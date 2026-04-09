@@ -40,7 +40,7 @@ export default function App() {
         <div className="max-w-screen-2xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <TrendingUp size={20} className="text-blue-400" />
-            <h1 className="text-lg font-semibold text-white tracking-tight">Value Stock Screener</h1>
+            <h1 className="text-lg font-semibold text-white tracking-tight">Joshua Misir's Value Finder</h1>
             <span className="text-xs text-gray-600 border border-gray-800 px-2 py-0.5 rounded">US Listed · Mkt Cap &gt;$300M</span>
           </div>
           {lastUpdated && (
