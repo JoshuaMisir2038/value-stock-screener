@@ -1,0 +1,34 @@
+name: Update Stock Data
+
+on:
+  schedule:
+    # Runs weekdays at 11pm UTC (6pm ET / market close + buffer)
+    - cron: '0 23 * * 1-5'
+  workflow_dispatch: # allow manual trigger from GitHub UI
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install yfinance
+
+      - name: Fetch stock data
+        run: python scripts/fetch_data.py
+
+      - name: Commit updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/data/stocks.json
+          git diff --cached --quiet || git commit -m "chore: update stock data $(date -u '+%Y-%m-%d')"
+          git push
