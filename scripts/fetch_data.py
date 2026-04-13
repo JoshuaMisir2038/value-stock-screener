@@ -490,7 +490,7 @@ def main():
     # Fetch options for top candidates
     calls = []
     print("\nFetching CALL options...")
-    for s in call_candidates[:25]:
+    for s in call_candidates[:60]:
         print(f"  {s['symbol']} (rsi={s['rsi']}, score={s['valueScore']})", end=' ')
         result = find_best_option(s, 'call', 'buy')
         if result:
@@ -498,13 +498,13 @@ def main():
             print(f"✓ strike=${result['strike']} ask=${result['ask']} IV={result['impliedVolatility']}%")
         else:
             print("no qualifying options")
-        if len(calls) >= 5:
+        if len(calls) >= 20:
             break
         time.sleep(0.3)
 
     sell_puts = []
     print("\nFetching SELL PUT options...")
-    for s in sell_put_candidates[:25]:
+    for s in sell_put_candidates[:60]:
         print(f"  {s['symbol']} (rsi={s['rsi']}, score={s['valueScore']})", end=' ')
         result = find_best_option(s, 'put', 'sell')
         if result:
@@ -512,13 +512,13 @@ def main():
             print(f"✓ strike=${result['strike']} bid=${result['bid']} yield={result.get('annualizedYield')}%")
         else:
             print("no qualifying options")
-        if len(sell_puts) >= 4:
+        if len(sell_puts) >= 14:
             break
         time.sleep(0.3)
 
     buy_puts = []
     print("\nFetching BUY PUT options...")
-    for s in buy_put_candidates[:20]:
+    for s in buy_put_candidates[:60]:
         print(f"  {s['symbol']} (rsi={s['rsi']}, score={s['valueScore']})", end=' ')
         result = find_best_option(s, 'put', 'buy')
         if result:
@@ -526,7 +526,7 @@ def main():
             print(f"✓ strike=${result['strike']} ask=${result['ask']} IV={result['impliedVolatility']}%")
         else:
             print("no qualifying options")
-        if len(buy_puts) >= 1:
+        if len(buy_puts) >= 6:
             break
         time.sleep(0.3)
 
