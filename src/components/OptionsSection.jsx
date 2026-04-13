@@ -1,27 +1,127 @@
 import { useState, useEffect } from 'react'
-import { RefreshCw, Info } from 'lucide-react'
+import { RefreshCw, Info, TrendingUp, TrendingDown } from 'lucide-react'
 import ScoreBadge from './ScoreBadge'
 
-function YieldBadge({ value }) {
-  if (!value) return <span className="text-gray-600">—</span>
-  const color = value >= 30 ? 'text-emerald-400' : value >= 15 ? 'text-blue-400' : 'text-yellow-400'
-  return <span className={`font-bold tabular-nums ${color}`}>{value}%</span>
+function RsiBadge({ value }) {
+  if (value == null) return <span className="text-gray-600">—</span>
+  let color
+  if (value <= 35) color = 'text-emerald-400'       // oversold
+  else if (value <= 55) color = 'text-blue-400'      // neutral-low
+  else if (value <= 65) color = 'text-yellow-400'    // neutral-high
+  else color = 'text-red-400'                        // overbought
+  return <span className={`tabular-nums font-medium ${color}`}>{value}</span>
+}
+
+function Ma200Badge({ price, ma200, above }) {
+  if (ma200 == null) return <span className="text-gray-600">—</span>
+  const pct = ma200 ? ((price - ma200) / ma200 * 100).toFixed(1) : null
+  const color = above ? 'text-emerald-400' : 'text-red-400'
+  const arrow = above ? '▲' : '▼'
+  return (
+    <span className={`tabular-nums text-xs ${color}`}>
+      {arrow} {Math.abs(pct)}%
+    </span>
+  )
+}
+
+function ActionBadge({ action, optionType }) {
+  const isBuy = action === 'BUY'
+  const color = isBuy ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-orange-500/15 text-orange-400 border-orange-500/30'
+  return (
+    <span className={`text-xs font-bold px-2 py-0.5 rounded border ${color}`}>
+      {action} {optionType}
+    </span>
+  )
+}
+
+function OptionsTable({ rows, showYield }) {
+  if (!rows.length) return <div className="text-center py-8 text-gray-600 text-sm">No qualifying options found.</div>
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm border-collapse">
+        <thead>
+          <tr className="border-b border-gray-800 text-left text-xs text-gray-500 uppercase tracking-wider">
+            <th className="px-3 py-3">#</th>
+            <th className="px-3 py-3">Action</th>
+            <th className="px-3 py-3">Ticker</th>
+            <th className="px-3 py-3">Company</th>
+            <th className="px-3 py-3">Sector</th>
+            <th className="px-3 py-3">Val Score</th>
+            <th className="px-3 py-3">Price</th>
+            <th className="px-3 py-3">RSI</th>
+            <th className="px-3 py-3">vs 200MA</th>
+            <th className="px-3 py-3">Strike</th>
+            <th className="px-3 py-3">% OTM</th>
+            <th className="px-3 py-3">Expiry</th>
+            <th className="px-3 py-3">DTE</th>
+            <th className="px-3 py-3">Bid</th>
+            <th className="px-3 py-3">Ask</th>
+            <th className="px-3 py-3">IV</th>
+            <th className="px-3 py-3">Open Int.</th>
+            {showYield
+              ? <th className="px-3 py-3">Ann. Yield</th>
+              : <th className="px-3 py-3">Max Loss</th>}
+            <th className="px-3 py-3">Break-Even</th>
+            <th className="px-3 py-3">Signal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((o, i) => (
+            <tr
+              key={`${o.symbol}-${o.strike}-${o.expiry}-${i}`}
+              className={`border-b border-gray-900 hover:bg-gray-900/50 transition-colors ${i % 2 === 0 ? '' : 'bg-gray-950/50'}`}
+            >
+              <td className="px-3 py-3 text-gray-600 text-xs font-mono">#{i + 1}</td>
+              <td className="px-3 py-3 whitespace-nowrap">
+                <ActionBadge action={o.action} optionType={o.optionType} />
+              </td>
+              <td className="px-3 py-3 font-bold text-white tracking-wide">{o.symbol}</td>
+              <td className="px-3 py-3">
+                <span className="text-gray-300 truncate block max-w-[160px]" title={o.name}>{o.name}</span>
+              </td>
+              <td className="px-3 py-3">
+                <span className="text-xs text-gray-400 px-2 py-0.5 bg-gray-800 rounded-full whitespace-nowrap">{o.sector}</span>
+              </td>
+              <td className="px-3 py-3"><ScoreBadge score={o.valueScore} /></td>
+              <td className="px-3 py-3 tabular-nums text-gray-300">${o.stockPrice?.toFixed(2)}</td>
+              <td className="px-3 py-3"><RsiBadge value={o.rsi} /></td>
+              <td className="px-3 py-3">
+                <Ma200Badge price={o.stockPrice} ma200={o.ma200} above={o.aboveMa200} />
+              </td>
+              <td className="px-3 py-3 tabular-nums text-white font-medium">${o.strike?.toFixed(2)}</td>
+              <td className="px-3 py-3 tabular-nums text-gray-400">{o.pctOtm}%</td>
+              <td className="px-3 py-3 tabular-nums text-gray-300 whitespace-nowrap">{o.expiry}</td>
+              <td className="px-3 py-3 tabular-nums text-gray-400">{o.dte}d</td>
+              <td className="px-3 py-3 tabular-nums text-gray-400">${o.bid?.toFixed(2)}</td>
+              <td className="px-3 py-3 tabular-nums text-gray-400">${o.ask?.toFixed(2)}</td>
+              <td className="px-3 py-3 tabular-nums text-gray-400">{o.impliedVolatility}%</td>
+              <td className="px-3 py-3 tabular-nums text-gray-400">{o.openInterest?.toLocaleString()}</td>
+              {showYield
+                ? <td className="px-3 py-3 tabular-nums font-bold text-emerald-400">{o.annualizedYield}%</td>
+                : <td className="px-3 py-3 tabular-nums text-red-400/70">${o.maxLoss?.toFixed(0)}</td>}
+              <td className="px-3 py-3 tabular-nums text-gray-400">${o.breakEven?.toFixed(2)}</td>
+              <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">{o.signal}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
 }
 
 export default function OptionsSection() {
-  const [options, setOptions] = useState([])
+  const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [lastUpdated, setLastUpdated] = useState(null)
+  const [view, setView] = useState('calls')
 
   useEffect(() => {
     async function load() {
       try {
         const res = await fetch('./data/options.json')
         if (!res.ok) throw new Error('Options data not found')
-        const json = await res.json()
-        setOptions(json.options || [])
-        setLastUpdated(json.lastUpdated)
+        setData(await res.json())
       } catch (err) {
         setError(err.message)
       } finally {
@@ -37,18 +137,50 @@ export default function OptionsSection() {
       <div className="flex gap-2 items-start bg-yellow-500/5 border border-yellow-500/20 rounded p-3 mb-5 text-xs text-yellow-200/60">
         <Info size={13} className="mt-0.5 shrink-0 text-yellow-500/50" />
         <span>
-          <strong className="text-yellow-400/80">Research only.</strong> These are algorithmically identified
-          cash-secured put opportunities based on value score and premium yield. Not financial advice.
-          Options involve risk of loss. Verify all data independently before making any decision.
+          <strong className="text-yellow-400/80">Research only.</strong> Algorithmically identified
+          options based on value score, RSI, and 200-day moving average. Not financial advice.
+          Options involve significant risk including total loss of premium paid. Verify all data independently.
         </span>
       </div>
 
-      {/* Strategy explanation */}
-      <div className="mb-5 text-xs text-gray-500 leading-relaxed max-w-3xl">
-        <strong className="text-gray-400">Strategy: Cash-Secured Puts</strong> — Sell a put option on a
-        stock you'd be happy to own. You collect the premium immediately. If the stock stays above the
-        strike at expiry, you keep the premium as profit. If it falls below, you buy the stock at the
-        strike (reduced by the premium collected). Ranked by annualized yield × value score.
+      {/* Legend */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5 text-xs">
+        <div className="bg-gray-900 border border-gray-800 rounded p-3">
+          <div className="flex items-center gap-2 mb-1.5 text-emerald-400 font-medium">
+            <TrendingUp size={12} /> BUY CALL
+          </div>
+          <p className="text-gray-500 leading-relaxed">
+            Above 200MA (uptrend) · RSI 35–58 (pulled back, room to run) · Value score ≥45.
+            You profit if the stock rises above break-even before expiry.
+          </p>
+        </div>
+        <div className="bg-gray-900 border border-gray-800 rounded p-3">
+          <div className="flex items-center gap-2 mb-1.5 text-orange-400 font-medium">
+            <TrendingDown size={12} /> SELL PUT (Income)
+          </div>
+          <p className="text-gray-500 leading-relaxed">
+            Above 200MA · RSI 40–65 · Value score ≥60. Collect premium to potentially
+            buy a stock you want anyway at a discount. Profitable if stock stays above strike.
+          </p>
+        </div>
+        <div className="bg-gray-900 border border-gray-800 rounded p-3">
+          <div className="flex items-center gap-2 mb-1.5 text-red-400 font-medium">
+            <TrendingDown size={12} /> BUY PUT (Bearish)
+          </div>
+          <p className="text-gray-500 leading-relaxed">
+            Below 200MA (downtrend) · RSI 55–75 (overbought bounce likely to fail) · Low value score.
+            You profit if the stock falls below break-even before expiry.
+          </p>
+        </div>
+      </div>
+
+      {/* RSI legend */}
+      <div className="flex gap-4 mb-5 text-xs text-gray-500">
+        <span>RSI:</span>
+        <span className="text-emerald-400">≤35 Oversold</span>
+        <span className="text-blue-400">35–55 Neutral-low</span>
+        <span className="text-yellow-400">55–65 Neutral-high</span>
+        <span className="text-red-400">≥65 Overbought</span>
       </div>
 
       {loading && (
@@ -64,70 +196,41 @@ export default function OptionsSection() {
         </div>
       )}
 
-      {!loading && !error && (
+      {!loading && !error && data && (
         <>
-          {lastUpdated && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-600 mb-4">
-              <RefreshCw size={11} />
-              Updated {new Date(lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex gap-1">
+              {[
+                { id: 'calls', label: `Calls (${data.calls?.length || 0})` },
+                { id: 'puts',  label: `Puts (${data.puts?.length || 0})` },
+              ].map(({ id, label }) => (
+                <button
+                  key={id}
+                  onClick={() => setView(id)}
+                  className={`px-4 py-1.5 rounded text-sm border transition-colors ${
+                    view === id
+                      ? 'bg-blue-600/20 border-blue-500/50 text-blue-400'
+                      : 'bg-gray-900 border-gray-800 text-gray-500 hover:text-gray-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
-          )}
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-gray-800 text-left text-xs text-gray-500 uppercase tracking-wider">
-                  <th className="px-3 py-3">Rank</th>
-                  <th className="px-3 py-3">Ticker</th>
-                  <th className="px-3 py-3">Company</th>
-                  <th className="px-3 py-3">Sector</th>
-                  <th className="px-3 py-3">Value Score</th>
-                  <th className="px-3 py-3">Stock Price</th>
-                  <th className="px-3 py-3">Strike</th>
-                  <th className="px-3 py-3">% OTM</th>
-                  <th className="px-3 py-3">Expiry</th>
-                  <th className="px-3 py-3">DTE</th>
-                  <th className="px-3 py-3">Bid</th>
-                  <th className="px-3 py-3">Open Int.</th>
-                  <th className="px-3 py-3">IV</th>
-                  <th className="px-3 py-3">Ann. Yield</th>
-                  <th className="px-3 py-3">Break-Even</th>
-                </tr>
-              </thead>
-              <tbody>
-                {options.map((o, i) => (
-                  <tr
-                    key={`${o.symbol}-${o.strike}-${o.expiry}`}
-                    className={`border-b border-gray-900 hover:bg-gray-900/50 transition-colors ${i % 2 === 0 ? '' : 'bg-gray-950/50'}`}
-                  >
-                    <td className="px-3 py-3 text-gray-600 text-xs font-mono">#{i + 1}</td>
-                    <td className="px-3 py-3 font-bold text-white tracking-wide">{o.symbol}</td>
-                    <td className="px-3 py-3">
-                      <span className="text-gray-300 truncate block max-w-[180px]" title={o.name}>{o.name}</span>
-                    </td>
-                    <td className="px-3 py-3">
-                      <span className="text-xs text-gray-400 px-2 py-0.5 bg-gray-800 rounded-full whitespace-nowrap">{o.sector}</span>
-                    </td>
-                    <td className="px-3 py-3"><ScoreBadge score={o.valueScore} /></td>
-                    <td className="px-3 py-3 tabular-nums text-gray-300">${o.stockPrice?.toFixed(2)}</td>
-                    <td className="px-3 py-3 tabular-nums text-white font-medium">${o.strike?.toFixed(2)}</td>
-                    <td className="px-3 py-3 tabular-nums text-gray-400">{o.pctOtm}%</td>
-                    <td className="px-3 py-3 tabular-nums text-gray-300 whitespace-nowrap">{o.expiry}</td>
-                    <td className="px-3 py-3 tabular-nums text-gray-400">{o.dte}d</td>
-                    <td className="px-3 py-3 tabular-nums text-emerald-400">${o.bid?.toFixed(2)}</td>
-                    <td className="px-3 py-3 tabular-nums text-gray-400">{o.openInterest?.toLocaleString()}</td>
-                    <td className="px-3 py-3 tabular-nums text-gray-400">{o.impliedVolatility}%</td>
-                    <td className="px-3 py-3"><YieldBadge value={o.annualizedYield} /></td>
-                    <td className="px-3 py-3 tabular-nums text-gray-400">${o.breakEven?.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {options.length === 0 && (
-              <div className="text-center py-16 text-gray-600">No qualifying options found in latest data refresh.</div>
+            {data.asOf && (
+              <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                <RefreshCw size={11} />
+                Data as of {data.asOf}
+              </div>
             )}
           </div>
+
+          {view === 'calls' && (
+            <OptionsTable rows={data.calls || []} showYield={false} />
+          )}
+          {view === 'puts' && (
+            <OptionsTable rows={data.puts || []} showYield={true} />
+          )}
         </>
       )}
     </div>
