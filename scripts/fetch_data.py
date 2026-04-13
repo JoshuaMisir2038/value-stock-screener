@@ -146,28 +146,72 @@ def fetch_fundamental(ticker, friday_close):
             return None
 
         free_cash_flow = info.get('freeCashflow')
-        shares = info.get('sharesOutstanding')
+        total_revenue  = info.get('totalRevenue')
+        shares         = info.get('sharesOutstanding')
+        total_debt     = info.get('totalDebt') or 0
+        total_cash     = info.get('totalCash') or 0
+        ebitda         = info.get('ebitda')
+        rev_growth     = info.get('revenueGrowth')   # e.g. 0.12 = 12%
+
+        # Price to Free Cash Flow
         p_fcf = None
         if free_cash_flow and shares and shares > 0 and price:
             fcf_per_share = free_cash_flow / shares
             if fcf_per_share > 0:
                 p_fcf = price / fcf_per_share
 
+        # FCF Margin
+        fcf_margin = None
+        if free_cash_flow and total_revenue and total_revenue > 0:
+            fcf_margin = free_cash_flow / total_revenue
+
+        # EV / Revenue
+        ev = info.get('enterpriseValue')
+        ev_revenue = None
+        if ev and total_revenue and total_revenue > 0:
+            ev_revenue = ev / total_revenue
+
+        # Rule of 40: revenue growth % + FCF margin %
+        rule_of_40 = None
+        if rev_growth is not None and fcf_margin is not None:
+            rule_of_40 = round(rev_growth * 100 + fcf_margin * 100, 1)
+
+        # Net Debt / EBITDA
+        net_debt_ebitda = None
+        net_debt = total_debt - total_cash
+        if ebitda and ebitda > 0 and net_debt is not None:
+            net_debt_ebitda = round(net_debt / ebitda, 2)
+
         return {
-            'symbol': ticker,
-            'name': info.get('longName') or info.get('shortName') or ticker,
-            'sector': info.get('sector') or 'Unknown',
-            'industry': info.get('industry') or '',
-            'marketCap': market_cap,
-            'price': price,
-            'peRatio': info.get('trailingPE'),
-            'psRatio': info.get('priceToSalesTrailing12Months'),
-            'pbRatio': info.get('priceToBook'),
-            'evEbitda': info.get('enterpriseToEbitda'),
-            'debtEquity': (info.get('debtToEquity') or 0) / 100 if info.get('debtToEquity') else None,
-            'roe': info.get('returnOnEquity'),
-            'dividendYield': info.get('dividendYield'),
-            'pFcf': p_fcf,
+            'symbol':          ticker,
+            'name':            info.get('longName') or info.get('shortName') or ticker,
+            'sector':          info.get('sector') or 'Unknown',
+            'industry':        info.get('industry') or '',
+            'marketCap':       market_cap,
+            'price':           price,
+            # Valuation
+            'evEbitda':        info.get('enterpriseToEbitda'),
+            'peRatio':         info.get('trailingPE'),
+            'forwardPE':       info.get('forwardPE'),
+            'pFcf':            p_fcf,
+            'psRatio':         info.get('priceToSalesTrailing12Months'),
+            'pbRatio':         info.get('priceToBook'),
+            'evRevenue':       ev_revenue,
+            # Margins
+            'grossMargin':     info.get('grossMargins'),
+            'operatingMargin': info.get('operatingMargins'),
+            'fcfMargin':       fcf_margin,
+            # Growth
+            'revenueGrowth':   rev_growth,
+            'earningsGrowth':  info.get('earningsGrowth'),
+            'ruleOf40':        rule_of_40,
+            # Quality / Safety
+            'roe':             info.get('returnOnEquity'),
+            'debtEquity':      (info.get('debtToEquity') or 0) / 100 if info.get('debtToEquity') else None,
+            'currentRatio':    info.get('currentRatio'),
+            'netDebtEbitda':   net_debt_ebitda,
+            # Income
+            'dividendYield':   info.get('dividendYield'),
         }
     except Exception as e:
         print(f"  Fundamental error {ticker}: {e}")

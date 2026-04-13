@@ -3,6 +3,7 @@ import { useStocks } from './hooks/useStocks'
 import StockTable from './components/StockTable'
 import Filters from './components/Filters'
 import OptionsSection from './components/OptionsSection'
+import { EquityMethodology } from './components/Methodology'
 import { TrendingUp, RefreshCw, BarChart2, Layers } from 'lucide-react'
 
 const DEFAULT_FILTERS = {
@@ -80,12 +81,8 @@ export default function App() {
       <div className="max-w-screen-2xl mx-auto px-6 py-5">
         {tab === 'screener' && (
           <>
-            <div className="flex gap-4 mb-5 text-xs text-gray-500">
-              <span>Value Score (sector-relative):</span>
-              <span className="text-emerald-400">75–100 Strong value</span>
-              <span className="text-blue-400">55–74 Moderate value</span>
-              <span className="text-yellow-400">35–54 Fair</span>
-              <span className="text-red-400">0–34 Expensive</span>
+            <div className="mb-4">
+              <EquityMethodology />
             </div>
 
             <div className="mb-5">

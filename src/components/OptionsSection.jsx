@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { RefreshCw, Info, TrendingUp, TrendingDown } from 'lucide-react'
 import ScoreBadge from './ScoreBadge'
+import { OptionsMethodology } from './Methodology'
 
 function RsiBadge({ value }) {
   if (value == null) return <span className="text-gray-600">—</span>
@@ -133,6 +134,10 @@ export default function OptionsSection() {
 
   return (
     <div>
+      <div className="mb-4">
+        <OptionsMethodology />
+      </div>
+
       {/* Disclaimer */}
       <div className="flex gap-2 items-start bg-yellow-500/5 border border-yellow-500/20 rounded p-3 mb-5 text-xs text-yellow-200/60">
         <Info size={13} className="mt-0.5 shrink-0 text-yellow-500/50" />
