@@ -14,7 +14,7 @@ const col = createColumnHelper()
 
 // Column groups for the sticky sub-header
 const GROUPS = [
-  { label: '',            span: 5, border: false },
+  { label: '',            span: 6, border: false },
   { label: 'VALUATION',  span: 7, border: true },
   { label: 'MARGINS',    span: 3, border: true },
   { label: 'GROWTH',     span: 3, border: true },
@@ -25,7 +25,8 @@ const GROUPS = [
 
 const COLUMNS = [
   // Identity
-  col.accessor('valueScore',      { header: 'Score',        cell: i => <ScoreBadge score={i.getValue()} />,                                          size: 68 }),
+  col.accessor('valueScore',      { header: 'Mkt Score',    cell: i => <ScoreBadge score={i.getValue()} />,                                          size: 85 }),
+  col.accessor('sectorScore',     { header: 'Sec Score',    cell: i => <ScoreBadge score={i.getValue()} />,                                          size: 82 }),
   col.accessor('symbol',          { header: 'Ticker',       cell: i => <span className="font-bold text-white tracking-wide">{i.getValue()}</span>,   size: 75 }),
   col.accessor('name',            { header: 'Company',      cell: i => <span className="text-gray-300 truncate block max-w-[180px]" title={i.getValue()}>{i.getValue()}</span>, size: 190 }),
   col.accessor('sector',          { header: 'Sector',       cell: i => <span className="text-xs text-gray-400 px-2 py-0.5 bg-gray-800 rounded-full whitespace-nowrap">{i.getValue()}</span>, size: 140 }),
@@ -97,7 +98,7 @@ export default function StockTable({ data }) {
             <tr key={headerGroup.id} className="border-b border-gray-800">
               {headerGroup.headers.map((header, idx) => {
                 // Add border-left at group boundaries
-                const groupBoundaries = [5, 12, 15, 18, 21, 22, 23]
+                const groupBoundaries = [6, 13, 16, 19, 22, 23, 24]
                 const hasBorder = groupBoundaries.includes(idx)
                 return (
                   <th
@@ -121,7 +122,7 @@ export default function StockTable({ data }) {
               className={`border-b border-gray-900 hover:bg-gray-900/50 transition-colors ${i % 2 === 0 ? '' : 'bg-gray-950/40'}`}
             >
               {row.getVisibleCells().map((cell, idx) => {
-                const groupBoundaries = [5, 12, 15, 18, 21, 22, 23]
+                const groupBoundaries = [6, 13, 16, 19, 22, 23, 24]
                 const hasBorder = groupBoundaries.includes(idx)
                 return (
                   <td key={cell.id} className={`px-3 py-2.5 text-gray-300 ${hasBorder ? 'border-l border-gray-900' : ''}`}>

@@ -28,9 +28,9 @@ export function EquityMethodology() {
       </p>
 
       <div className="text-xs text-gray-500 mb-4 leading-relaxed space-y-1">
-        <p><strong className="text-gray-300">Step 1 — Group by sector.</strong> Each stock is only ranked against companies in its own sector (Technology, Healthcare, Financials, etc.).</p>
-        <p><strong className="text-gray-300">Step 2 — Percentile rank each metric.</strong> For every metric below, the stock's value is ranked as a percentile (0–100%) within its sector. A percentile of 90% means it's cheaper than 90% of sector peers on that metric.</p>
-        <p><strong className="text-gray-300">Step 3 — Weight and combine.</strong> Each metric's percentile is multiplied by its weight, summed, then normalized to a 0–100 score.</p>
+        <p><strong className="text-gray-300">Mkt Score</strong> — ranked against all 600+ stocks in the universe regardless of sector. A score of 80 means the stock is genuinely cheap vs the entire market. Use this to compare across sectors and allocate capital.</p>
+        <p><strong className="text-gray-300">Sec Score</strong> — ranked only against companies in the same sector. A score of 80 means it's cheap relative to its peers. Use this to find the best names within a sector you've already decided to invest in.</p>
+        <p className="pt-1"><strong className="text-gray-300">How it works:</strong> For each metric below, the stock is percentile-ranked (0–100%) within the comparison pool. Each percentile is multiplied by its weight, summed, then normalized to 0–100.</p>
       </div>
 
       <table className="w-full text-xs border-collapse mb-4">

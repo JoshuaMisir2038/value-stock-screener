@@ -1,4 +1,5 @@
-// Value score = weighted percentile rank within sector
+// Value score = weighted percentile rank vs the entire market (market-relative)
+// Sector rank = percentile rank within sector only (shown as a secondary column)
 // Lower is better for valuation multiples; higher is better for quality metrics
 export const SCORE_METRICS = [
   { key: 'evEbitda',        weight: 0.20, lowerIsBetter: true,  label: 'EV/EBITDA',        desc: 'Enterprise value relative to earnings before interest, taxes, depreciation & amortization. Best cross-sector valuation metric.' },
@@ -18,40 +19,40 @@ function percentileRank(value, values) {
   return rank / (sorted.length - 1 || 1)
 }
 
+function scoreAgainst(stock, pool) {
+  let totalWeight = 0
+  let weightedScore = 0
+
+  for (const { key, weight, lowerIsBetter } of SCORE_METRICS) {
+    const value = stock[key]
+    if (value == null || isNaN(value) || value <= 0) continue
+
+    const poolValues = pool
+      .map(p => p[key])
+      .filter(v => v != null && !isNaN(v) && v > 0)
+
+    if (poolValues.length < 2) continue
+
+    let pct = percentileRank(value, poolValues)
+    if (lowerIsBetter) pct = 1 - pct
+
+    weightedScore += pct * weight
+    totalWeight += weight
+  }
+
+  return totalWeight > 0 ? Math.round((weightedScore / totalWeight) * 100) : null
+}
+
 export function computeScores(stocks) {
-  // Group by sector for sector-relative scoring
   const sectors = {}
   for (const s of stocks) {
     if (!sectors[s.sector]) sectors[s.sector] = []
     sectors[s.sector].push(s)
   }
 
-  return stocks.map(stock => {
-    const peers = sectors[stock.sector] || stocks
-    let totalWeight = 0
-    let weightedScore = 0
-
-    for (const { key, weight, lowerIsBetter } of SCORE_METRICS) {
-      const value = stock[key]
-      if (value == null || isNaN(value) || value <= 0) continue
-
-      const peerValues = peers
-        .map(p => p[key])
-        .filter(v => v != null && !isNaN(v) && v > 0)
-
-      if (peerValues.length < 2) continue
-
-      let pct = percentileRank(value, peerValues)
-      if (lowerIsBetter) pct = 1 - pct
-
-      weightedScore += pct * weight
-      totalWeight += weight
-    }
-
-    const score = totalWeight > 0
-      ? Math.round((weightedScore / totalWeight) * 100)
-      : null
-
-    return { ...stock, valueScore: score }
-  })
+  return stocks.map(stock => ({
+    ...stock,
+    valueScore:  scoreAgainst(stock, stocks),                          // vs entire market
+    sectorScore: scoreAgainst(stock, sectors[stock.sector] || stocks), // vs sector only
+  }))
 }
