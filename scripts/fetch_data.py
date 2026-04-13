@@ -1,18 +1,16 @@
 """
 Fetches value metrics for US-listed stocks with market cap > $300M using yfinance.
-Outputs public/data/stocks.json consumed by the React frontend.
+Also fetches top 10 cash-secured put options from highest-scored value stocks.
+Outputs public/data/stocks.json and public/data/options.json
 """
 
 import json
 import time
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 
 import yfinance as yf
 
-# S&P 1500 tickers (S&P 500 + S&P 400 MidCap + S&P 600 SmallCap)
-# Covers most US stocks with market cap above ~$300M
-# Source list kept inline to avoid external dependency at runtime
 TICKERS = [
     "A","AAL","AAP","AAPL","ABBV","ABC","ABMD","ABT","ACN","ADBE","ADI","ADM",
     "ADP","ADSK","AEE","AEP","AES","AFL","AIG","AIZ","AJG","AKAM","ALB","ALGN",
@@ -55,7 +53,6 @@ TICKERS = [
     "VRSN","VRTX","VTR","VZ","WAB","WAT","WBA","WDC","WEC","WELL","WFC","WHR",
     "WM","WMB","WMT","WRB","WRK","WST","WU","WY","WYNN","XEL","XLNX","XOM",
     "XRAY","XYL","YUM","ZBH","ZBRA","ZION","ZTS",
-    # Additional mid/small cap
     "ACHC","ACM","ADNT","AGCO","AIT","AMKR","AMSF","ANF","AOSL","ARC","ARW",
     "ASH","ATR","BCO","BECN","BHF","BIOL","BJRI","BJ","BOOT","BRC","BRKR",
     "CABO","CBT","CDAY","CFLT","CHE","CHGG","CHRD","CLB","COTY","CPT","CRI",
@@ -80,12 +77,35 @@ TICKERS = [
     "WMS","WOR","WPC","WRLD","WS","WTFC","WWD","XHR","XNCR","YORW",
 ]
 
-FIELDS = [
-    'symbol', 'longName', 'sector', 'industry', 'marketCap', 'currentPrice',
-    'trailingPE', 'priceToSalesTrailing12Months', 'priceToBook',
-    'enterpriseToEbitda', 'debtToEquity', 'returnOnEquity',
-    'dividendYield', 'freeCashflow', 'marketCap',
-]
+
+def compute_value_score(stock, peers):
+    """Replicate the JS scoring logic in Python so we can rank stocks for options."""
+    metrics = [
+        ('evEbitda',   0.25, True),
+        ('pFcf',       0.20, True),
+        ('peRatio',    0.20, True),
+        ('psRatio',    0.15, True),
+        ('pbRatio',    0.10, True),
+        ('debtEquity', 0.10, True),
+    ]
+    total_weight = 0
+    weighted = 0
+    for key, weight, lower_is_better in metrics:
+        value = stock.get(key)
+        if not value or value <= 0:
+            continue
+        peer_vals = sorted([p[key] for p in peers if p.get(key) and p[key] > 0])
+        if len(peer_vals) < 2:
+            continue
+        rank = sum(1 for v in peer_vals if v < value)
+        pct = rank / (len(peer_vals) - 1)
+        if lower_is_better:
+            pct = 1 - pct
+        weighted += pct * weight
+        total_weight += weight
+    if total_weight == 0:
+        return None
+    return round((weighted / total_weight) * 100)
 
 
 def fetch_stock(ticker):
@@ -99,7 +119,6 @@ def fetch_stock(ticker):
         free_cash_flow = info.get('freeCashflow')
         shares = info.get('sharesOutstanding')
 
-        # Price to Free Cash Flow
         p_fcf = None
         if free_cash_flow and shares and shares > 0 and price:
             fcf_per_share = free_cash_flow / shares
@@ -127,39 +146,164 @@ def fetch_stock(ticker):
         return None
 
 
+def fetch_options_for_stock(stock):
+    """
+    Find the best cash-secured put for a given stock.
+    Criteria:
+      - 21-45 days to expiration
+      - Strike 3-12% below current price (OTM)
+      - Bid > 0 (liquid)
+      - Open interest > 50
+    Ranks by annualized premium yield.
+    """
+    symbol = stock['symbol']
+    price = stock.get('price')
+    if not price or price <= 0:
+        return None
+
+    try:
+        ticker = yf.Ticker(symbol)
+        expirations = ticker.options
+        if not expirations:
+            return None
+
+        today = date.today()
+        candidates = []
+
+        for exp_str in expirations:
+            exp_date = date.fromisoformat(exp_str)
+            dte = (exp_date - today).days
+            if dte < 21 or dte > 45:
+                continue
+
+            try:
+                chain = ticker.option_chain(exp_str)
+                puts = chain.puts
+            except Exception:
+                continue
+
+            for _, row in puts.iterrows():
+                strike = row.get('strike', 0)
+                bid = row.get('bid', 0)
+                oi = row.get('openInterest', 0) or 0
+                iv = row.get('impliedVolatility', 0) or 0
+
+                if not strike or not bid or bid <= 0:
+                    continue
+                if oi < 50:
+                    continue
+
+                # Strike must be 3-12% below current price
+                pct_otm = (price - strike) / price
+                if pct_otm < 0.03 or pct_otm > 0.12:
+                    continue
+
+                # Annualized yield = (bid / strike) * (365 / dte)
+                ann_yield = (bid / strike) * (365 / dte)
+                break_even = strike - bid
+
+                candidates.append({
+                    'symbol': symbol,
+                    'name': stock['name'],
+                    'sector': stock['sector'],
+                    'valueScore': stock.get('valueScore'),
+                    'stockPrice': round(price, 2),
+                    'strike': strike,
+                    'expiry': exp_str,
+                    'dte': dte,
+                    'bid': round(bid, 2),
+                    'openInterest': int(oi),
+                    'impliedVolatility': round(iv * 100, 1),
+                    'annualizedYield': round(ann_yield * 100, 1),
+                    'breakEven': round(break_even, 2),
+                    'pctOtm': round(pct_otm * 100, 1),
+                })
+
+        if not candidates:
+            return None
+
+        # Best = highest annualized yield
+        return max(candidates, key=lambda x: x['annualizedYield'])
+
+    except Exception as e:
+        print(f"  Options error {symbol}: {e}")
+        return None
+
+
 def main():
-    print(f"Fetching data for {len(TICKERS)} tickers...")
+    print(f"Fetching stock data for {len(TICKERS)} tickers...")
     stocks = []
-    errors = 0
 
     for i, ticker in enumerate(TICKERS):
         print(f"[{i+1}/{len(TICKERS)}] {ticker}", end=' ')
         result = fetch_stock(ticker)
         if result:
             stocks.append(result)
-            print(f"✓ ({result['sector']}, mktcap=${result['marketCap']/1e9:.1f}B)")
+            print(f"✓ ({result['sector']}, ${result['marketCap']/1e9:.1f}B)")
         else:
-            errors += 1
             print("skipped")
-
-        # Be polite to Yahoo Finance — avoid rate limiting
         if (i + 1) % 10 == 0:
             time.sleep(1)
 
-    output = {
+    # Compute value scores
+    sectors = {}
+    for s in stocks:
+        sectors.setdefault(s['sector'], []).append(s)
+
+    for stock in stocks:
+        peers = sectors.get(stock['sector'], stocks)
+        stock['valueScore'] = compute_value_score(stock, peers)
+
+    # Save stocks.json
+    stocks_output = {
         'lastUpdated': datetime.now(timezone.utc).isoformat(),
         'count': len(stocks),
         'stocks': stocks,
     }
+    base = os.path.join(os.path.dirname(__file__), '..', 'public', 'data')
+    os.makedirs(base, exist_ok=True)
 
-    out_path = os.path.join(os.path.dirname(__file__), '..', 'public', 'data', 'stocks.json')
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    with open(os.path.join(base, 'stocks.json'), 'w') as f:
+        json.dump(stocks_output, f)
+    print(f"\nStocks done: {len(stocks)} saved.")
 
-    with open(out_path, 'w') as f:
-        json.dump(output, f)
+    # Fetch options for top 40 value-scored stocks
+    scored = sorted(
+        [s for s in stocks if s.get('valueScore') is not None],
+        key=lambda x: x['valueScore'],
+        reverse=True
+    )[:40]
 
-    print(f"\nDone. {len(stocks)} stocks saved, {errors} skipped.")
-    print(f"Output: {os.path.abspath(out_path)}")
+    print(f"\nFetching options for top {len(scored)} value stocks...")
+    options = []
+    for i, stock in enumerate(scored):
+        print(f"[{i+1}/{len(scored)}] {stock['symbol']} (score={stock['valueScore']})", end=' ')
+        result = fetch_options_for_stock(stock)
+        if result:
+            options.append(result)
+            print(f"✓ strike=${result['strike']} exp={result['expiry']} yield={result['annualizedYield']}%")
+        else:
+            print("no qualifying options")
+        time.sleep(0.5)
+
+    # Sort by composite: weight annualized yield + value score
+    def option_rank(o):
+        score = o.get('valueScore') or 0
+        yield_ = o.get('annualizedYield') or 0
+        return (score / 100) * 0.4 + (min(yield_, 100) / 100) * 0.6
+
+    top10 = sorted(options, key=option_rank, reverse=True)[:10]
+
+    options_output = {
+        'lastUpdated': datetime.now(timezone.utc).isoformat(),
+        'strategy': 'cash-secured-puts',
+        'options': top10,
+    }
+
+    with open(os.path.join(base, 'options.json'), 'w') as f:
+        json.dump(options_output, f)
+
+    print(f"\nOptions done: {len(top10)} top picks saved.")
 
 
 if __name__ == '__main__':

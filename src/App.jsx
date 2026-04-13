@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react'
 import { useStocks } from './hooks/useStocks'
 import StockTable from './components/StockTable'
 import Filters from './components/Filters'
-import { TrendingUp, RefreshCw } from 'lucide-react'
+import OptionsSection from './components/OptionsSection'
+import { TrendingUp, RefreshCw, BarChart2, Layers } from 'lucide-react'
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -11,9 +12,15 @@ const DEFAULT_FILTERS = {
   minScore: 0,
 }
 
+const TABS = [
+  { id: 'screener', label: 'Value Screener', icon: BarChart2 },
+  { id: 'options',  label: 'Options Ideas',  icon: Layers },
+]
+
 export default function App() {
   const { stocks, loading, error, lastUpdated } = useStocks()
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
+  const [tab, setTab] = useState('screener')
 
   const sectors = useMemo(() => {
     const set = new Set(stocks.map(s => s.sector).filter(Boolean))
@@ -50,49 +57,66 @@ export default function App() {
             </div>
           )}
         </div>
+
+        {/* Tabs */}
+        <div className="max-w-screen-2xl mx-auto px-6 flex gap-1">
+          {TABS.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm border-b-2 transition-colors ${
+                tab === id
+                  ? 'border-blue-500 text-white'
+                  : 'border-transparent text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              <Icon size={14} />
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="max-w-screen-2xl mx-auto px-6 py-5">
-        {/* Score legend */}
-        <div className="flex gap-4 mb-5 text-xs text-gray-500">
-          <span>Value Score (sector-relative):</span>
-          <span className="text-emerald-400">75–100 Strong value</span>
-          <span className="text-blue-400">55–74 Moderate value</span>
-          <span className="text-yellow-400">35–54 Fair</span>
-          <span className="text-red-400">0–34 Expensive</span>
-        </div>
+        {tab === 'screener' && (
+          <>
+            <div className="flex gap-4 mb-5 text-xs text-gray-500">
+              <span>Value Score (sector-relative):</span>
+              <span className="text-emerald-400">75–100 Strong value</span>
+              <span className="text-blue-400">55–74 Moderate value</span>
+              <span className="text-yellow-400">35–54 Fair</span>
+              <span className="text-red-400">0–34 Expensive</span>
+            </div>
 
-        {/* Filters */}
-        <div className="mb-5">
-          <Filters sectors={sectors} filters={filters} onChange={setFilters} />
-        </div>
+            <div className="mb-5">
+              <Filters sectors={sectors} filters={filters} onChange={setFilters} />
+            </div>
 
-        {/* Count */}
-        {!loading && !error && (
-          <div className="mb-3 text-xs text-gray-600">
-            {filtered.length.toLocaleString()} of {stocks.length.toLocaleString()} stocks
-          </div>
+            {!loading && !error && (
+              <div className="mb-3 text-xs text-gray-600">
+                {filtered.length.toLocaleString()} of {stocks.length.toLocaleString()} stocks
+              </div>
+            )}
+
+            {loading && (
+              <div className="flex items-center justify-center py-32 text-gray-600">
+                <RefreshCw size={16} className="animate-spin mr-2" />
+                Loading stock data...
+              </div>
+            )}
+
+            {error && (
+              <div className="py-32 text-center">
+                <p className="text-red-400 mb-2">Could not load stock data.</p>
+                <p className="text-gray-600 text-sm">{error}</p>
+              </div>
+            )}
+
+            {!loading && !error && <StockTable data={filtered} />}
+          </>
         )}
 
-        {/* States */}
-        {loading && (
-          <div className="flex items-center justify-center py-32 text-gray-600">
-            <RefreshCw size={16} className="animate-spin mr-2" />
-            Loading stock data...
-          </div>
-        )}
-
-        {error && (
-          <div className="py-32 text-center">
-            <p className="text-red-400 mb-2">Could not load stock data.</p>
-            <p className="text-gray-600 text-sm">{error}</p>
-            <p className="text-gray-700 text-xs mt-4">
-              Run <code className="bg-gray-900 px-1 py-0.5 rounded">python scripts/fetch_data.py</code> to generate the data file.
-            </p>
-          </div>
-        )}
-
-        {!loading && !error && <StockTable data={filtered} />}
+        {tab === 'options' && <OptionsSection />}
       </div>
     </div>
   )
