@@ -21,7 +21,7 @@ const GROUPS = [
   { label: 'SAFETY',     span: 3, border: true },
   { label: 'INCOME',     span: 1, border: true },
   { label: 'TECHNICAL',  span: 2, border: true },
-  { label: 'ANNUAL EPS', span: 3, border: true },
+  { label: 'ANNUAL REVENUE', span: 3, border: true },
 ]
 
 const COLUMNS = [
@@ -55,45 +55,30 @@ const COLUMNS = [
   col.accessor('netDebtEbitda',   { header: 'ND/EBITDA',    cell: i => { const v = i.getValue(); if (v == null) return <span className="text-gray-600">—</span>; const c = v < 0 ? 'text-emerald-400' : v < 2 ? 'text-gray-300' : v < 4 ? 'text-yellow-400' : 'text-red-400'; return <span className={`tabular-nums ${c}`}>{v}x</span> }, size: 90 }),
   // Income
   col.accessor('dividendYield',   { header: 'Div Yield',    cell: i => <MetricCell value={i.getValue()} format="percent" />,                         size: 80 }),
-  // Annual EPS
-  col.accessor('epsY1', {
+  // Annual Revenue
+  col.accessor('revY1', {
     header: ({ table }) => {
-      const yr = table.getRowModel().rows[0]?.original?.epsY1Year
-      return yr ? `EPS '${yr.slice(2)}` : 'EPS Y1'
+      const yr = table.getRowModel().rows[0]?.original?.revY1Year
+      return yr ? `Rev '${yr.slice(2)}` : 'Rev Y1'
     },
-    cell: i => {
-      const v = i.getValue()
-      if (v == null) return <span className="text-gray-600">—</span>
-      const color = v > 0 ? 'text-emerald-400' : 'text-red-400'
-      return <span className={`tabular-nums font-medium ${color}`}>${v.toFixed(2)}</span>
-    },
-    size: 80,
+    cell: i => <MetricCell value={i.getValue()} format="marketcap" />,
+    size: 85,
   }),
-  col.accessor('epsY2', {
+  col.accessor('revY2', {
     header: ({ table }) => {
-      const yr = table.getRowModel().rows[0]?.original?.epsY2Year
-      return yr ? `EPS '${yr.slice(2)}` : 'EPS Y2'
+      const yr = table.getRowModel().rows[0]?.original?.revY2Year
+      return yr ? `Rev '${yr.slice(2)}` : 'Rev Y2'
     },
-    cell: i => {
-      const v = i.getValue()
-      if (v == null) return <span className="text-gray-600">—</span>
-      const color = v > 0 ? 'text-emerald-400' : 'text-red-400'
-      return <span className={`tabular-nums font-medium ${color}`}>${v.toFixed(2)}</span>
-    },
-    size: 80,
+    cell: i => <MetricCell value={i.getValue()} format="marketcap" />,
+    size: 85,
   }),
-  col.accessor('epsY3', {
+  col.accessor('revY3', {
     header: ({ table }) => {
-      const yr = table.getRowModel().rows[0]?.original?.epsY3Year
-      return yr ? `EPS '${yr.slice(2)}` : 'EPS Y3'
+      const yr = table.getRowModel().rows[0]?.original?.revY3Year
+      return yr ? `Rev '${yr.slice(2)}` : 'Rev Y3'
     },
-    cell: i => {
-      const v = i.getValue()
-      if (v == null) return <span className="text-gray-600">—</span>
-      const color = v > 0 ? 'text-emerald-400' : 'text-red-400'
-      return <span className={`tabular-nums font-medium ${color}`}>${v.toFixed(2)}</span>
-    },
-    size: 80,
+    cell: i => <MetricCell value={i.getValue()} format="marketcap" />,
+    size: 85,
   }),
   // Technical
   col.accessor('rsi',             { header: 'RSI',          cell: i => { const v = i.getValue(); if (!v) return <span className="text-gray-600">—</span>; const c = v <= 35 ? 'text-emerald-400' : v <= 55 ? 'text-blue-400' : v <= 65 ? 'text-yellow-400' : 'text-red-400'; return <span className={`tabular-nums ${c}`}>{v}</span> }, size: 55 }),

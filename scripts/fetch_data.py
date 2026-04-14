@@ -134,24 +134,22 @@ def batch_download_technicals(symbols):
 
 # ── Fundamentals ─────────────────────────────────────────────────────────────
 
-def fetch_annual_eps(t, shares):
-    """Fetch last 3 years of annual EPS from income statement."""
+def fetch_annual_revenue(t):
+    """Fetch last 3 years of annual total revenue from income statement."""
     try:
         stmt = t.income_stmt
         if stmt is None or stmt.empty:
             return {}
-        if 'Net Income' not in stmt.index:
+        row_key = next((k for k in stmt.index if 'Total Revenue' in k or 'Revenue' in k), None)
+        if not row_key:
             return {}
-        ni_row = stmt.loc['Net Income']
+        rev_row = stmt.loc[row_key]
         result = {}
         for i, col in enumerate(stmt.columns[:3]):
-            ni = ni_row[col]
+            val = rev_row[col]
             year = str(col.year) if hasattr(col, 'year') else str(col)[:4]
-            key = f'epsY{i+1}'
-            if pd.notna(ni) and shares and shares > 0:
-                result[key] = round(float(ni) / shares, 2)
-            else:
-                result[key] = None
+            key = f'revY{i+1}'
+            result[key] = float(val) if pd.notna(val) else None
             result[f'{key}Year'] = year
         return result
     except Exception:
@@ -173,7 +171,7 @@ def fetch_fundamental(ticker, friday_close):
         free_cash_flow = info.get('freeCashflow')
         total_revenue  = info.get('totalRevenue')
         shares         = info.get('sharesOutstanding')
-        annual_eps     = fetch_annual_eps(t, shares)
+        annual_rev     = fetch_annual_revenue(t)
         total_debt     = info.get('totalDebt') or 0
         total_cash     = info.get('totalCash') or 0
         ebitda         = info.get('ebitda')
@@ -238,8 +236,8 @@ def fetch_fundamental(ticker, friday_close):
             'netDebtEbitda':   net_debt_ebitda,
             # Income
             'dividendYield':   info.get('dividendYield'),
-            # Annual EPS (last 3 fiscal years)
-            **annual_eps,
+            # Annual Revenue (last 3 fiscal years)
+            **annual_rev,
         }
     except Exception as e:
         print(f"  Fundamental error {ticker}: {e}")
