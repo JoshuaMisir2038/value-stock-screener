@@ -21,6 +21,7 @@ const GROUPS = [
   { label: 'SAFETY',     span: 3, border: true },
   { label: 'INCOME',     span: 1, border: true },
   { label: 'TECHNICAL',  span: 2, border: true },
+  { label: 'ANNUAL EPS', span: 3, border: true },
 ]
 
 const COLUMNS = [
@@ -54,6 +55,46 @@ const COLUMNS = [
   col.accessor('netDebtEbitda',   { header: 'ND/EBITDA',    cell: i => { const v = i.getValue(); if (v == null) return <span className="text-gray-600">—</span>; const c = v < 0 ? 'text-emerald-400' : v < 2 ? 'text-gray-300' : v < 4 ? 'text-yellow-400' : 'text-red-400'; return <span className={`tabular-nums ${c}`}>{v}x</span> }, size: 90 }),
   // Income
   col.accessor('dividendYield',   { header: 'Div Yield',    cell: i => <MetricCell value={i.getValue()} format="percent" />,                         size: 80 }),
+  // Annual EPS
+  col.accessor('epsY1', {
+    header: ({ table }) => {
+      const yr = table.getRowModel().rows[0]?.original?.epsY1Year
+      return yr ? `EPS '${yr.slice(2)}` : 'EPS Y1'
+    },
+    cell: i => {
+      const v = i.getValue()
+      if (v == null) return <span className="text-gray-600">—</span>
+      const color = v > 0 ? 'text-emerald-400' : 'text-red-400'
+      return <span className={`tabular-nums font-medium ${color}`}>${v.toFixed(2)}</span>
+    },
+    size: 80,
+  }),
+  col.accessor('epsY2', {
+    header: ({ table }) => {
+      const yr = table.getRowModel().rows[0]?.original?.epsY2Year
+      return yr ? `EPS '${yr.slice(2)}` : 'EPS Y2'
+    },
+    cell: i => {
+      const v = i.getValue()
+      if (v == null) return <span className="text-gray-600">—</span>
+      const color = v > 0 ? 'text-emerald-400' : 'text-red-400'
+      return <span className={`tabular-nums font-medium ${color}`}>${v.toFixed(2)}</span>
+    },
+    size: 80,
+  }),
+  col.accessor('epsY3', {
+    header: ({ table }) => {
+      const yr = table.getRowModel().rows[0]?.original?.epsY3Year
+      return yr ? `EPS '${yr.slice(2)}` : 'EPS Y3'
+    },
+    cell: i => {
+      const v = i.getValue()
+      if (v == null) return <span className="text-gray-600">—</span>
+      const color = v > 0 ? 'text-emerald-400' : 'text-red-400'
+      return <span className={`tabular-nums font-medium ${color}`}>${v.toFixed(2)}</span>
+    },
+    size: 80,
+  }),
   // Technical
   col.accessor('rsi',             { header: 'RSI',          cell: i => { const v = i.getValue(); if (!v) return <span className="text-gray-600">—</span>; const c = v <= 35 ? 'text-emerald-400' : v <= 55 ? 'text-blue-400' : v <= 65 ? 'text-yellow-400' : 'text-red-400'; return <span className={`tabular-nums ${c}`}>{v}</span> }, size: 55 }),
   col.accessor('aboveMa200',      { header: 'vs 200MA',     cell: i => { const s = i.row.original; if (!s.ma200 || !s.price) return <span className="text-gray-600">—</span>; const pct = ((s.price - s.ma200) / s.ma200 * 100).toFixed(1); const c = s.aboveMa200 ? 'text-emerald-400' : 'text-red-400'; return <span className={`tabular-nums text-xs ${c}`}>{s.aboveMa200 ? '▲' : '▼'} {Math.abs(pct)}%</span> }, size: 80 }),
@@ -98,7 +139,7 @@ export default function StockTable({ data }) {
             <tr key={headerGroup.id} className="border-b border-gray-800">
               {headerGroup.headers.map((header, idx) => {
                 // Add border-left at group boundaries
-                const groupBoundaries = [6, 13, 16, 19, 22, 23, 24]
+                const groupBoundaries = [6, 13, 16, 19, 22, 23, 24, 27]
                 const hasBorder = groupBoundaries.includes(idx)
                 return (
                   <th
@@ -122,7 +163,7 @@ export default function StockTable({ data }) {
               className={`border-b border-gray-900 hover:bg-gray-900/50 transition-colors ${i % 2 === 0 ? '' : 'bg-gray-950/40'}`}
             >
               {row.getVisibleCells().map((cell, idx) => {
-                const groupBoundaries = [6, 13, 16, 19, 22, 23, 24]
+                const groupBoundaries = [6, 13, 16, 19, 22, 23, 24, 27]
                 const hasBorder = groupBoundaries.includes(idx)
                 return (
                   <td key={cell.id} className={`px-3 py-2.5 text-gray-300 ${hasBorder ? 'border-l border-gray-900' : ''}`}>

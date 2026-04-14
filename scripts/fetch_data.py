@@ -134,9 +134,34 @@ def batch_download_technicals(symbols):
 
 # ── Fundamentals ─────────────────────────────────────────────────────────────
 
+def fetch_annual_eps(t, shares):
+    """Fetch last 3 years of annual EPS from income statement."""
+    try:
+        stmt = t.income_stmt
+        if stmt is None or stmt.empty:
+            return {}
+        if 'Net Income' not in stmt.index:
+            return {}
+        ni_row = stmt.loc['Net Income']
+        result = {}
+        for i, col in enumerate(stmt.columns[:3]):
+            ni = ni_row[col]
+            year = str(col.year) if hasattr(col, 'year') else str(col)[:4]
+            key = f'epsY{i+1}'
+            if pd.notna(ni) and shares and shares > 0:
+                result[key] = round(float(ni) / shares, 2)
+            else:
+                result[key] = None
+            result[f'{key}Year'] = year
+        return result
+    except Exception:
+        return {}
+
+
 def fetch_fundamental(ticker, friday_close):
     try:
-        info = yf.Ticker(ticker).info
+        t = yf.Ticker(ticker)
+        info = t.info
         market_cap = info.get('marketCap') or 0
         if market_cap < 300_000_000:
             return None
@@ -148,6 +173,7 @@ def fetch_fundamental(ticker, friday_close):
         free_cash_flow = info.get('freeCashflow')
         total_revenue  = info.get('totalRevenue')
         shares         = info.get('sharesOutstanding')
+        annual_eps     = fetch_annual_eps(t, shares)
         total_debt     = info.get('totalDebt') or 0
         total_cash     = info.get('totalCash') or 0
         ebitda         = info.get('ebitda')
@@ -212,6 +238,8 @@ def fetch_fundamental(ticker, friday_close):
             'netDebtEbitda':   net_debt_ebitda,
             # Income
             'dividendYield':   info.get('dividendYield'),
+            # Annual EPS (last 3 fiscal years)
+            **annual_eps,
         }
     except Exception as e:
         print(f"  Fundamental error {ticker}: {e}")
