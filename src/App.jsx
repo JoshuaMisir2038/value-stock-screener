@@ -3,8 +3,10 @@ import { useStocks } from './hooks/useStocks'
 import StockTable from './components/StockTable'
 import Filters from './components/Filters'
 import OptionsSection from './components/OptionsSection'
+import BondsTab from './components/BondsTab'
+import CommoditiesTab from './components/CommoditiesTab'
 import { EquityMethodology } from './components/Methodology'
-import { TrendingUp, RefreshCw, BarChart2, Layers } from 'lucide-react'
+import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package } from 'lucide-react'
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -14,8 +16,10 @@ const DEFAULT_FILTERS = {
 }
 
 const TABS = [
-  { id: 'screener', label: 'Value Screener', icon: BarChart2 },
-  { id: 'options',  label: 'Options Ideas',  icon: Layers },
+  { id: 'screener',     label: 'Value Screener', icon: BarChart2 },
+  { id: 'options',      label: 'Options Ideas',  icon: Layers },
+  { id: 'bonds',        label: 'Bonds',          icon: Landmark },
+  { id: 'commodities',  label: 'Commodities',    icon: Package },
 ]
 
 export default function App() {
@@ -113,7 +117,9 @@ export default function App() {
           </>
         )}
 
-        {tab === 'options' && <OptionsSection />}
+        {tab === 'options'     && <OptionsSection />}
+        {tab === 'bonds'       && <BondsTab />}
+        {tab === 'commodities' && <CommoditiesTab />}
       </div>
     </div>
   )
