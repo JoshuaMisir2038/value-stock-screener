@@ -186,6 +186,165 @@ function ScatterPlot({ points }) {
   )
 }
 
+// ── Multi-year lookback ───────────────────────────────────────────────────────
+
+const HORIZONS = [
+  { key: 'return1y', label: '1Y', years: 1 },
+  { key: 'return2y', label: '2Y', years: 2 },
+  { key: 'return3y', label: '3Y', years: 3 },
+  { key: 'return4y', label: '4Y', years: 4 },
+  { key: 'return5y', label: '5Y', years: 5 },
+]
+
+function HorizonChart({ rows }) {
+  const W = 560, H = 240
+  const PAD = { top: 16, right: 24, bottom: 40, left: 56 }
+  const plotW = W - PAD.left - PAD.right
+  const plotH = H - PAD.top - PAD.bottom
+
+  const allVals = rows.flatMap(r => [r.highAvg, r.lowAvg, r.spy].filter(v => v != null))
+  if (!allVals.length) return null
+  const rawMin = Math.min(...allVals)
+  const rawMax = Math.max(...allVals)
+  const pad    = Math.max(5, (rawMax - rawMin) * 0.1)
+  const yMin   = Math.floor((rawMin - pad) / 10) * 10
+  const yMax   = Math.ceil((rawMax + pad) / 10) * 10
+  const yRange = yMax - yMin || 1
+
+  const xS = i => PAD.left + (i / (rows.length - 1)) * plotW
+  const yS = v => PAD.top + (1 - (v - yMin) / yRange) * plotH
+
+  const yStep = (yMax - yMin) <= 100 ? 20 : 50
+  const yTicks = []
+  for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax; y += yStep) yTicks.push(y)
+
+  function line(key, color) {
+    const pts = rows.map((r, i) => r[key] != null ? `${i === 0 ? 'M' : 'L'}${xS(i).toFixed(1)},${yS(r[key]).toFixed(1)}` : null)
+    const path = pts.filter(Boolean).join(' ')
+    return path ? <path key={key} d={path} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeDasharray={key === 'spy' ? '5,3' : undefined} /> : null
+  }
+
+  return (
+    <svg width={W} height={H} className="overflow-visible w-full max-w-[560px]">
+      {/* Grid + Y labels */}
+      {yTicks.map(y => (
+        <g key={y}>
+          <line x1={PAD.left} x2={PAD.left + plotW} y1={yS(y)} y2={yS(y)} stroke="#1f2937" strokeWidth="1" />
+          <text x={PAD.left - 6} y={yS(y)} textAnchor="end" dominantBaseline="middle" fontSize="9" fill="#4b5563">{y}%</text>
+        </g>
+      ))}
+      {/* Zero line */}
+      {yMin < 0 && <line x1={PAD.left} x2={PAD.left + plotW} y1={yS(0)} y2={yS(0)} stroke="#374151" strokeWidth="1.5" strokeDasharray="4,3" />}
+      {/* Lines */}
+      {line('highAvg', '#34d399')}
+      {line('lowAvg',  '#f87171')}
+      {line('spy',     '#60a5fa')}
+      {/* Dots + X labels */}
+      {rows.map((r, i) => (
+        <g key={i}>
+          {r.highAvg != null && <circle cx={xS(i)} cy={yS(r.highAvg)} r={4} fill="#34d399" />}
+          {r.lowAvg  != null && <circle cx={xS(i)} cy={yS(r.lowAvg)}  r={4} fill="#f87171" />}
+          {r.spy     != null && <circle cx={xS(i)} cy={yS(r.spy)}     r={3} fill="#60a5fa" />}
+          <text x={xS(i)} y={H - 6} textAnchor="middle" fontSize="10" fill="#6b7280">{r.label} ago</text>
+        </g>
+      ))}
+      {/* Axes */}
+      <line x1={PAD.left} x2={PAD.left + plotW} y1={PAD.top + plotH} y2={PAD.top + plotH} stroke="#374151" strokeWidth="1" />
+      <line x1={PAD.left} x2={PAD.left} y1={PAD.top} y2={PAD.top + plotH} stroke="#374151" strokeWidth="1" />
+      {/* Y label */}
+      <text x={12} y={PAD.top + plotH / 2} textAnchor="middle" fontSize="9" fill="#6b7280"
+        transform={`rotate(-90,12,${PAD.top + plotH / 2})`}>Return to today %</text>
+    </svg>
+  )
+}
+
+function MultiYearLookback({ stocks, spy }) {
+  const rows = useMemo(() => HORIZONS.map(({ key, label, years }) => {
+    const hi = stocks.filter(s => s.valueScore >= 75 && s[key] != null)
+    const lo = stocks.filter(s => s.valueScore <  25 && s[key] != null)
+    return {
+      label,
+      years,
+      highAvg:   avg(hi.map(s => s[key])),
+      highCount: hi.length,
+      lowAvg:    avg(lo.map(s => s[key])),
+      lowCount:  lo.length,
+      spy:       spy?.[key] ?? null,
+    }
+  }), [stocks, spy])
+
+  const anyData = rows.some(r => r.highAvg != null)
+  if (!anyData) return (
+    <div className="text-xs text-gray-600 py-4">
+      Multi-year return data not yet available. Re-run <code className="bg-gray-900 px-1 rounded">python scripts/fetch_data.py</code>.
+    </div>
+  )
+
+  return (
+    <div>
+      {/* Chart */}
+      <div className="border border-gray-800 rounded p-4 bg-gray-950/30 mb-4 overflow-x-auto">
+        <HorizonChart rows={rows} />
+        <div className="flex gap-5 mt-3 text-xs text-gray-500">
+          <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-0.5 bg-emerald-400 rounded" />High score (&gt;75)</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-0.5 bg-red-400 rounded" />Low score (&lt;25)</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-0.5 bg-blue-400 rounded" />S&amp;P 500 (SPY)</span>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="border border-gray-800 rounded overflow-hidden bg-gray-950/30">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b border-gray-800 text-xs text-gray-600 uppercase tracking-wider">
+              <th className="px-4 py-2.5 text-left">Entry Point</th>
+              <th className="px-4 py-2.5 text-right">High Score (&gt;75)<br /><span className="font-normal normal-case">avg return to now</span></th>
+              <th className="px-4 py-2.5 text-right">Low Score (&lt;25)<br /><span className="font-normal normal-case">avg return to now</span></th>
+              <th className="px-4 py-2.5 text-right">S&amp;P 500<br /><span className="font-normal normal-case">SPY return</span></th>
+              <th className="px-4 py-2.5 text-right">High vs SPY<br /><span className="font-normal normal-case">alpha</span></th>
+              <th className="px-4 py-2.5 text-right">High vs Low<br /><span className="font-normal normal-case">spread</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => {
+              const alpha  = r.highAvg != null && r.spy     != null ? r.highAvg - r.spy    : null
+              const spread = r.highAvg != null && r.lowAvg  != null ? r.highAvg - r.lowAvg : null
+              const alphaColor  = alpha  == null ? 'text-gray-600' : alpha  > 0 ? 'text-emerald-400' : 'text-red-400'
+              const spreadColor = spread == null ? 'text-gray-600' : spread > 0 ? 'text-emerald-400' : 'text-red-400'
+              return (
+                <tr key={r.label} className={`border-b border-gray-900 hover:bg-gray-900/50 ${i % 2 !== 0 ? 'bg-gray-950/40' : ''}`}>
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-gray-200">{r.label} ago → today</div>
+                    <div className="text-xs text-gray-600">{r.highCount} high · {r.lowCount} low stocks</div>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <ReturnCell value={r.highAvg} bold />
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <ReturnCell value={r.lowAvg} bold />
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums text-blue-400 font-medium">
+                    {r.spy != null ? `${r.spy > 0 ? '+' : ''}${r.spy.toFixed(1)}%` : '—'}
+                  </td>
+                  <td className={`px-4 py-3 text-right tabular-nums font-bold ${alphaColor}`}>
+                    {alpha != null ? `${alpha > 0 ? '+' : ''}${alpha.toFixed(1)}%` : '—'}
+                  </td>
+                  <td className={`px-4 py-3 text-right tabular-nums font-bold ${spreadColor}`}>
+                    {spread != null ? `${spread > 0 ? '+' : ''}${spread.toFixed(1)}%` : '—'}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-gray-700 mt-2">
+        Uses <em>current</em> value scores applied to historical entry prices — not point-in-time scores. A positive alpha means today's high-scored stocks also happened to outperform from that date.
+      </p>
+    </div>
+  )
+}
+
 // ── Decile table ──────────────────────────────────────────────────────────────
 
 function DecileTable({ deciles, spy }) {
@@ -351,6 +510,14 @@ export default function BacktestTab({ stocks, benchmark, loading }) {
           sub={r2 > 0.1 ? 'moderate signal' : r2 > 0.03 ? 'weak signal' : 'low signal'}
           accent="text-gray-300"
         />
+      </div>
+
+      {/* Multi-year lookback */}
+      <div>
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">
+          Multi-Year Lookback: High vs Low Score Performance
+        </h3>
+        <MultiYearLookback stocks={valid} spy={spy} />
       </div>
 
       {/* Scatter plot */}
