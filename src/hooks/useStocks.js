@@ -3,6 +3,7 @@ import { computeScores } from '../utils/scoring'
 
 export function useStocks() {
   const [stocks, setStocks] = useState([])
+  const [benchmark, setBenchmark] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [lastUpdated, setLastUpdated] = useState(null)
@@ -16,6 +17,7 @@ export function useStocks() {
         const scored = computeScores(json.stocks)
         setStocks(scored)
         setLastUpdated(json.lastUpdated)
+        setBenchmark(json.benchmark || null)
       } catch (err) {
         setError(err.message)
       } finally {
@@ -25,5 +27,5 @@ export function useStocks() {
     load()
   }, [])
 
-  return { stocks, loading, error, lastUpdated }
+  return { stocks, loading, error, lastUpdated, benchmark }
 }

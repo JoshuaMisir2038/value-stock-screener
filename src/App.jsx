@@ -5,8 +5,9 @@ import Filters from './components/Filters'
 import OptionsSection from './components/OptionsSection'
 import BondsTab from './components/BondsTab'
 import CommoditiesTab from './components/CommoditiesTab'
+import BacktestTab from './components/BacktestTab'
 import { EquityMethodology } from './components/Methodology'
-import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package } from 'lucide-react'
+import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity } from 'lucide-react'
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -20,10 +21,11 @@ const TABS = [
   { id: 'options',      label: 'Options Ideas',  icon: Layers },
   { id: 'bonds',        label: 'Bonds',          icon: Landmark },
   { id: 'commodities',  label: 'Commodities',    icon: Package },
+  { id: 'backtest',     label: 'Backtester',     icon: Activity },
 ]
 
 export default function App() {
-  const { stocks, loading, error, lastUpdated } = useStocks()
+  const { stocks, loading, error, lastUpdated, benchmark } = useStocks()
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [tab, setTab] = useState('screener')
 
@@ -123,6 +125,7 @@ export default function App() {
         {tab === 'options'     && <OptionsSection />}
         {tab === 'bonds'       && <BondsTab />}
         {tab === 'commodities' && <CommoditiesTab />}
+        {tab === 'backtest'    && <BacktestTab stocks={stocks} benchmark={benchmark} loading={loading} />}
       </div>
     </div>
   )

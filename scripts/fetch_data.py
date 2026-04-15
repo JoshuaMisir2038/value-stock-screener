@@ -72,6 +72,28 @@ TICKERS = [
 
 # ── Technical indicators ─────────────────────────────────────────────────────
 
+def compute_returns(series):
+    """Compute price returns at 1M, 3M, 6M, 1Y horizons from a daily close series."""
+    n = len(series)
+    if n < 5:
+        return {}
+    latest = float(series.iloc[-1])
+
+    def pct(lookback):
+        idx = max(0, n - 1 - lookback)
+        if idx >= n - 1:
+            return None
+        past = float(series.iloc[idx])
+        return round((latest / past - 1) * 100, 1) if past > 0 else None
+
+    return {
+        'return1m': pct(21),
+        'return3m': pct(63),
+        'return6m': pct(126),
+        'return1y': pct(min(251, n - 2)),
+    }
+
+
 def compute_rsi(series, period=14):
     delta = series.diff()
     gain = delta.where(delta > 0, 0.0)
@@ -118,11 +140,13 @@ def batch_download_technicals(symbols):
                 last_close = series.iloc[-1]
                 last_date = series.index[-1].date().isoformat()
 
+                returns = compute_returns(series)
                 technicals[sym] = {
                     'rsi': round(float(rsi_val), 1) if pd.notna(rsi_val) else None,
                     'ma200': round(float(ma200_val), 2) if pd.notna(ma200_val) else None,
                     'fridayClose': round(float(last_close), 2),
                     'asOf': last_date,
+                    **returns,
                 }
         except Exception as e:
             print(f"  Batch error (chunk {i//chunk_size}): {e}")
@@ -428,9 +452,13 @@ def main():
         if result:
             tech = technicals.get(ticker, {})
             result.update({
-                'rsi': tech.get('rsi'),
-                'ma200': tech.get('ma200'),
-                'asOf': tech.get('asOf'),
+                'rsi':       tech.get('rsi'),
+                'ma200':     tech.get('ma200'),
+                'asOf':      tech.get('asOf'),
+                'return1m':  tech.get('return1m'),
+                'return3m':  tech.get('return3m'),
+                'return6m':  tech.get('return6m'),
+                'return1y':  tech.get('return1y'),
             })
             if result['price'] and result['ma200']:
                 above = result['price'] >= result['ma200']
@@ -455,12 +483,25 @@ def main():
 
     as_of = technicals and next(iter(technicals.values()), {}).get('asOf', date.today().isoformat())
 
+    # Fetch SPY benchmark returns
+    print("\nFetching SPY benchmark...")
+    spy_benchmark = None
+    try:
+        spy_hist = yf.Ticker('SPY').history(period='1y')
+        if not spy_hist.empty:
+            spy_series = spy_hist['Close'].dropna()
+            spy_benchmark = compute_returns(spy_series)
+            print(f"  SPY 1Y return: {spy_benchmark.get('return1y')}%")
+    except Exception as e:
+        print(f"  SPY error: {e}")
+
     # Save stocks.json
     with open(os.path.join(base, 'stocks.json'), 'w') as f:
         json.dump({
             'lastUpdated': datetime.now(timezone.utc).isoformat(),
             'asOf': as_of,
             'count': len(stocks),
+            'benchmark': {'spy': spy_benchmark},
             'stocks': stocks,
         }, f)
     print(f"\nSaved {len(stocks)} stocks.")
