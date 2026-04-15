@@ -3,6 +3,68 @@ import { RefreshCw, Info, TrendingUp, TrendingDown } from 'lucide-react'
 import ScoreBadge from './ScoreBadge'
 import { OptionsMethodology } from './Methodology'
 
+function useMacro() {
+  const [macro, setMacro] = useState(null)
+  useEffect(() => {
+    fetch('./data/macro.json').then(r => r.ok ? r.json() : null).then(setMacro).catch(() => {})
+  }, [])
+  return macro
+}
+
+function SentimentBanner({ macro }) {
+  if (!macro) return null
+  const vix   = macro.vix?.current
+  const pcr   = macro.pcr?.equity?.value
+  const t10y2 = macro.indicators?.T10Y2Y?.value
+
+  const vixColor  = vix == null ? 'text-gray-500' : vix < 15 ? 'text-emerald-400' : vix < 25 ? 'text-yellow-400' : 'text-red-400'
+  const vixLabel  = vix == null ? '—' : vix < 15 ? 'Calm' : vix < 25 ? 'Moderate' : vix < 35 ? 'Elevated' : 'Fear'
+  const pcrColor  = pcr == null ? 'text-gray-500' : pcr < 0.7 ? 'text-red-400' : pcr <= 1.0 ? 'text-emerald-400' : 'text-yellow-400'
+  const pcrLabel  = pcr == null ? '—' : pcr < 0.7 ? 'Greed' : pcr <= 0.9 ? 'Neutral' : pcr <= 1.2 ? 'Cautious' : 'Fear'
+  const curveColor = t10y2 == null ? 'text-gray-500' : t10y2 >= 0 ? 'text-emerald-400' : 'text-red-400'
+  const curveLabel = t10y2 == null ? '—' : t10y2 >= 0 ? 'Normal' : 'Inverted'
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-5 text-xs">
+      <div className="bg-gray-900 border border-gray-800 rounded px-3 py-2.5">
+        <div className="text-gray-600 mb-0.5">VIX</div>
+        <div className="flex items-baseline gap-1.5">
+          <span className={`text-base font-bold tabular-nums ${vixColor}`}>{vix ?? '—'}</span>
+          <span className={`${vixColor}`}>{vixLabel}</span>
+        </div>
+      </div>
+      <div className="bg-gray-900 border border-gray-800 rounded px-3 py-2.5">
+        <div className="text-gray-600 mb-0.5">Put/Call Ratio</div>
+        <div className="flex items-baseline gap-1.5">
+          <span className={`text-base font-bold tabular-nums ${pcrColor}`}>{pcr ?? '—'}</span>
+          <span className={`${pcrColor}`}>{pcrLabel}</span>
+        </div>
+      </div>
+      <div className="bg-gray-900 border border-gray-800 rounded px-3 py-2.5">
+        <div className="text-gray-600 mb-0.5">Yield Curve (10Y−2Y)</div>
+        <div className="flex items-baseline gap-1.5">
+          <span className={`text-base font-bold tabular-nums ${curveColor}`}>
+            {t10y2 != null ? `${t10y2 > 0 ? '+' : ''}${t10y2}%` : '—'}
+          </span>
+          <span className={`${curveColor}`}>{curveLabel}</span>
+        </div>
+      </div>
+      <div className="bg-gray-900 border border-gray-800 rounded px-3 py-2.5">
+        <div className="text-gray-600 mb-0.5">Market Read</div>
+        <div className="text-gray-300 font-medium leading-tight">
+          {vix != null && pcr != null
+            ? vix > 25 && pcr > 1.0
+              ? '😨 High fear — potential buy signal'
+              : vix < 15 && pcr < 0.7
+              ? '🤑 Complacency — options are cheap'
+              : '😐 Mixed — assess each trade independently'
+            : '—'}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function RsiBadge({ value }) {
   if (value == null) return <span className="text-gray-600">—</span>
   let color
@@ -112,6 +174,7 @@ function OptionsTable({ rows, showYield }) {
 }
 
 export default function OptionsSection() {
+  const macro = useMacro()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -134,6 +197,8 @@ export default function OptionsSection() {
 
   return (
     <div>
+      <SentimentBanner macro={macro} />
+
       <div className="mb-4">
         <OptionsMethodology />
       </div>

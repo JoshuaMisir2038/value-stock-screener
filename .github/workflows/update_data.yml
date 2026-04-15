@@ -35,6 +35,9 @@ jobs:
       - name: Fetch bond and commodity data
         run: python scripts/fetch_market_data.py
 
+      - name: Fetch macro data (VIX, PCR, FRED)
+        run: python scripts/fetch_macro.py
+
       - name: Run options backtest
         run: python scripts/run_backtest.py
 
@@ -42,6 +45,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/data/stocks.json public/data/bonds.json public/data/commodities.json public/data/backtest_options.json
+          git add public/data/stocks.json public/data/bonds.json public/data/commodities.json public/data/backtest_options.json public/data/macro.json
           git diff --cached --quiet || git commit -m "chore: update market data $(date -u '+%Y-%m-%d')"
           git push

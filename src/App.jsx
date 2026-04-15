@@ -7,8 +7,9 @@ import BondsTab from './components/BondsTab'
 import CommoditiesTab from './components/CommoditiesTab'
 import BacktestTab from './components/BacktestTab'
 import OptionsBacktestTab from './components/OptionsBacktestTab'
+import MacroTab from './components/MacroTab'
 import { EquityMethodology } from './components/Methodology'
-import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical } from 'lucide-react'
+import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe } from 'lucide-react'
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -24,6 +25,7 @@ const TABS = [
   { id: 'commodities',  label: 'Commodities',    icon: Package },
   { id: 'backtest',     label: 'Score Backtest', icon: Activity },
   { id: 'optbacktest', label: 'Options Backtest', icon: FlaskConical },
+  { id: 'macro',       label: 'Macro',           icon: Globe },
 ]
 
 export default function App() {
@@ -129,6 +131,7 @@ export default function App() {
         {tab === 'commodities' && <CommoditiesTab />}
         {tab === 'backtest'    && <BacktestTab stocks={stocks} benchmark={benchmark} loading={loading} />}
         {tab === 'optbacktest' && <OptionsBacktestTab />}
+        {tab === 'macro'       && <MacroTab />}
       </div>
     </div>
   )
