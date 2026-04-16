@@ -1,10 +1,10 @@
 {
-  "asOf": "2026-04-16 18:20 UTC",
+  "asOf": "2026-04-16 21:18 UTC",
   "vix": {
-    "current": 18.39,
+    "current": 17.94,
     "prev": 18.17,
-    "change1d": 0.22,
-    "change1w": -1.1,
+    "change1d": -0.23,
+    "change1w": -1.55,
     "high52": 33.82,
     "low52": 13.47,
     "history": [
@@ -214,13 +214,13 @@
       },
       {
         "date": "2026-04-19",
-        "value": 18.39
+        "value": 17.94
       }
     ]
   },
   "pcr": {
     "equity": {
-      "value": 1.09,
+      "value": 1.07,
       "date": "2026-04-16",
       "source": "SPY + QQQ + IWM options volume",
       "history": []
@@ -777,16 +777,12 @@
       "unit": "%",
       "desc": "Yield curve spread \u2014 negative = inverted (recession signal)",
       "goodLow": false,
-      "value": 0.53,
-      "date": "2026-04-15",
-      "prev": 0.5,
-      "change": 0.03,
-      "changeYoY": 0.0,
+      "value": 0.54,
+      "date": "2026-04-16",
+      "prev": 0.53,
+      "change": 0.01,
+      "changeYoY": 0.03,
       "history": [
-        {
-          "date": "2026-03",
-          "value": 0.55
-        },
         {
           "date": "2026-03",
           "value": 0.55
@@ -878,6 +874,10 @@
         {
           "date": "2026-04",
           "value": 0.53
+        },
+        {
+          "date": "2026-04",
+          "value": 0.54
         }
       ]
     },
