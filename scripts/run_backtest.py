@@ -66,9 +66,9 @@ STRATEGIES = {
         'label':     'BUY CALL',
         'opt_type':  'call',
         'action':    'buy',
-        'otm_mult':  1.05,    # 5% OTM
+        'otm_mult':  1.02,    # 2% OTM (higher delta ~0.45)
         'dte':       45,
-        'rsi_min':   35,  'rsi_max':   58,
+        'rsi_min':   40,  'rsi_max':   55,   # tighter: pulled back but not oversold
         'above_ma':  True,
         'score_min': 45,  'score_max': 100,
         'color':     '#34d399',
@@ -112,8 +112,11 @@ def backtest_stock(symbol, series, value_score, strategy_id):
 
     rsi   = rolling_rsi(series)
     ma200 = series.rolling(200).mean()
+    ma50  = series.rolling(50).mean()
     # 21-day realised volatility, annualised
     vol21 = series.pct_change().rolling(21).std() * math.sqrt(252)
+    # 63-day (3M) momentum
+    mom3m = series.pct_change(63)
 
     trades = []
     next_entry = 0   # earliest index we can open a new trade
@@ -124,7 +127,9 @@ def backtest_stock(symbol, series, value_score, strategy_id):
 
         rsi_val  = rsi.iloc[i]
         ma_val   = ma200.iloc[i]
+        ma50_val = ma50.iloc[i]
         vol_val  = vol21.iloc[i]
+        mom_val  = mom3m.iloc[i]
         price    = float(series.iloc[i])
 
         if (pd.isna(rsi_val) or pd.isna(ma_val) or pd.isna(vol_val)
@@ -140,6 +145,23 @@ def backtest_stock(symbol, series, value_score, strategy_id):
             continue
         if not (cfg['score_min'] <= value_score <= cfg['score_max']):
             continue
+
+        # BUY CALL: additional quant-grade filters
+        if strategy_id == 'buy_call':
+            if pd.isna(ma50_val) or pd.isna(mom_val):
+                continue
+            # Golden cross: 50MA > 200MA (full uptrend alignment)
+            if float(ma50_val) < float(ma_val):
+                continue
+            # Price above 50MA
+            if price < float(ma50_val):
+                continue
+            # Positive 3M momentum
+            if float(mom_val) <= 0:
+                continue
+            # Low IV proxy: skip when 21-day realised vol > 35%
+            if float(vol_val) > 0.35:
+                continue
 
         # Can we reach expiry within the series?
         expiry_idx = i + cfg['dte']

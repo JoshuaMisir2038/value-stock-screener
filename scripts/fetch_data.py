@@ -73,7 +73,7 @@ TICKERS = [
 # ── Technical indicators ─────────────────────────────────────────────────────
 
 def compute_returns(series):
-    """Compute price returns at 1M, 3M, 6M, 1Y horizons from a daily close series."""
+    """Compute price returns at 1M, 3M, 6M, 1Y, 2Y, 3Y, 4Y, 5Y horizons."""
     n = len(series)
     if n < 5:
         return {}
@@ -87,10 +87,14 @@ def compute_returns(series):
         return round((latest / past - 1) * 100, 1) if past > 0 else None
 
     return {
-        'return1m': pct(21),
-        'return3m': pct(63),
-        'return6m': pct(126),
-        'return1y': pct(min(251, n - 2)),
+        'return1m':  pct(21),
+        'return3m':  pct(63),
+        'return6m':  pct(126),
+        'return1y':  pct(min(251,  n - 2)),
+        'return2y':  pct(min(502,  n - 2)),
+        'return3y':  pct(min(756,  n - 2)),
+        'return4y':  pct(min(1008, n - 2)),
+        'return5y':  pct(min(1258, n - 2)),
     }
 
 
@@ -114,7 +118,7 @@ def batch_download_technicals(symbols):
         try:
             raw = yf.download(
                 tickers=chunk,
-                period='1y',
+                period='5y',
                 auto_adjust=True,
                 progress=False,
                 threads=True,
@@ -132,18 +136,21 @@ def batch_download_technicals(symbols):
                 if len(series) < 30:
                     continue
 
-                rsi_series = compute_rsi(series)
+                rsi_series   = compute_rsi(series)
                 ma200_series = series.rolling(200).mean()
+                ma50_series  = series.rolling(50).mean()
 
-                rsi_val = rsi_series.iloc[-1]
+                rsi_val   = rsi_series.iloc[-1]
                 ma200_val = ma200_series.iloc[-1]
+                ma50_val  = ma50_series.iloc[-1]
                 last_close = series.iloc[-1]
-                last_date = series.index[-1].date().isoformat()
+                last_date  = series.index[-1].date().isoformat()
 
                 returns = compute_returns(series)
                 technicals[sym] = {
-                    'rsi': round(float(rsi_val), 1) if pd.notna(rsi_val) else None,
+                    'rsi':   round(float(rsi_val),   1) if pd.notna(rsi_val)   else None,
                     'ma200': round(float(ma200_val), 2) if pd.notna(ma200_val) else None,
+                    'ma50':  round(float(ma50_val),  2) if pd.notna(ma50_val)  else None,
                     'fridayClose': round(float(last_close), 2),
                     'asOf': last_date,
                     **returns,
@@ -322,6 +329,26 @@ def find_best_option(stock, option_type, action):
 
         today = date.today()
         dte_min, dte_max = (30, 60) if action == 'buy' else (21, 45)
+
+        # Earnings avoidance: skip calls if earnings fall within DTE window
+        if option_type == 'call' and action == 'buy':
+            try:
+                cal = ticker.calendar
+                if isinstance(cal, dict):
+                    eds = cal.get('Earnings Date', [])
+                    if not hasattr(eds, '__iter__') or isinstance(eds, str):
+                        eds = [eds]
+                    for ed in eds:
+                        if hasattr(ed, 'date'):
+                            ed = ed.date()
+                        elif isinstance(ed, str):
+                            try: ed = date.fromisoformat(ed[:10])
+                            except: continue
+                        if 0 <= (ed - today).days <= dte_max:
+                            return None  # earnings within option window — skip
+            except Exception:
+                pass
+
         candidates = []
 
         for exp_str in expirations:
@@ -353,14 +380,19 @@ def find_best_option(stock, option_type, action):
                 pct_from_price = (strike - price) / price  # + means above price
 
                 if option_type == 'call' and action == 'buy':
-                    if not (0.02 <= pct_from_price <= 0.07):
+                    if not (0.00 <= pct_from_price <= 0.04):  # 0–4% OTM (higher delta)
                         continue
-                    if iv > 0.60:  # skip very expensive options
+                    if iv > 0.35:  # IV rank proxy: skip expensive premium
                         continue
-                    # Score: prefer low IV (cheap) + good RSI setup
+                    if oi < 500:  # liquidity filter
+                        continue
+                    mid_price = (bid + ask) / 2 if (bid + ask) > 0 else ask
+                    if mid_price > 0 and (ask - bid) / mid_price > 0.20:  # bid-ask spread < 20%
+                        continue
+                    # Score: prefer low IV + good RSI setup
                     tech_score = stock.get('_techScore', 50)
                     cost_pct = ask / price
-                    score = tech_score - (cost_pct * 200) - (iv * 30)
+                    score = tech_score - (cost_pct * 200) - (iv * 50)
 
                 elif option_type == 'put' and action == 'sell':
                     otm_pct = -pct_from_price  # positive = below price
@@ -454,17 +486,25 @@ def main():
             result.update({
                 'rsi':       tech.get('rsi'),
                 'ma200':     tech.get('ma200'),
+                'ma50':      tech.get('ma50'),
                 'asOf':      tech.get('asOf'),
                 'return1m':  tech.get('return1m'),
                 'return3m':  tech.get('return3m'),
                 'return6m':  tech.get('return6m'),
                 'return1y':  tech.get('return1y'),
+                'return2y':  tech.get('return2y'),
+                'return3y':  tech.get('return3y'),
+                'return4y':  tech.get('return4y'),
+                'return5y':  tech.get('return5y'),
             })
             if result['price'] and result['ma200']:
                 above = result['price'] >= result['ma200']
                 pct = round((result['price'] - result['ma200']) / result['ma200'] * 100, 1)
                 result['aboveMa200'] = above
                 result['pctFromMa200'] = pct
+            if result['price'] and result.get('ma50'):
+                result['aboveMa50'] = result['price'] >= result['ma50']
+                result['goldenCross'] = (result.get('ma50', 0) >= result.get('ma200', 0))
             stocks.append(result)
             print(f"  [{i+1}/{len(TICKERS)}] {ticker} ✓")
         else:
@@ -483,15 +523,18 @@ def main():
 
     as_of = technicals and next(iter(technicals.values()), {}).get('asOf', date.today().isoformat())
 
-    # Fetch SPY benchmark returns
+    # Fetch SPY benchmark returns (5Y to match stock history)
     print("\nFetching SPY benchmark...")
     spy_benchmark = None
     try:
-        spy_hist = yf.Ticker('SPY').history(period='1y')
+        spy_hist = yf.Ticker('SPY').history(period='5y')
         if not spy_hist.empty:
             spy_series = spy_hist['Close'].dropna()
             spy_benchmark = compute_returns(spy_series)
-            print(f"  SPY 1Y return: {spy_benchmark.get('return1y')}%")
+            print(f"  SPY returns — 1Y: {spy_benchmark.get('return1y')}%  "
+                  f"2Y: {spy_benchmark.get('return2y')}%  "
+                  f"3Y: {spy_benchmark.get('return3y')}%  "
+                  f"5Y: {spy_benchmark.get('return5y')}%")
     except Exception as e:
         print(f"  SPY error: {e}")
 
@@ -509,19 +552,22 @@ def main():
     # ── Step 4: Find options candidates ──
     scored = [s for s in stocks if s.get('valueScore') is not None and s.get('rsi') and s.get('ma200')]
 
-    # CALL candidates: above 200MA + RSI 35-58 + decent value score
+    # CALL candidates: full uptrend alignment + momentum + RSI sweet spot + value
     call_candidates = [
         s for s in scored
         if s.get('aboveMa200') and
-        35 <= (s.get('rsi') or 0) <= 58 and
+        s.get('aboveMa50') and
+        s.get('goldenCross') and          # 50MA > 200MA
+        40 <= (s.get('rsi') or 0) <= 55 and  # tighter RSI: pulled back but not oversold
+        (s.get('return3m') or 0) > 0 and  # positive 3M momentum
         (s.get('valueScore') or 0) >= 45
     ]
     for s in call_candidates:
         rsi = s['rsi']
-        rsi_score = 100 - abs(rsi - 45) * 2  # sweet spot around 45
-        above_bonus = 15 if s.get('aboveMa200') else 0
-        s['_techScore'] = rsi_score + above_bonus + (s.get('valueScore') or 0) * 0.3
-        s['signal'] = f"RSI {rsi} · {'+' if s['aboveMa200'] else ''}{s.get('pctFromMa200', 0)}% vs 200MA"
+        rsi_score = 100 - abs(rsi - 47) * 2  # sweet spot ~47
+        s['_techScore'] = rsi_score + (s.get('valueScore') or 0) * 0.3 + (s.get('return3m') or 0) * 0.5
+        s['signal'] = (f"RSI {rsi} · 3M +{s.get('return3m', 0)}% · "
+                       f"+{s.get('pctFromMa200', 0)}% vs 200MA · golden cross")
 
     call_candidates.sort(key=lambda x: x['_techScore'], reverse=True)
 
