@@ -139,10 +139,13 @@ def batch_download_technicals(symbols):
                 rsi_series   = compute_rsi(series)
                 ma200_series = series.rolling(200).mean()
                 ma50_series  = series.rolling(50).mean()
+                log_rets     = series.pct_change().dropna()
+                hv21_series  = log_rets.rolling(21).std() * (252 ** 0.5)
 
                 rsi_val   = rsi_series.iloc[-1]
                 ma200_val = ma200_series.iloc[-1]
                 ma50_val  = ma50_series.iloc[-1]
+                hv21_val  = hv21_series.iloc[-1]
                 last_close = series.iloc[-1]
                 last_date  = series.index[-1].date().isoformat()
 
@@ -151,6 +154,7 @@ def batch_download_technicals(symbols):
                     'rsi':   round(float(rsi_val),   1) if pd.notna(rsi_val)   else None,
                     'ma200': round(float(ma200_val), 2) if pd.notna(ma200_val) else None,
                     'ma50':  round(float(ma50_val),  2) if pd.notna(ma50_val)  else None,
+                    'hv21':  round(float(hv21_val),  4) if pd.notna(hv21_val)  else None,
                     'fridayClose': round(float(last_close), 2),
                     'asOf': last_date,
                     **returns,
@@ -382,17 +386,20 @@ def find_best_option(stock, option_type, action):
                 if option_type == 'call' and action == 'buy':
                     if not (0.00 <= pct_from_price <= 0.04):  # 0–4% OTM (higher delta)
                         continue
-                    if iv > 0.35:  # IV rank proxy: skip expensive premium
+                    # IV/HV ratio: skip if premium is expensive relative to actual volatility
+                    hv21 = stock.get('hv21') or 0.20
+                    if iv > 0.35 or (hv21 > 0 and iv / hv21 > 1.3):
                         continue
                     if oi < 500:  # liquidity filter
                         continue
                     mid_price = (bid + ask) / 2 if (bid + ask) > 0 else ask
                     if mid_price > 0 and (ask - bid) / mid_price > 0.20:  # bid-ask spread < 20%
                         continue
-                    # Score: prefer low IV + good RSI setup
+                    # Score: prefer low IV/HV ratio + good momentum
                     tech_score = stock.get('_techScore', 50)
+                    iv_hv_ratio = iv / hv21 if hv21 > 0 else 1.0
                     cost_pct = ask / price
-                    score = tech_score - (cost_pct * 200) - (iv * 50)
+                    score = tech_score - (cost_pct * 200) - (iv_hv_ratio * 40)
 
                 elif option_type == 'put' and action == 'sell':
                     otm_pct = -pct_from_price  # positive = below price
@@ -487,6 +494,7 @@ def main():
                 'rsi':       tech.get('rsi'),
                 'ma200':     tech.get('ma200'),
                 'ma50':      tech.get('ma50'),
+                'hv21':      tech.get('hv21'),
                 'asOf':      tech.get('asOf'),
                 'return1m':  tech.get('return1m'),
                 'return3m':  tech.get('return3m'),
@@ -523,18 +531,24 @@ def main():
 
     as_of = technicals and next(iter(technicals.values()), {}).get('asOf', date.today().isoformat())
 
-    # Fetch SPY benchmark returns (5Y to match stock history)
+    # Fetch SPY benchmark returns + regime check
     print("\nFetching SPY benchmark...")
     spy_benchmark = None
+    spy_above_ma50 = False
     try:
         spy_hist = yf.Ticker('SPY').history(period='5y')
         if not spy_hist.empty:
             spy_series = spy_hist['Close'].dropna()
             spy_benchmark = compute_returns(spy_series)
+            spy_ma50_val = spy_series.rolling(50).mean().iloc[-1]
+            spy_price_now = float(spy_series.iloc[-1])
+            spy_above_ma50 = spy_price_now >= float(spy_ma50_val)
             print(f"  SPY returns — 1Y: {spy_benchmark.get('return1y')}%  "
                   f"2Y: {spy_benchmark.get('return2y')}%  "
                   f"3Y: {spy_benchmark.get('return3y')}%  "
                   f"5Y: {spy_benchmark.get('return5y')}%")
+            print(f"  SPY regime: {'ABOVE' if spy_above_ma50 else 'BELOW'} 50MA — "
+                  f"{'calls enabled' if spy_above_ma50 else 'calls SUPPRESSED (bear regime)'}")
     except Exception as e:
         print(f"  SPY error: {e}")
 
@@ -552,15 +566,14 @@ def main():
     # ── Step 4: Find options candidates ──
     scored = [s for s in stocks if s.get('valueScore') is not None and s.get('rsi') and s.get('ma200')]
 
-    # CALL candidates: full uptrend alignment + momentum + RSI sweet spot
-    # Value score intentionally excluded — backtest shows technicals alone outperform;
-    # momentum names (low value score, high growth) are the best call candidates.
+    # CALL candidates: market regime gate + full uptrend alignment + momentum + RSI sweet spot
     call_candidates = [
         s for s in scored
-        if s.get('aboveMa200') and
+        if spy_above_ma50 and              # market regime: only buy calls when SPY > 50MA
+        s.get('aboveMa200') and
         s.get('aboveMa50') and
-        s.get('goldenCross') and          # 50MA > 200MA
-        40 <= (s.get('rsi') or 0) <= 55 and  # tighter RSI: pulled back but not oversold
+        s.get('goldenCross') and           # 50MA > 200MA
+        40 <= (s.get('rsi') or 0) <= 55 and
         (s.get('return3m') or 0) > 0       # positive 3M momentum
     ]
     for s in call_candidates:

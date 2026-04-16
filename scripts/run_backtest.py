@@ -100,7 +100,8 @@ STRATEGIES = {
 
 # ── Per-stock simulation ──────────────────────────────────────────────────────
 
-def backtest_stock(symbol, series, value_score, strategy_id):
+def backtest_stock(symbol, series, value_score, strategy_id, spy_ma50=None):
+    # spy_ma50 is a dict of {date: ma50_value} for regime gate lookups
     """
     Simulate one strategy on one stock's 1Y price series.
     Returns a list of trade dicts.
@@ -113,24 +114,24 @@ def backtest_stock(symbol, series, value_score, strategy_id):
     rsi   = rolling_rsi(series)
     ma200 = series.rolling(200).mean()
     ma50  = series.rolling(50).mean()
-    # 21-day realised volatility, annualised
     vol21 = series.pct_change().rolling(21).std() * math.sqrt(252)
-    # 63-day (3M) momentum
+    vol63 = series.pct_change().rolling(63).std() * math.sqrt(252)
     mom3m = series.pct_change(63)
 
     trades = []
-    next_entry = 0   # earliest index we can open a new trade
+    next_entry = 0
 
     for i in range(60, n):
         if i < next_entry:
             continue
 
-        rsi_val  = rsi.iloc[i]
-        ma_val   = ma200.iloc[i]
-        ma50_val = ma50.iloc[i]
-        vol_val  = vol21.iloc[i]
-        mom_val  = mom3m.iloc[i]
-        price    = float(series.iloc[i])
+        rsi_val   = rsi.iloc[i]
+        ma_val    = ma200.iloc[i]
+        ma50_val  = ma50.iloc[i]
+        vol_val   = vol21.iloc[i]
+        vol63_val = vol63.iloc[i]
+        mom_val   = mom3m.iloc[i]
+        price     = float(series.iloc[i])
 
         if (pd.isna(rsi_val) or pd.isna(ma_val) or pd.isna(vol_val)
                 or price <= 0 or vol_val <= 0):
@@ -146,22 +147,28 @@ def backtest_stock(symbol, series, value_score, strategy_id):
         if not (cfg['score_min'] <= value_score <= cfg['score_max']):
             continue
 
-        # BUY CALL: additional quant-grade filters
+        # BUY CALL: quant-grade filters
         if strategy_id == 'buy_call':
             if pd.isna(ma50_val) or pd.isna(mom_val):
                 continue
-            # Golden cross: 50MA > 200MA (full uptrend alignment)
-            if float(ma50_val) < float(ma_val):
+            if float(ma50_val) < float(ma_val):   # golden cross
                 continue
-            # Price above 50MA
-            if price < float(ma50_val):
+            if price < float(ma50_val):            # above 50MA
                 continue
-            # Positive 3M momentum
-            if float(mom_val) <= 0:
+            if float(mom_val) <= 0:                # positive 3M momentum
                 continue
-            # Low IV proxy: skip when 21-day realised vol > 35%
-            if float(vol_val) > 0.35:
+            # IV/HV ratio proxy: skip if vol is expanding (21d vol > 1.3× 63d vol)
+            if not pd.isna(vol63_val) and vol63_val > 0:
+                if float(vol_val) / float(vol63_val) > 1.3:
+                    continue
+            if float(vol_val) > 0.35:              # absolute vol cap
                 continue
+            # Market regime gate: SPY must be above its 50MA
+            if spy_ma50:
+                entry_date_key = series.index[i].date()
+                spy_ma50_val = spy_ma50.get(entry_date_key)
+                if spy_ma50_val is None or pd.isna(spy_ma50_val) or float(spy_ma50_val) <= 0:
+                    continue
 
         # Can we reach expiry within the series?
         expiry_idx = i + cfg['dte']
@@ -179,19 +186,43 @@ def backtest_stock(symbol, series, value_score, strategy_id):
         entry_date   = series.index[i].date().isoformat()
         expiry_date  = series.index[expiry_idx].date().isoformat()
 
-        # P&L
-        if cfg['opt_type'] == 'call':
-            intrinsic = max(0.0, expiry_price - strike)
-        else:
-            intrinsic = max(0.0, strike - expiry_price)
+        # ── Profit target + 21 DTE early exit ─────────────────────────────────
+        # Exit at 50% gain OR when 21 DTE remain — whichever comes first.
+        early_exit_i = i + max(1, cfg['dte'] - 21)
+        loop_end     = min(early_exit_i + 1, expiry_idx, n)
+        exit_value   = None
 
         if cfg['action'] == 'buy':
-            pnl = intrinsic - premium
-            # Return = % of premium invested
-            return_pct = round(pnl / premium * 100, 1)
+            profit_target = premium * 1.5   # 50% gain
+            for j in range(i + 1, loop_end):
+                T_rem   = max(0.0001, (expiry_idx - j) / 365.0)
+                opt_val = bs_price(float(series.iloc[j]), strike, T_rem,
+                                   RISK_FREE_RATE, float(vol_val), cfg['opt_type'])
+                if opt_val >= profit_target or j >= early_exit_i:
+                    exit_value = opt_val
+                    break
         else:  # sell put
-            pnl = premium - intrinsic
-            # Return = % of strike (collateral required for cash-secured put)
+            buyback_target = premium * 0.5  # lock in 50% of premium collected
+            for j in range(i + 1, loop_end):
+                T_rem   = max(0.0001, (expiry_idx - j) / 365.0)
+                opt_val = bs_price(float(series.iloc[j]), strike, T_rem,
+                                   RISK_FREE_RATE, float(vol_val), cfg['opt_type'])
+                if opt_val <= buyback_target or j >= early_exit_i:
+                    exit_value = opt_val
+                    break
+
+        # Fallback: held to expiry (intrinsic only)
+        if exit_value is None:
+            if cfg['opt_type'] == 'call':
+                exit_value = max(0.0, expiry_price - strike)
+            else:
+                exit_value = max(0.0, strike - expiry_price)
+
+        if cfg['action'] == 'buy':
+            pnl        = exit_value - premium
+            return_pct = round(pnl / premium * 100, 1)
+        else:
+            pnl        = premium - exit_value
             return_pct = round(pnl / strike * 100, 1)
 
         trades.append({
@@ -210,7 +241,6 @@ def backtest_stock(symbol, series, value_score, strategy_id):
             'valueScore':  value_score,
         })
 
-        # Lock stock until this trade expires
         next_entry = expiry_idx + 1
 
     return trades
@@ -286,6 +316,23 @@ if __name__ == '__main__':
     prices = download_prices(symbols)
     print(f"  Prices for {len(prices)} symbols")
 
+    # SPY regime gate: compute rolling 50MA from 1Y history
+    print("\nDownloading SPY for market regime gate...")
+    spy_ma50_by_date = {}  # date -> ma50 value for O(1) lookup
+    try:
+        spy_hist  = yf.Ticker('SPY').history(period='1y')
+        spy_close = spy_hist['Close'].dropna()
+        if len(spy_close) >= 50:
+            spy_ma50_series = spy_close.rolling(50).mean()
+            for ts, val in spy_ma50_series.items():
+                spy_ma50_by_date[ts.date()] = val
+            current_spy  = float(spy_close.iloc[-1])
+            current_ma50 = float(spy_ma50_series.iloc[-1])
+            regime = 'BULL (above 50MA)' if current_spy >= current_ma50 else 'BEAR (below 50MA)'
+            print(f"  SPY ${current_spy:.2f} vs 50MA ${current_ma50:.2f} — {regime}")
+    except Exception as e:
+        print(f"  SPY download error: {e}")
+
     results = {}
     for sid, cfg in STRATEGIES.items():
         print(f"\nRunning {cfg['label']} backtest across {len(prices)} stocks...")
@@ -294,7 +341,7 @@ if __name__ == '__main__':
             score = score_map.get(sym)
             if score is None:
                 continue
-            all_trades.extend(backtest_stock(sym, series, score, sid))
+            all_trades.extend(backtest_stock(sym, series, score, sid, spy_ma50=spy_ma50_by_date))
 
         all_trades.sort(key=lambda t: t['entryDate'])
         stats = compute_stats(all_trades)
