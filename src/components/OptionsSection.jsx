@@ -220,7 +220,8 @@ export default function OptionsSection() {
             <TrendingUp size={12} /> BUY CALL
           </div>
           <p className="text-gray-500 leading-relaxed">
-            Above 200MA (uptrend) · RSI 35–58 (pulled back, room to run) · Value score ≥45.
+            Golden cross (50MA &gt; 200MA) · RSI 40–55 (pulled back within uptrend) ·
+            Positive 3M momentum · IV &lt;35% · No earnings in window.
             You profit if the stock rises above break-even before expiry.
           </p>
         </div>

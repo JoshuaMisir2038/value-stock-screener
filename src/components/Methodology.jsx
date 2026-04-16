@@ -79,10 +79,10 @@ export function OptionsMethodology() {
   return (
     <Section title="How are Options Ideas selected?">
       <p className="text-xs text-gray-500 mt-3 mb-4 leading-relaxed">
-        Options are screened from the top-scored value stocks using two technical filters —
-        <strong className="text-gray-300"> RSI</strong> (momentum) and the
-        <strong className="text-gray-300"> 200-day Moving Average</strong> (trend) — to only surface
-        setups with a favourable risk/reward. Three distinct strategies are used:
+        Three distinct strategies, each filtered by a different combination of trend, momentum,
+        and volatility signals. Criteria were refined through backtesting across 500+ stocks —
+        BUY CALL intentionally omits a value score requirement since backtest showed
+        momentum names (often "expensive" on fundamentals) produce the best call outcomes.
       </p>
 
       <div className="space-y-3 text-xs mb-4">
@@ -92,13 +92,15 @@ export function OptionsMethodology() {
             color: 'border-emerald-500/40 bg-emerald-500/5',
             badge: 'text-emerald-400',
             criteria: [
-              'Stock is trading above its 200-day MA (long-term uptrend confirmed)',
-              'RSI is between 35–58 (stock has pulled back within the uptrend — room to run)',
-              'Value score ≥ 45 (not expensive)',
-              'Strike 2–7% above current price (OTM), 30–60 days to expiry',
-              'IV < 60% (avoids overpaying for elevated premium)',
+              'Full uptrend alignment: price above both 50MA and 200MA, and 50MA > 200MA (golden cross)',
+              'RSI 40–55: stock has pulled back within the uptrend — room to run without being oversold',
+              'Positive 3-month momentum (return3m > 0): confirms trend is still active',
+              'IV < 35%: avoids buying expensive premium (low IV rank proxy)',
+              'Strike 0–4% OTM, 30–60 DTE: higher delta (~0.45) needs smaller move to profit',
+              'Open interest ≥ 500 and bid-ask spread < 20% of mid: liquidity check',
+              'No earnings within expiry window: avoids IV crush and binary event risk',
             ],
-            profit: 'Profit if stock rises above break-even (strike + premium paid) before expiry.',
+            profit: 'Profit if stock rises above break-even (strike + premium) before expiry.',
             loss: 'Max loss = premium paid × 100 per contract.',
           },
           {
@@ -120,13 +122,13 @@ export function OptionsMethodology() {
             color: 'border-red-500/40 bg-red-500/5',
             badge: 'text-red-400',
             criteria: [
-              'Stock is below its 200-day MA (long-term downtrend)',
-              'RSI between 55–75 (a bounce inside a downtrend — elevated but likely to fail)',
-              'Value score ≤ 45 (overvalued fundamentals reinforce the bearish thesis)',
+              'Stock is below its 200-day MA (long-term downtrend confirmed)',
+              'RSI between 55–75: a bounce inside a downtrend — elevated and likely to fail',
+              'Value score ≤ 45: overvalued fundamentals reinforce the bearish thesis',
               'Strike 3–8% below current price, 30–60 days to expiry',
               'IV < 55% (avoid overpaying)',
             ],
-            profit: 'Profit if stock falls below break-even (strike − premium paid) before expiry.',
+            profit: 'Profit if stock falls below break-even (strike − premium) before expiry.',
             loss: 'Max loss = premium paid × 100 per contract.',
           },
         ].map(s => (
