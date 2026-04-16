@@ -220,9 +220,9 @@ export default function OptionsSection() {
             <TrendingUp size={12} /> BUY CALL
           </div>
           <p className="text-gray-500 leading-relaxed">
-            Golden cross (50MA &gt; 200MA) · RSI 40–55 (pulled back within uptrend) ·
-            Positive 3M momentum · IV &lt;35% · No earnings in window.
-            You profit if the stock rises above break-even before expiry.
+            SPY above 50MA · Golden cross · RSI 40–55 · Positive 3M momentum ·
+            IV/HV ratio &lt;1.3 · No earnings in window.
+            Exit at 50% gain or 21 DTE remaining.
           </p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded p-3">
