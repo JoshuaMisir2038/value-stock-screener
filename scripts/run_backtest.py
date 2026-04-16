@@ -70,7 +70,7 @@ STRATEGIES = {
         'dte':       45,
         'rsi_min':   40,  'rsi_max':   55,   # tighter: pulled back but not oversold
         'above_ma':  True,
-        'score_min': 45,  'score_max': 100,
+        'score_min': 0,   'score_max': 100,
         'color':     '#34d399',
     },
     'sell_put': {

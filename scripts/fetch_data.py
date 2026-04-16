@@ -552,20 +552,21 @@ def main():
     # ── Step 4: Find options candidates ──
     scored = [s for s in stocks if s.get('valueScore') is not None and s.get('rsi') and s.get('ma200')]
 
-    # CALL candidates: full uptrend alignment + momentum + RSI sweet spot + value
+    # CALL candidates: full uptrend alignment + momentum + RSI sweet spot
+    # Value score intentionally excluded — backtest shows technicals alone outperform;
+    # momentum names (low value score, high growth) are the best call candidates.
     call_candidates = [
         s for s in scored
         if s.get('aboveMa200') and
         s.get('aboveMa50') and
         s.get('goldenCross') and          # 50MA > 200MA
         40 <= (s.get('rsi') or 0) <= 55 and  # tighter RSI: pulled back but not oversold
-        (s.get('return3m') or 0) > 0 and  # positive 3M momentum
-        (s.get('valueScore') or 0) >= 45
+        (s.get('return3m') or 0) > 0       # positive 3M momentum
     ]
     for s in call_candidates:
         rsi = s['rsi']
         rsi_score = 100 - abs(rsi - 47) * 2  # sweet spot ~47
-        s['_techScore'] = rsi_score + (s.get('valueScore') or 0) * 0.3 + (s.get('return3m') or 0) * 0.5
+        s['_techScore'] = rsi_score + (s.get('return3m') or 0) * 0.5
         s['signal'] = (f"RSI {rsi} · 3M +{s.get('return3m', 0)}% · "
                        f"+{s.get('pctFromMa200', 0)}% vs 200MA · golden cross")
 
