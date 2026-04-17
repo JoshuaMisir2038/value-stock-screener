@@ -80,8 +80,8 @@ export function OptionsMethodology() {
     <Section title="How are Options Ideas selected?">
       <p className="text-xs text-gray-500 mt-3 mb-4 leading-relaxed">
         Three strategies filtered by trend, momentum, and volatility signals — iteratively refined
-        through backtesting across 500+ stocks. BUY CALL reached a <strong className="text-gray-300">70% win rate</strong> and{' '}
-        <strong className="text-gray-300">1.96 profit factor</strong> after applying the criteria below.
+        through backtesting across 500+ stocks. BUY CALL reached a <strong className="text-gray-300">74% win rate</strong> and{' '}
+        <strong className="text-gray-300">2.83 profit factor</strong> after applying the criteria below.
         No value score filter on calls — backtest confirmed momentum names outperform.
       </p>
 
@@ -94,11 +94,10 @@ export function OptionsMethodology() {
             criteria: [
               'Market regime gate: SPY must be above its 50MA — no calls in bear market conditions',
               'Full uptrend alignment: price above 50MA and 200MA, with 50MA > 200MA (golden cross)',
-              'RSI 40–55: mild pullback within the uptrend — room to run, not oversold',
-              'Positive 3-month momentum: confirms trend has real velocity behind it',
-              'IV/HV ratio < 1.3: implied vol must be close to actual realized vol — avoids overpaying for premium',
-              'IV < 35% absolute cap: additional guard against expensive premium environments',
-              'Strike 0–4% OTM, 30–60 DTE: higher delta (~0.45) requires a smaller move to profit',
+              'RSI 38–60: mild pullback within the uptrend — room to run, not oversold',
+              'Positive 1-month momentum: confirms trend has real velocity behind it',
+              'IV/HV ratio < 1.8: implied vol must be reasonable relative to actual realized vol — avoids overpaying for premium',
+              'Strike 0–6% OTM, 25–65 DTE: higher delta requires a smaller move to profit',
               'Open interest ≥ 500 and bid-ask spread < 20% of mid: liquidity and fill quality',
               'No earnings within the expiry window: avoids IV crush and binary event risk',
             ],

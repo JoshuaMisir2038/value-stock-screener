@@ -66,9 +66,9 @@ STRATEGIES = {
         'label':     'BUY CALL',
         'opt_type':  'call',
         'action':    'buy',
-        'otm_mult':  1.02,    # 2% OTM (higher delta ~0.45)
+        'otm_mult':  1.03,    # 3% OTM (mid-point of 0-6% live range)
         'dte':       45,
-        'rsi_min':   40,  'rsi_max':   55,   # tighter: pulled back but not oversold
+        'rsi_min':   38,  'rsi_max':   60,   # widened from 40-55
         'above_ma':  True,
         'score_min': 0,   'score_max': 100,
         'color':     '#34d399',
@@ -116,7 +116,8 @@ def backtest_stock(symbol, series, value_score, strategy_id, spy_ma50=None):
     ma50  = series.rolling(50).mean()
     vol21 = series.pct_change().rolling(21).std() * math.sqrt(252)
     vol63 = series.pct_change().rolling(63).std() * math.sqrt(252)
-    mom3m = series.pct_change(63)
+    mom1m = series.pct_change(21)   # 1M momentum (replaces 3M)
+    mom3m = series.pct_change(63)   # kept for golden cross context
 
     trades = []
     next_entry = 0
@@ -130,7 +131,7 @@ def backtest_stock(symbol, series, value_score, strategy_id, spy_ma50=None):
         ma50_val  = ma50.iloc[i]
         vol_val   = vol21.iloc[i]
         vol63_val = vol63.iloc[i]
-        mom_val   = mom3m.iloc[i]
+        mom1m_val = mom1m.iloc[i]
         price     = float(series.iloc[i])
 
         if (pd.isna(rsi_val) or pd.isna(ma_val) or pd.isna(vol_val)
@@ -149,17 +150,17 @@ def backtest_stock(symbol, series, value_score, strategy_id, spy_ma50=None):
 
         # BUY CALL: quant-grade filters
         if strategy_id == 'buy_call':
-            if pd.isna(ma50_val) or pd.isna(mom_val):
+            if pd.isna(ma50_val) or pd.isna(mom1m_val):
                 continue
             if float(ma50_val) < float(ma_val):   # golden cross
                 continue
             if price < float(ma50_val):            # above 50MA
                 continue
-            if float(mom_val) <= 0:                # positive 3M momentum
+            if float(mom1m_val) <= 0:              # positive 1M momentum (widened from 3M)
                 continue
-            # IV/HV ratio proxy: skip if vol is expanding (21d vol > 1.3× 63d vol)
+            # IV/HV ratio proxy: skip if vol is expanding too aggressively (raised to 1.8)
             if not pd.isna(vol63_val) and vol63_val > 0:
-                if float(vol_val) / float(vol63_val) > 1.3:
+                if float(vol_val) / float(vol63_val) > 1.8:
                     continue
             if float(vol_val) > 0.35:              # absolute vol cap
                 continue

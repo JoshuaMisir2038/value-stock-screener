@@ -220,8 +220,8 @@ export default function OptionsSection() {
             <TrendingUp size={12} /> BUY CALL
           </div>
           <p className="text-gray-500 leading-relaxed">
-            SPY above 50MA · Golden cross · RSI 40–55 · Positive 3M momentum ·
-            IV/HV ratio &lt;1.3 · No earnings in window.
+            SPY above 50MA · Golden cross · RSI 38–60 · Positive 1M momentum ·
+            IV/HV ratio &lt;1.8 · No earnings in window.
             Exit at 50% gain or 21 DTE remaining.
           </p>
         </div>

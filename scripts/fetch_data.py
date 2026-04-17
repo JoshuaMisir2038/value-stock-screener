@@ -390,12 +390,11 @@ def find_best_option(stock, option_type, action):
                 pct_from_price = (strike - price) / price  # + means above price
 
                 if option_type == 'call' and action == 'buy':
-                    if not (0.00 <= pct_from_price <= 0.04):  # 0–4% OTM (higher delta)
+                    if not (0.00 <= pct_from_price <= 0.06):  # 0–6% OTM (widened from 0-4%)
                         continue
-                    # IV/HV ratio: only filter — absolute cap removed since high-HV stocks
-                    # (e.g. NVDA HV=35%) would be wrongly excluded by a fixed threshold
+                    # IV/HV ratio: premium must not be excessively expensive vs realised vol
                     hv21 = stock.get('hv21') or 0.20
-                    if hv21 > 0 and iv / hv21 > 1.5:
+                    if hv21 > 0 and iv / hv21 > 1.8:
                         continue
                     if oi < 100:  # minimum OI — spread filter below handles real liquidity
                         continue
@@ -580,14 +579,14 @@ def main():
         s.get('aboveMa200') and
         s.get('aboveMa50') and
         s.get('goldenCross') and           # 50MA > 200MA
-        40 <= (s.get('rsi') or 0) <= 55 and
-        (s.get('return3m') or 0) > 0       # positive 3M momentum
+        38 <= (s.get('rsi') or 0) <= 60 and   # widened from 40-55
+        (s.get('return1m') or 0) > 0           # 1M momentum (from 3M) — faster confirmation
     ]
     for s in call_candidates:
         rsi = s['rsi']
-        rsi_score = 100 - abs(rsi - 47) * 2  # sweet spot ~47
-        s['_techScore'] = rsi_score + (s.get('return3m') or 0) * 0.5
-        s['signal'] = (f"RSI {rsi} · 3M +{s.get('return3m', 0)}% · "
+        rsi_score = 100 - abs(rsi - 49) * 2  # sweet spot ~49
+        s['_techScore'] = rsi_score + (s.get('return1m') or 0) * 0.8 + (s.get('return3m') or 0) * 0.3
+        s['signal'] = (f"RSI {rsi} · 1M +{s.get('return1m', 0)}% · "
                        f"+{s.get('pctFromMa200', 0)}% vs 200MA · golden cross")
 
     call_candidates.sort(key=lambda x: x['_techScore'], reverse=True)
