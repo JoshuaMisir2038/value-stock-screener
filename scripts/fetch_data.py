@@ -332,9 +332,10 @@ def find_best_option(stock, option_type, action):
             return None
 
         today = date.today()
-        dte_min, dte_max = (30, 60) if action == 'buy' else (21, 45)
+        dte_min, dte_max = (25, 65) if action == 'buy' else (21, 45)
 
-        # Earnings avoidance: skip calls if earnings fall within DTE window
+        # Fetch earnings dates once for per-expiration check below
+        earnings_dates = set()
         if option_type == 'call' and action == 'buy':
             try:
                 cal = ticker.calendar
@@ -348,8 +349,7 @@ def find_best_option(stock, option_type, action):
                         elif isinstance(ed, str):
                             try: ed = date.fromisoformat(ed[:10])
                             except: continue
-                        if 0 <= (ed - today).days <= dte_max:
-                            return None  # earnings within option window — skip
+                        earnings_dates.add(ed)
             except Exception:
                 pass
 
@@ -360,6 +360,12 @@ def find_best_option(stock, option_type, action):
             dte = (exp_date - today).days
             if dte < dte_min or dte > dte_max:
                 continue
+
+            # Skip expiration only if earnings are imminent (within 14 days)
+            # — not the full DTE window, since post-earnings expirations are fine
+            if option_type == 'call' and action == 'buy':
+                if any(0 <= (ed - today).days <= 14 for ed in earnings_dates):
+                    continue
 
             try:
                 chain = ticker.option_chain(exp_str)
@@ -386,11 +392,12 @@ def find_best_option(stock, option_type, action):
                 if option_type == 'call' and action == 'buy':
                     if not (0.00 <= pct_from_price <= 0.04):  # 0–4% OTM (higher delta)
                         continue
-                    # IV/HV ratio: skip if premium is expensive relative to actual volatility
+                    # IV/HV ratio: only filter — absolute cap removed since high-HV stocks
+                    # (e.g. NVDA HV=35%) would be wrongly excluded by a fixed threshold
                     hv21 = stock.get('hv21') or 0.20
-                    if iv > 0.35 or (hv21 > 0 and iv / hv21 > 1.3):
+                    if hv21 > 0 and iv / hv21 > 1.5:
                         continue
-                    if oi < 500:  # liquidity filter
+                    if oi < 100:  # minimum OI — spread filter below handles real liquidity
                         continue
                     mid_price = (bid + ask) / 2 if (bid + ask) > 0 else ask
                     if mid_price > 0 and (ask - bid) / mid_price > 0.20:  # bid-ask spread < 20%
