@@ -27,7 +27,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install yfinance
+        run: pip install yfinance pandas
 
       - name: Fetch stock data
         run: python scripts/fetch_data.py
@@ -45,6 +45,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/data/stocks.json public/data/bonds.json public/data/commodities.json public/data/backtest_options.json public/data/macro.json
+          git add public/data/stocks.json public/data/options.json public/data/bonds.json public/data/commodities.json public/data/backtest_options.json public/data/macro.json
           git diff --cached --quiet || git commit -m "chore: update market data $(date -u '+%Y-%m-%d')"
           git push
