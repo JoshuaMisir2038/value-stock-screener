@@ -80,8 +80,8 @@ export function OptionsMethodology() {
     <Section title="How are Options Ideas selected?">
       <p className="text-xs text-gray-500 mt-3 mb-4 leading-relaxed">
         Three strategies filtered by trend, momentum, and volatility signals — iteratively refined
-        through backtesting across 500+ stocks. BUY CALL reached a <strong className="text-gray-300">74% win rate</strong> and{' '}
-        <strong className="text-gray-300">2.83 profit factor</strong> after applying the criteria below.
+        through backtesting across 500+ stocks. BUY CALL reached a <strong className="text-gray-300">64% win rate</strong> and{' '}
+        <strong className="text-gray-300">1.56 profit factor</strong> after applying the criteria below.
         No value score filter on calls — backtest confirmed momentum names outperform.
       </p>
 
