@@ -2,6 +2,8 @@ name: Update Stock Data
 
 on:
   schedule:
+    # 7:00am ET (pre-market) = 11:00am UTC
+    - cron: '0 11 * * 1-5'
     # 9:30am ET (market open) = 1:30pm UTC
     - cron: '30 13 * * 1-5'
     # 1:00pm ET (midday) = 5pm UTC
