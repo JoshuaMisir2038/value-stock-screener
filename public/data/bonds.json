@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-04-20 19:20 UTC",
+  "asOf": "2026-04-20 21:31 UTC",
   "us": [
     {
       "ticker": "^IRX",
@@ -47,9 +47,9 @@
       "ticker": "IGOV",
       "name": "Developed Markets Govt Bonds",
       "region": "Global DM",
-      "price": 42.09,
-      "change1d": -0.09,
-      "change1w": 0.96,
+      "price": 42.11,
+      "change1d": -0.05,
+      "change1w": 1.01,
       "high52": 43.12,
       "low52": 39.8181
     },
@@ -57,9 +57,9 @@
       "ticker": "BWX",
       "name": "Intl Treasury Bond",
       "region": "Global DM",
-      "price": 22.425,
-      "change1d": 0.02,
-      "change1w": 0.97,
+      "price": 22.45,
+      "change1d": 0.13,
+      "change1w": 1.08,
       "high52": 23.148,
       "low52": 21.6056
     },
@@ -67,9 +67,9 @@
       "ticker": "BNDX",
       "name": "Total Intl Bond (Hedged)",
       "region": "Global",
-      "price": 48.2791,
-      "change1d": -0.11,
-      "change1w": 0.5,
+      "price": 48.27,
+      "change1d": -0.12,
+      "change1w": 0.48,
       "high52": 49.0154,
       "low52": 46.812
     },
@@ -77,9 +77,9 @@
       "ticker": "EMB",
       "name": "EM USD Sovereign Debt",
       "region": "Emerging Markets",
-      "price": 96.595,
+      "price": 96.59,
       "change1d": -0.08,
-      "change1w": 0.59,
+      "change1w": 0.58,
       "high52": 96.93,
       "low52": 83.1659
     },
@@ -91,7 +91,7 @@
       "change1d": -0.08,
       "change1w": 0.62,
       "high52": 26.361,
-      "low52": 22.7324
+      "low52": 22.7323
     }
   ],
   "corporate": [
@@ -99,9 +99,9 @@
       "ticker": "LQD",
       "name": "US Investment Grade Corp",
       "type": "IG Corp",
-      "price": 110.065,
-      "change1d": 0.02,
-      "change1w": 0.41,
+      "price": 110.03,
+      "change1d": -0.01,
+      "change1w": 0.37,
       "high52": 111.0897,
       "low52": 100.8585
     },
@@ -109,9 +109,9 @@
       "ticker": "HYG",
       "name": "US High Yield Corp",
       "type": "HY Corp",
-      "price": 80.555,
-      "change1d": -0.12,
-      "change1w": 0.37,
+      "price": 80.58,
+      "change1d": -0.09,
+      "change1w": 0.4,
       "high52": 80.76,
       "low52": 72.7902
     },
@@ -119,9 +119,9 @@
       "ticker": "JNK",
       "name": "US High Yield (alt)",
       "type": "HY Corp",
-      "price": 96.975,
-      "change1d": -0.11,
-      "change1w": 0.41,
+      "price": 96.99,
+      "change1d": -0.09,
+      "change1w": 0.42,
       "high52": 97.24,
       "low52": 87.0006
     },
@@ -129,9 +129,9 @@
       "ticker": "VCIT",
       "name": "Vanguard Corp Bond Interm",
       "type": "IG Corp",
-      "price": 83.515,
-      "change1d": 0.04,
-      "change1w": 0.38,
+      "price": 83.5,
+      "change1d": 0.02,
+      "change1w": 0.36,
       "high52": 84.1851,
       "low52": 76.4919
     }
