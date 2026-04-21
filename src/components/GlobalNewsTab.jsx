@@ -6,27 +6,27 @@ const PROXY = 'https://api.allorigins.win/raw?url='
 const FEEDS = [
   {
     id:    'bbc',
-    label: 'BBC',
+    label: 'BBC Business',
     badge: 'bg-red-500/15 text-red-400 border-red-500/30',
-    url:   'https://feeds.bbci.co.uk/news/world/rss.xml',
+    url:   'https://feeds.bbci.co.uk/news/business/rss.xml',
   },
   {
     id:    'guardian',
     label: 'The Guardian',
     badge: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    url:   'https://www.theguardian.com/world/rss',
+    url:   'https://www.theguardian.com/business/rss',
   },
   {
     id:    'npr',
-    label: 'NPR',
+    label: 'NPR Business',
     badge: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
-    url:   'https://feeds.npr.org/1001/rss.xml',
+    url:   'https://feeds.npr.org/1006/rss.xml',
   },
   {
-    id:    'aljazeera',
-    label: 'Al Jazeera',
-    badge: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30',
-    url:   'https://www.aljazeera.com/xml/rss/all.xml',
+    id:    'cnbc',
+    label: 'CNBC',
+    badge: 'bg-blue-500/15 text-blue-300 border-blue-400/30',
+    url:   'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664',
   },
 ]
 
