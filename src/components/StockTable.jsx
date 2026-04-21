@@ -10,6 +10,7 @@ import { ChevronUp, ChevronDown, ChevronsUpDown, History } from 'lucide-react'
 import ScoreBadge from './ScoreBadge'
 import MetricCell from './MetricCell'
 import ScoreHistoryModal from './ScoreHistoryModal'
+import StockDetailModal from './StockDetailModal'
 
 const col = createColumnHelper()
 
@@ -40,7 +41,14 @@ const COLUMNS = [
     </div>
   ), size: 105 }),
   col.accessor('sectorScore',     { header: 'Sec Score',    cell: i => <ScoreBadge score={i.getValue()} />,                                          size: 82 }),
-  col.accessor('symbol',          { header: 'Ticker',       cell: i => <span className="font-bold text-white tracking-wide">{i.getValue()}</span>,   size: 75 }),
+  col.accessor('symbol',          { header: 'Ticker',       cell: i => (
+    <button
+      onClick={() => i.table.options.meta?.onShowDetail(i.row.original)}
+      className="font-bold text-white tracking-wide hover:text-blue-400 transition-colors"
+    >
+      {i.getValue()}
+    </button>
+  ), size: 75 }),
   col.accessor('name',            { header: 'Company',      cell: i => <span className="text-gray-300 truncate block max-w-[180px]" title={i.getValue()}>{i.getValue()}</span>, size: 190 }),
   col.accessor('sector',          { header: 'Sector',       cell: i => <span className="text-xs text-gray-400 px-2 py-0.5 bg-gray-800 rounded-full whitespace-nowrap">{i.getValue()}</span>, size: 140 }),
   col.accessor('marketCap',       { header: 'Mkt Cap',      cell: i => <MetricCell value={i.getValue()} format="marketcap" />,                       size: 88 }),
@@ -106,6 +114,7 @@ function SortIcon({ isSorted }) {
 export default function StockTable({ data }) {
   const [sorting, setSorting] = useState([{ id: 'valueScore', desc: true }])
   const [historyStock, setHistoryStock] = useState(null)
+  const [detailStock, setDetailStock] = useState(null)
 
   const table = useReactTable({
     data,
@@ -114,7 +123,10 @@ export default function StockTable({ data }) {
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    meta: { onShowHistory: stock => setHistoryStock(stock) },
+    meta: {
+      onShowHistory: stock => setHistoryStock(stock),
+      onShowDetail:  stock => setDetailStock(stock),
+    },
   })
 
   return (
@@ -187,6 +199,12 @@ export default function StockTable({ data }) {
         name={historyStock.name}
         currentScore={historyStock.valueScore}
         onClose={() => setHistoryStock(null)}
+      />
+    )}
+    {detailStock && (
+      <StockDetailModal
+        stock={detailStock}
+        onClose={() => setDetailStock(null)}
       />
     )}
     </>
