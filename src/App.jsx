@@ -12,7 +12,7 @@ import HackerNewsTab from './components/HackerNewsTab'
 import GlobalNewsTab from './components/GlobalNewsTab'
 import GitHubTrendingTab from './components/GitHubTrendingTab'
 import { EquityMethodology } from './components/Methodology'
-import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, Github } from 'lucide-react'
+import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch } from 'lucide-react'
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -31,7 +31,7 @@ const TABS = [
   { id: 'macro',       label: 'Macro',           icon: Globe },
   { id: 'hackernews', label: 'Hacker News',     icon: Flame },
   { id: 'news',       label: 'Global News',     icon: Newspaper },
-  { id: 'github',     label: 'GitHub Trending', icon: Github },
+  { id: 'github',     label: 'GitHub Trending', icon: GitBranch },
 ]
 
 export default function App() {
