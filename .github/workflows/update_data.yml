@@ -43,10 +43,13 @@ jobs:
       - name: Run options backtest
         run: python scripts/run_backtest.py
 
+      - name: Snapshot value scores (once per day)
+        run: python scripts/snapshot_scores.py
+
       - name: Commit updated data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/data/stocks.json public/data/options.json public/data/bonds.json public/data/commodities.json public/data/backtest_options.json public/data/macro.json
+          git add public/data/stocks.json public/data/options.json public/data/bonds.json public/data/commodities.json public/data/backtest_options.json public/data/macro.json public/data/score_history.json
           git diff --cached --quiet || git commit -m "chore: update market data $(date -u '+%Y-%m-%d')"
           git push

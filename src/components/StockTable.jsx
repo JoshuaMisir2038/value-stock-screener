@@ -6,9 +6,10 @@ import {
   createColumnHelper,
 } from '@tanstack/react-table'
 import { useState } from 'react'
-import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronsUpDown, History } from 'lucide-react'
 import ScoreBadge from './ScoreBadge'
 import MetricCell from './MetricCell'
+import ScoreHistoryModal from './ScoreHistoryModal'
 
 const col = createColumnHelper()
 
@@ -26,7 +27,18 @@ const GROUPS = [
 
 const COLUMNS = [
   // Identity
-  col.accessor('valueScore',      { header: 'Mkt Score',    cell: i => <ScoreBadge score={i.getValue()} />,                                          size: 85 }),
+  col.accessor('valueScore',      { header: 'Mkt Score',    cell: i => (
+    <div className="flex items-center gap-1">
+      <ScoreBadge score={i.getValue()} />
+      <button
+        onClick={e => { e.stopPropagation(); i.table.options.meta?.onShowHistory(i.row.original) }}
+        className="text-gray-700 hover:text-gray-400 transition-colors"
+        title="Score history"
+      >
+        <History size={11} />
+      </button>
+    </div>
+  ), size: 105 }),
   col.accessor('sectorScore',     { header: 'Sec Score',    cell: i => <ScoreBadge score={i.getValue()} />,                                          size: 82 }),
   col.accessor('symbol',          { header: 'Ticker',       cell: i => <span className="font-bold text-white tracking-wide">{i.getValue()}</span>,   size: 75 }),
   col.accessor('name',            { header: 'Company',      cell: i => <span className="text-gray-300 truncate block max-w-[180px]" title={i.getValue()}>{i.getValue()}</span>, size: 190 }),
@@ -93,6 +105,7 @@ function SortIcon({ isSorted }) {
 
 export default function StockTable({ data }) {
   const [sorting, setSorting] = useState([{ id: 'valueScore', desc: true }])
+  const [historyStock, setHistoryStock] = useState(null)
 
   const table = useReactTable({
     data,
@@ -101,9 +114,11 @@ export default function StockTable({ data }) {
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    meta: { onShowHistory: stock => setHistoryStock(stock) },
   })
 
   return (
+    <>
     <div className="overflow-x-auto">
       <table className="w-full text-sm border-collapse">
         <thead>
@@ -165,5 +180,15 @@ export default function StockTable({ data }) {
         <div className="text-center py-16 text-gray-600">No stocks match your filters.</div>
       )}
     </div>
+
+    {historyStock && (
+      <ScoreHistoryModal
+        symbol={historyStock.symbol}
+        name={historyStock.name}
+        currentScore={historyStock.valueScore}
+        onClose={() => setHistoryStock(null)}
+      />
+    )}
+    </>
   )
 }
