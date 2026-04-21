@@ -149,12 +149,15 @@ def batch_download_technicals(symbols):
                 last_close = series.iloc[-1]
                 last_date  = series.index[-1].date().isoformat()
 
+                change1d_val = log_rets.iloc[-1] * 100 if len(log_rets) >= 1 else None
+
                 returns = compute_returns(series)
                 technicals[sym] = {
                     'rsi':   round(float(rsi_val),   1) if pd.notna(rsi_val)   else None,
                     'ma200': round(float(ma200_val), 2) if pd.notna(ma200_val) else None,
                     'ma50':  round(float(ma50_val),  2) if pd.notna(ma50_val)  else None,
                     'hv21':  round(float(hv21_val),  4) if pd.notna(hv21_val)  else None,
+                    'change1d': round(float(change1d_val), 2) if change1d_val is not None and pd.notna(change1d_val) else None,
                     'fridayClose': round(float(last_close), 2),
                     'asOf': last_date,
                     **returns,

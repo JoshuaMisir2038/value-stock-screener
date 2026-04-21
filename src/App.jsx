@@ -12,6 +12,7 @@ import HackerNewsTab from './components/HackerNewsTab'
 import GlobalNewsTab from './components/GlobalNewsTab'
 import GitHubTrendingTab from './components/GitHubTrendingTab'
 import { EquityMethodology } from './components/Methodology'
+import TickerBanner from './components/TickerBanner'
 import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch } from 'lucide-react'
 
 const DEFAULT_FILTERS = {
@@ -98,6 +99,8 @@ export default function App() {
           ))}
         </div>
       </div>
+
+      {!loading && stocks.length > 0 && <TickerBanner stocks={stocks} />}
 
       <div className="max-w-screen-2xl mx-auto px-6 py-5">
         {tab === 'screener' && (

@@ -4,3 +4,18 @@
 
 body { margin: 0; background: #030712; color: #f9fafb; }
 #root { width: 100%; max-width: none; text-align: left; }
+
+@keyframes ticker-fwd {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes ticker-rev {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.ticker-forward {
+  animation: ticker-fwd linear infinite;
+}
+.ticker-reverse {
+  animation: ticker-rev linear infinite;
+}
