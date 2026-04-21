@@ -61,22 +61,19 @@ export default function App() {
       <div className="border-b border-gray-800 bg-gray-950 sticky top-0 z-10">
         <div className="max-w-screen-2xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <TrendingUp size={20} className="text-blue-400" />
+            <img src="/desert.jpg" alt="" className="w-8 h-8 rounded-full object-cover opacity-90" />
             <div>
               <h1 className="text-lg font-semibold text-white tracking-tight">Joshua Misir's Value Finder</h1>
               <p className="text-xs text-gray-600 italic">most stock screeners are trash, so i built my own</p>
             </div>
             <span className="text-xs text-gray-600 border border-gray-800 px-2 py-0.5 rounded">US Listed · Mkt Cap &gt;$300M</span>
           </div>
-          <div className="flex items-center gap-3">
-            {lastUpdated && (
-              <div className="flex items-center gap-1.5 text-xs text-gray-600">
-                <RefreshCw size={11} />
-                Updated {new Date(lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              </div>
-            )}
-            <img src="/desert.jpg" alt="" className="w-8 h-8 rounded-full object-cover opacity-90" />
-          </div>
+          {lastUpdated && (
+            <div className="flex items-center gap-1.5 text-xs text-gray-600">
+              <RefreshCw size={11} />
+              Updated {new Date(lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
