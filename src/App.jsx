@@ -68,12 +68,15 @@ export default function App() {
             </div>
             <span className="text-xs text-gray-600 border border-gray-800 px-2 py-0.5 rounded">US Listed · Mkt Cap &gt;$300M</span>
           </div>
-          {lastUpdated && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-600">
-              <RefreshCw size={11} />
-              Updated {new Date(lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {lastUpdated && (
+              <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                <RefreshCw size={11} />
+                Updated {new Date(lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </div>
+            )}
+            <img src="/desert.jpg" alt="" className="w-8 h-8 rounded-full object-cover opacity-90" />
+          </div>
         </div>
 
         {/* Tabs */}
