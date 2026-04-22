@@ -267,9 +267,8 @@ const BLANK = {
   minPE: '', maxPE: '', minForwardPE: '', maxForwardPE: '',
   minPB: '', maxPB: '', minPFCF: '', maxPFCF: '',
   maxPSRatio: '', maxEVRevenue: '', maxEVEbitda: '',
-  // Profitability
-  minGrossMargin: '', maxGrossMargin: '',
-  minOperatingMargin: '', minFCFMargin: '',
+  // Profitability (min-only — screens for high-quality businesses)
+  minGrossMargin: '', minOperatingMargin: '', minFCFMargin: '',
   minROE: '', minRuleOf40: '',
   // Leverage / Liquidity
   maxNetDebtEbitda: '', maxDebtEquity: '', minCurrentRatio: '',
@@ -304,7 +303,6 @@ function applyFilters(stocks, f) {
     if (num(f.maxEVRevenue)     !== null && (s.evRevenue         ?? Infinity)  > num(f.maxEVRevenue))    return false
     if (num(f.maxEVEbitda)      !== null && (s.evEbitda          ?? Infinity)  > num(f.maxEVEbitda))     return false
     if (num(f.minGrossMargin)   !== null && (s.grossMargin       ?? -Infinity) * 100 < num(f.minGrossMargin))   return false
-    if (num(f.maxGrossMargin)   !== null && (s.grossMargin       ?? Infinity)  * 100 > num(f.maxGrossMargin))   return false
     if (num(f.minOperatingMargin)!==null && (s.operatingMargin  ?? -Infinity) * 100 < num(f.minOperatingMargin)) return false
     if (num(f.minFCFMargin)     !== null && (s.fcfMargin         ?? -Infinity) * 100 < num(f.minFCFMargin))     return false
     if (num(f.minROE)           !== null && (s.roe               ?? -Infinity) * 100 < num(f.minROE))           return false
@@ -584,11 +582,11 @@ export default function CustomScreenerTab({ stocks, onSendToBacktest }) {
         </Section>
 
         <Section title="Profitability & Margins" open={openSections.profitability} onToggle={() => toggleSection('profitability')}>
-          <RangeInputs label="Gross Margin %"     minVal={filters.minGrossMargin}    maxVal={filters.maxGrossMargin}    onMin={v => set('minGrossMargin', v)}    onMax={v => set('maxGrossMargin', v)}    minPlaceholder="e.g. 40" maxPlaceholder="Max" />
+          <FilterInput label="Min Gross Margin %"     value={filters.minGrossMargin}     onChange={v => set('minGrossMargin', v)}     placeholder="e.g. 50" hint="e.g. 97% for Visa" />
           <FilterInput label="Min Operating Margin %" value={filters.minOperatingMargin} onChange={v => set('minOperatingMargin', v)} placeholder="e.g. 15" />
-          <FilterInput label="Min FCF Margin %"   value={filters.minFCFMargin}       onChange={v => set('minFCFMargin', v)}       placeholder="e.g. 10" />
-          <FilterInput label="Min ROE %"          value={filters.minROE}             onChange={v => set('minROE', v)}             placeholder="e.g. 15" />
-          <FilterInput label="Min Rule of 40"     value={filters.minRuleOf40}        onChange={v => set('minRuleOf40', v)}        placeholder="e.g. 40" hint="rev growth + FCF%" />
+          <FilterInput label="Min FCF Margin %"       value={filters.minFCFMargin}       onChange={v => set('minFCFMargin', v)}       placeholder="e.g. 10" />
+          <FilterInput label="Min ROE %"              value={filters.minROE}             onChange={v => set('minROE', v)}             placeholder="e.g. 15" />
+          <FilterInput label="Min Rule of 40"         value={filters.minRuleOf40}        onChange={v => set('minRuleOf40', v)}        placeholder="e.g. 40" hint="rev growth + FCF%" />
         </Section>
 
         <Section title="Leverage & Liquidity" open={openSections.leverage} onToggle={() => toggleSection('leverage')}>

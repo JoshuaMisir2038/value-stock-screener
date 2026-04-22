@@ -14,7 +14,13 @@ export function useStocks() {
         const res = await fetch('./data/stocks.json')
         if (!res.ok) throw new Error('Data not found')
         const json = await res.json()
-        const scored = computeScores(json.stocks)
+        const seen = new Set()
+        const unique = json.stocks.filter(s => {
+          if (seen.has(s.symbol)) return false
+          seen.add(s.symbol)
+          return true
+        })
+        const scored = computeScores(unique)
         setStocks(scored)
         setLastUpdated(json.lastUpdated)
         setBenchmark(json.benchmark || null)
