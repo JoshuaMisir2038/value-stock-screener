@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://joshuamisir2038.github.io/value-stock-screener/sitemap.xml
