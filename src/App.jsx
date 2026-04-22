@@ -71,7 +71,7 @@ export default function App() {
               <h1 className="text-lg font-semibold text-white tracking-tight">Joshua Misir's Value Finder</h1>
               <p className="text-xs text-gray-600 italic">most stock screeners are trash, so i built my own</p>
             </div>
-            <span className="text-xs text-gray-600 border border-gray-800 px-2 py-0.5 rounded">US Listed · Mkt Cap &gt;$300M</span>
+            <span className="text-xs text-gray-600 border border-gray-800 px-2 py-0.5 rounded">US Listed · Mkt Cap &gt;$100M</span>
           </div>
           {lastUpdated && (
             <div className="flex items-center gap-1.5 text-xs text-gray-600">

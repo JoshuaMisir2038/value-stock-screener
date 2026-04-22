@@ -199,7 +199,7 @@ def fetch_fundamental(ticker, friday_close):
         t = yf.Ticker(ticker)
         info = t.info
         market_cap = info.get('marketCap') or 0
-        if market_cap < 300_000_000:
+        if market_cap < 100_000_000:
             return None
 
         price = friday_close or info.get('currentPrice') or info.get('regularMarketPrice')

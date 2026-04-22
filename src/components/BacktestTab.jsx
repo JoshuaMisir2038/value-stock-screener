@@ -553,7 +553,7 @@ export default function BacktestTab({ stocks, benchmark, loading }) {
           <DecileTable deciles={deciles} spy={spy} />
         </div>
         <p className="text-xs text-gray-700 mt-2">
-          Survivorship bias note: only stocks currently in the screener (mkt cap &gt;$300M, still trading) are included.
+          Survivorship bias note: only stocks currently in the screener (mkt cap &gt;$100M, still trading) are included.
           Delisted or acquired stocks are excluded, which may inflate historical averages.
         </p>
       </div>
