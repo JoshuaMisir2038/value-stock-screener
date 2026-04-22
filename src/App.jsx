@@ -80,7 +80,7 @@ export default function App() {
             </div>
             <div>
               <h1 className="text-sm font-bold text-white tracking-widest uppercase">JOSHUA MISIR // VALUE FINDER</h1>
-              <p className="text-[11px] text-gray-600 italic">most stock screeners are trash, so i built my own</p>
+              <p className="text-[11px] text-gray-400 italic font-bold">most stock screeners are trash, so i built my own</p>
             </div>
           </div>
           <div className="flex items-center gap-6 text-[11px]">
