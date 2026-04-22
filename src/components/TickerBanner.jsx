@@ -59,8 +59,8 @@ export default function TickerBanner({ stocks }) {
 
   return (
     <div>
-      <BannerRow stocks={half1} duration={90}  reverse={false} />
-      <BannerRow stocks={half2} duration={110} reverse={true}  />
+      <BannerRow stocks={half1} duration={200} reverse={false} />
+      <BannerRow stocks={half2} duration={240} reverse={true}  />
     </div>
   )
 }
