@@ -11,9 +11,11 @@ import MacroTab from './components/MacroTab'
 import HackerNewsTab from './components/HackerNewsTab'
 import GlobalNewsTab from './components/GlobalNewsTab'
 import GitHubTrendingTab from './components/GitHubTrendingTab'
+import CustomScreenerTab from './components/CustomScreenerTab'
+import CustomBacktestTab from './components/CustomBacktestTab'
 import { EquityMethodology } from './components/Methodology'
 import TickerBanner from './components/TickerBanner'
-import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch } from 'lucide-react'
+import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch, SlidersHorizontal, TestTube2 } from 'lucide-react'
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -32,13 +34,21 @@ const TABS = [
   { id: 'macro',       label: 'Macro',           icon: Globe },
   { id: 'hackernews', label: 'Hacker News',     icon: Flame },
   { id: 'news',       label: 'Global News',     icon: Newspaper },
-  { id: 'github',     label: 'GitHub Trending', icon: GitBranch },
+  { id: 'github',        label: 'GitHub Trending',  icon: GitBranch },
+  { id: 'customscreener', label: 'Custom Screener',  icon: SlidersHorizontal },
+  { id: 'custombacktest', label: 'Custom Backtest',  icon: TestTube2 },
 ]
 
 export default function App() {
   const { stocks, loading, error, lastUpdated, benchmark } = useStocks()
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [tab, setTab] = useState('screener')
+  const [backtestPayload, setBacktestPayload] = useState(null)
+
+  const handleSendToBacktest = payload => {
+    setBacktestPayload(payload)
+    setTab('custombacktest')
+  }
 
   const sectors = useMemo(() => {
     const set = new Set(stocks.map(s => s.sector).filter(Boolean))
@@ -145,7 +155,9 @@ export default function App() {
         {tab === 'macro'       && <MacroTab />}
         {tab === 'hackernews'  && <HackerNewsTab />}
         {tab === 'news'        && <GlobalNewsTab />}
-        {tab === 'github'      && <GitHubTrendingTab />}
+        {tab === 'github'         && <GitHubTrendingTab />}
+        {tab === 'customscreener' && <CustomScreenerTab stocks={stocks} benchmark={benchmark} onSendToBacktest={handleSendToBacktest} />}
+        {tab === 'custombacktest' && <CustomBacktestTab stocks={stocks} benchmark={benchmark} backtestPayload={backtestPayload} />}
       </div>
     </div>
   )
