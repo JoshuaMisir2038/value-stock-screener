@@ -9,12 +9,15 @@ import os
 import warnings
 from datetime import datetime, timezone, date, timedelta
 
+import io
+import requests
 import yfinance as yf
 import pandas as pd
 
 warnings.filterwarnings('ignore')
 
-TICKERS = [
+# Fallback hardcoded list used if Wikipedia fetch fails
+_FALLBACK_TICKERS = [
     "A","AAL","AAP","AAPL","ABBV","ABC","ABT","ACN","ADBE","ADI","ADM",
     "ADP","ADSK","AEE","AEP","AES","AFL","AIG","AIZ","AJG","AKAM","ALB","ALGN",
     "ALK","ALL","ALLE","AMAT","AMCR","AMD","AME","AMGN","AMP","AMT","AMZN","ANET",
@@ -56,7 +59,7 @@ TICKERS = [
     "VRSN","VRTX","VTR","VZ","WAB","WAT","WBA","WDC","WEC","WELL","WFC","WHR",
     "WM","WMB","WMT","WRB","WST","WU","WY","WYNN","XEL","XOM",
     "XRAY","XYL","YUM","ZBH","ZBRA","ZION","ZTS",
-    "AGCO","ALK","ANF","ARW","ASH","ATR","BBY","BECN","BJ","BOOT",
+    "AGCO","ANF","ARW","ASH","ATR","BECN","BJ","BOOT",
     "CABO","CDAY","CHE","CPT","CRI","CW","DAN","DKNG","DLX",
     "EAT","ENPH","ENS","EXP","FLO","FLS","FNB","FR","FULT","GFF","GGG",
     "GPI","GXO","HAE","HBI","HCC","HGV","HIW","HNI","HP","HRC","HRI","HRB",
@@ -68,6 +71,25 @@ TICKERS = [
     "URBN","USFD","VIRT","VLY","WAFD","WBS","WEN","WERN","WGO","WOR","WPC",
     "WRLD","WTFC","WWD",
 ]
+
+def _wiki_tickers(url, col):
+    html = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15, verify=False).text
+    return pd.read_html(io.StringIO(html))[0][col].tolist()
+
+def get_tickers():
+    """Fetch S&P 500 + S&P 400 + S&P 600 tickers from Wikipedia. Falls back to hardcoded list."""
+    try:
+        sp500 = _wiki_tickers('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies', 'Symbol')
+        sp400 = _wiki_tickers('https://en.wikipedia.org/wiki/List_of_S%26P_400_companies', 'Symbol')
+        sp600 = _wiki_tickers('https://en.wikipedia.org/wiki/List_of_S%26P_600_companies', 'Symbol')
+        combined = list({t.replace('.', '-') for t in sp500 + sp400 + sp600 if isinstance(t, str)})
+        print(f"Loaded {len(combined)} tickers from Wikipedia (S&P 500: {len(sp500)}, 400: {len(sp400)}, 600: {len(sp600)})")
+        return combined
+    except Exception as e:
+        print(f"Wikipedia fetch failed ({e}), using fallback ticker list")
+        return _FALLBACK_TICKERS
+
+TICKERS = get_tickers()
 
 
 # ── Technical indicators ─────────────────────────────────────────────────────
@@ -527,8 +549,10 @@ def main():
         else:
             print(f"  [{i+1}/{len(TICKERS)}] {ticker} skipped")
 
-        if (i + 1) % 10 == 0:
-            time.sleep(1)
+        if (i + 1) % 50 == 0:
+            time.sleep(3)
+        else:
+            time.sleep(0.1)
 
     # ── Step 3: Score ──
     sectors = {}
