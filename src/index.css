@@ -2,9 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
-body { margin: 0; background: #030712; color: #f9fafb; }
+/* ── Bloomberg Terminal base ─────────────────────────────── */
+body {
+  margin: 0;
+  background: #000000;
+  color: #CCCCCC;
+  font-family: 'IBM Plex Mono', 'Courier New', Courier, monospace;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
 #root { width: 100%; max-width: none; text-align: left; }
 
+/* Remove all border-radius — Bloomberg terminal has no curves */
+*, *::before, *::after {
+  border-radius: 0 !important;
+}
+
+/* Terminal-style scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: #2A2A2A; }
+::-webkit-scrollbar-thumb:hover { background: #FF6600; }
+
+/* Ticker banner animations */
 @keyframes ticker-fwd {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -13,9 +34,29 @@ body { margin: 0; background: #030712; color: #f9fafb; }
   0%   { transform: translateX(-50%); }
   100% { transform: translateX(0); }
 }
-.ticker-forward {
-  animation: ticker-fwd linear infinite;
+.ticker-forward { animation: ticker-fwd linear infinite; }
+.ticker-reverse { animation: ticker-rev linear infinite; }
+
+/* Bloomberg-style table rows */
+table { border-collapse: collapse; }
+
+/* Uppercase all th elements globally */
+th { text-transform: uppercase; letter-spacing: 0.08em; font-size: 10px; }
+
+/* Input fields — terminal style */
+input[type="number"],
+input[type="text"],
+select {
+  font-family: 'IBM Plex Mono', 'Courier New', monospace !important;
 }
-.ticker-reverse {
-  animation: ticker-rev linear infinite;
+
+/* Remove number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+input[type="number"] { -moz-appearance: textfield; }
+
+/* Orange focus ring instead of blue */
+input:focus, select:focus, button:focus {
+  outline: 1px solid #FF6600;
+  outline-offset: 0;
 }
