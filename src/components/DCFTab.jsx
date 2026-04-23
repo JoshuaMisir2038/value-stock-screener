@@ -164,11 +164,12 @@ Tip: The assumptions that matter most deserve the most scrutiny. Spend your rese
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function fmtM(v) {
+function fmtB(v) {
   if (v == null || isNaN(v)) return '—'
   const abs = Math.abs(v)
-  if (abs >= 1000) return `$${(v / 1000).toFixed(1)}B`
-  return `$${v.toFixed(0)}M`
+  if (abs >= 1000) return `$${(v / 1000).toFixed(1)}T`
+  if (abs >= 1)    return `$${v.toFixed(1)}B`
+  return `$${(v * 1000).toFixed(0)}M`   // sub-billion shown as M for readability
 }
 
 function fmtPct(v) {
@@ -322,7 +323,8 @@ function runDCF({ baseFCF, g1, g2, wacc, terminalMethod, terminalGrowth, exitMul
   const pvTV = tv / lastDiscount
   const enterpriseValue = pvSum + pvTV
   const equityValue = enterpriseValue - netDebt
-  const intrinsicValue = shares > 0 ? equityValue / shares : null
+  // inputs in $B, shares in M → ($B × 1e9) / (M × 1e6) = value × 1000 / shares = $/share
+  const intrinsicValue = shares > 0 ? (equityValue * 1000) / shares : null
 
   return { rows, pvSum, tv, pvTV, enterpriseValue, equityValue, intrinsicValue }
 }
@@ -333,8 +335,8 @@ export default function DCFTab({ stocks = [] }) {
   const [selectedStock, setSelectedStock] = useState(null)
   const [showEdu, setShowEdu] = useState(false)
 
-  // Model inputs
-  const [baseFCF,        setBaseFCF]        = useState(0)    // $M
+  // Model inputs — monetary values in $B, shares in millions
+  const [baseFCF,        setBaseFCF]        = useState(0)    // $B
   const [g1,             setG1]             = useState(10)   // %
   const [g2,             setG2]             = useState(5)    // %
   const [wacc,           setWacc]           = useState(10)   // %
@@ -343,7 +345,7 @@ export default function DCFTab({ stocks = [] }) {
   const [terminalGrowth, setTerminalGrowth] = useState(2.5)  // %
   const [exitMultiple,   setExitMultiple]   = useState(15)   // x
   const [years,          setYears]          = useState(10)
-  const [netDebt,        setNetDebt]        = useState(0)    // $M
+  const [netDebt,        setNetDebt]        = useState(0)    // $B
   const [shares,         setShares]         = useState(0)    // M shares
 
   // Auto-populate when stock selected
@@ -351,14 +353,14 @@ export default function DCFTab({ stocks = [] }) {
     setSelectedStock(stock)
     if (!stock) return
 
-    // Base FCF: revenue × FCF margin (revY1 in raw $, fcfMargin as decimal)
+    // Base FCF: revenue × FCF margin (revY1 in raw $, fcfMargin as decimal) → convert to $B
     let fcfEst = 0
     if (stock.revY1 && stock.fcfMargin) {
-      fcfEst = (stock.revY1 * stock.fcfMargin) / 1e6  // convert to $M
+      fcfEst = (stock.revY1 * stock.fcfMargin) / 1e9
     } else if (stock.marketCap && stock.pFcf && stock.pFcf > 0) {
-      fcfEst = (stock.marketCap / stock.pFcf) / 1e6
+      fcfEst = (stock.marketCap / stock.pFcf) / 1e9
     }
-    setBaseFCF(Math.round(fcfEst))
+    setBaseFCF(parseFloat(fcfEst.toFixed(2)))
 
     // Growth: use revenue growth as starting point
     const gEst = stock.revenueGrowth ? Math.round(stock.revenueGrowth * 100) : 10
@@ -457,16 +459,16 @@ export default function DCFTab({ stocks = [] }) {
                 hint="Most recent year free cash flow"
                 value={baseFCF}
                 onChange={setBaseFCF}
-                suffix="$M"
-                step={10}
+                suffix="$B"
+                step={0.1}
               />
               <InputRow
                 label="Net Debt"
-                hint="Total debt minus cash ($M). Use negative for net cash."
+                hint="Total debt minus cash ($B). Use negative for net cash."
                 value={netDebt}
                 onChange={setNetDebt}
-                suffix="$M"
-                step={50}
+                suffix="$B"
+                step={0.5}
               />
               <InputRow
                 label="Shares Outstanding"
@@ -638,10 +640,10 @@ export default function DCFTab({ stocks = [] }) {
                   <thead>
                     <tr className="border-b border-gray-800">
                       <th className="text-left px-3 py-2 text-gray-600 font-normal uppercase tracking-wider text-[10px] w-12">YR</th>
-                      <th className="text-right px-3 py-2 text-gray-600 font-normal uppercase tracking-wider text-[10px]">FCF ($M)</th>
+                      <th className="text-right px-3 py-2 text-gray-600 font-normal uppercase tracking-wider text-[10px]">FCF ($B)</th>
                       <th className="text-right px-3 py-2 text-gray-600 font-normal uppercase tracking-wider text-[10px]">Growth</th>
                       <th className="text-right px-3 py-2 text-gray-600 font-normal uppercase tracking-wider text-[10px]">Discount</th>
-                      <th className="text-right px-3 py-2 text-gray-600 font-normal uppercase tracking-wider text-[10px]">PV ($M)</th>
+                      <th className="text-right px-3 py-2 text-gray-600 font-normal uppercase tracking-wider text-[10px]">PV ($B)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -650,10 +652,10 @@ export default function DCFTab({ stocks = [] }) {
                       return (
                         <tr key={row.year} className={`border-b border-gray-900 ${i % 2 === 0 ? '' : 'bg-gray-950/30'}`}>
                           <td className="px-3 py-1.5 text-gray-600 tabular-nums">{row.year}</td>
-                          <td className="px-3 py-1.5 text-right text-gray-300 tabular-nums">{fmtM(row.fcf)}</td>
+                          <td className="px-3 py-1.5 text-right text-gray-300 tabular-nums">{fmtB(row.fcf)}</td>
                           <td className="px-3 py-1.5 text-right text-blue-400 tabular-nums text-[10px]">+{g}%</td>
                           <td className="px-3 py-1.5 text-right text-gray-600 tabular-nums text-[10px]">{(1 / row.discount).toFixed(3)}x</td>
-                          <td className="px-3 py-1.5 text-right text-gray-400 tabular-nums">{fmtM(row.pv)}</td>
+                          <td className="px-3 py-1.5 text-right text-gray-400 tabular-nums">{fmtB(row.pv)}</td>
                         </tr>
                       )
                     })}
@@ -667,12 +669,12 @@ export default function DCFTab({ stocks = [] }) {
                   VALUATION BRIDGE
                 </div>
                 {[
-                  { label: 'PV of FCFs (Years 1–' + years + ')',   value: fmtM(result.pvSum),          sub: true  },
-                  { label: 'Terminal Value (undiscounted)',          value: fmtM(result.tv),             sub: true  },
-                  { label: 'PV of Terminal Value',                   value: fmtM(result.pvTV),           sub: true  },
-                  { label: 'Enterprise Value',                       value: fmtM(result.enterpriseValue),sub: false },
-                  { label: `Less: Net Debt`,                         value: `(${fmtM(netDebt)})`,        sub: true, note: netDebt === 0 ? '⚠ set manually' : '' },
-                  { label: 'Equity Value',                           value: fmtM(result.equityValue),    sub: false },
+                  { label: 'PV of FCFs (Years 1–' + years + ')',   value: fmtB(result.pvSum),          sub: true  },
+                  { label: 'Terminal Value (undiscounted)',          value: fmtB(result.tv),             sub: true  },
+                  { label: 'PV of Terminal Value',                   value: fmtB(result.pvTV),           sub: true  },
+                  { label: 'Enterprise Value',                       value: fmtB(result.enterpriseValue),sub: false },
+                  { label: `Less: Net Debt`,                         value: `(${fmtB(netDebt)})`,        sub: true, note: netDebt === 0 ? '⚠ set manually' : '' },
+                  { label: 'Equity Value',                           value: fmtB(result.equityValue),    sub: false },
                   { label: `÷ Shares (${shares}M)`,                  value: null,                        sub: true  },
                   { label: 'INTRINSIC VALUE / SHARE',                value: fmtShare(result.intrinsicValue), bold: true },
                   { label: 'Current Market Price',                   value: fmtShare(currentPrice),      muted: true },
