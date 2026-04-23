@@ -72,22 +72,82 @@ _FALLBACK_TICKERS = [
     "WRLD","WTFC","WWD",
 ]
 
+def _nasdaq_ftp_tickers():
+    """
+    Primary source: NASDAQ FTP symbol directory — all US-listed common stocks.
+    nasdaqlisted.txt  cols: Symbol | Name | Market | TestIssue | FinStatus | LotSize | ETF | NextShares
+    otherlisted.txt   cols: ACTSymbol | Name | Exchange | CQSSymbol | ETF | LotSize | TestIssue | NASDAQSymbol
+    """
+    tickers = set()
+    sources = [
+        ('https://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqlisted.txt',
+         dict(sym=0, etf=6, test=3, fin=4)),
+        ('https://ftp.nasdaqtrader.com/SymbolDirectory/otherlisted.txt',
+         dict(sym=0, etf=4, test=6, fin=None)),
+    ]
+    for url, idx in sources:
+        r = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=30)
+        r.raise_for_status()
+        for line in r.text.splitlines()[1:]:
+            if line.startswith('File Creation') or not line.strip():
+                continue
+            parts = line.split('|')
+            if len(parts) < 5:
+                continue
+            sym  = parts[idx['sym']].strip()
+            etf  = parts[idx['etf']].strip()  if idx['etf']  < len(parts) else 'N'
+            test = parts[idx['test']].strip() if idx['test'] < len(parts) else 'N'
+            fin  = parts[idx['fin']].strip()  if idx['fin'] is not None and idx['fin'] < len(parts) else 'N'
+            # Skip ETFs, test issues, financially distressed, warrants/preferred (non-alpha symbols)
+            if etf == 'Y' or test == 'Y':
+                continue
+            if idx['fin'] is not None and fin not in ('N', ''):
+                continue
+            # Keep only clean alphabetic symbols (allow one hyphen for share classes like BRK-B)
+            clean = sym.replace('-', '')
+            if not clean.isalpha() or len(sym) > 5:
+                continue
+            tickers.add(sym)
+    return list(tickers)
+
+
 def _wiki_tickers(url, col):
     html = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15, verify=False).text
     return pd.read_html(io.StringIO(html))[0][col].tolist()
 
+
 def get_tickers():
-    """Fetch S&P 500 + S&P 400 + S&P 600 tickers from Wikipedia. Falls back to hardcoded list."""
+    """
+    Priority order:
+      1. NASDAQ FTP symbol directory  (~6 000 US common stocks)
+      2. Wikipedia S&P 500 + 400 + 600 (~1 500 stocks, used if NASDAQ FTP fails)
+      3. Hardcoded fallback (~540 stocks)
+    """
+    # ── 1. NASDAQ FTP ──────────────────────────────────────────────────────────
+    try:
+        tickers = _nasdaq_ftp_tickers()
+        if len(tickers) > 2000:
+            print(f"Loaded {len(tickers)} tickers from NASDAQ FTP symbol directory")
+            return tickers
+        print(f"NASDAQ FTP returned only {len(tickers)} tickers — trying Wikipedia")
+    except Exception as e:
+        print(f"NASDAQ FTP fetch failed ({e}) — trying Wikipedia")
+
+    # ── 2. Wikipedia S&P indices ───────────────────────────────────────────────
     try:
         sp500 = _wiki_tickers('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies', 'Symbol')
         sp400 = _wiki_tickers('https://en.wikipedia.org/wiki/List_of_S%26P_400_companies', 'Symbol')
         sp600 = _wiki_tickers('https://en.wikipedia.org/wiki/List_of_S%26P_600_companies', 'Symbol')
         combined = list({t.replace('.', '-') for t in sp500 + sp400 + sp600 if isinstance(t, str)})
-        print(f"Loaded {len(combined)} tickers from Wikipedia (S&P 500: {len(sp500)}, 400: {len(sp400)}, 600: {len(sp600)})")
-        return combined
+        if combined:
+            print(f"Loaded {len(combined)} tickers from Wikipedia (S&P 500/400/600)")
+            return combined
     except Exception as e:
-        print(f"Wikipedia fetch failed ({e}), using fallback ticker list")
-        return _FALLBACK_TICKERS
+        print(f"Wikipedia fetch failed ({e}) — using hardcoded fallback")
+
+    # ── 3. Hardcoded fallback ──────────────────────────────────────────────────
+    print(f"Using hardcoded fallback list ({len(_FALLBACK_TICKERS)} tickers)")
+    return _FALLBACK_TICKERS
 
 TICKERS = get_tickers()
 
@@ -514,11 +574,22 @@ def main():
     print(f"  Got technicals for {len(technicals)} tickers.")
 
     # ── Step 2: Fetch fundamentals ──
-    print(f"\nFetching fundamentals...")
+    # Only fetch for tickers that had price data — skips ~40% of the list immediately
+    tickers_with_price = [t for t in TICKERS if t in technicals]
+    tickers_no_price   = [t for t in TICKERS if t not in technicals]
+    print(f"\nFetching fundamentals for {len(tickers_with_price)} tickers with price data "
+          f"(skipping {len(tickers_no_price)} with no price history)")
     stocks = []
-    for i, ticker in enumerate(TICKERS):
+    for i, ticker in enumerate(tickers_with_price):
         friday_close = technicals.get(ticker, {}).get('fridayClose')
-        result = fetch_fundamental(ticker, friday_close)
+        # Simple retry on transient failures
+        result = None
+        for attempt in range(2):
+            result = fetch_fundamental(ticker, friday_close)
+            if result is not None:
+                break
+            if attempt == 0:
+                time.sleep(3)
         if result:
             tech = technicals.get(ticker, {})
             result.update({
@@ -526,6 +597,7 @@ def main():
                 'ma200':     tech.get('ma200'),
                 'ma50':      tech.get('ma50'),
                 'hv21':      tech.get('hv21'),
+                'change1d':  tech.get('change1d'),
                 'asOf':      tech.get('asOf'),
                 'return1m':  tech.get('return1m'),
                 'return3m':  tech.get('return3m'),
@@ -545,9 +617,9 @@ def main():
                 result['aboveMa50'] = result['price'] >= result['ma50']
                 result['goldenCross'] = (result.get('ma50', 0) >= result.get('ma200', 0))
             stocks.append(result)
-            print(f"  [{i+1}/{len(TICKERS)}] {ticker} ✓")
+            print(f"  [{i+1}/{len(tickers_with_price)}] {ticker} ✓")
         else:
-            print(f"  [{i+1}/{len(TICKERS)}] {ticker} skipped")
+            print(f"  [{i+1}/{len(tickers_with_price)}] {ticker} skipped")
 
         if (i + 1) % 50 == 0:
             time.sleep(3)
