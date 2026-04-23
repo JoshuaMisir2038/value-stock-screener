@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import { SCORE_METRICS } from '../utils/scoring'
 
 function Section({ title, children }) {
   const [open, setOpen] = useState(false)
@@ -21,55 +20,34 @@ function Section({ title, children }) {
 export function EquityMethodology() {
   return (
     <Section title="How is the Value Score calculated?">
-      <p className="text-xs text-gray-500 mt-3 mb-4 leading-relaxed">
-        Each stock receives a score from <strong className="text-gray-300">0–100</strong> representing how cheap it is
-        relative to its sector peers — not the entire market. This makes a bank with a P/E of 10
-        comparable to other banks, not to tech stocks. Here's how it works:
-      </p>
-
-      <div className="text-xs text-gray-500 mb-4 leading-relaxed space-y-1">
-        <p><strong className="text-gray-300">Mkt Score</strong> — ranked against all 600+ stocks in the universe regardless of sector. A score of 80 means the stock is genuinely cheap vs the entire market. Use this to compare across sectors and allocate capital.</p>
-        <p><strong className="text-gray-300">Sec Score</strong> — ranked only against companies in the same sector. A score of 80 means it's cheap relative to its peers. Use this to find the best names within a sector you've already decided to invest in.</p>
-        <p className="pt-1"><strong className="text-gray-300">How it works:</strong> For each metric below, the stock is percentile-ranked (0–100%) within the comparison pool. Each percentile is multiplied by its weight, summed, then normalized to 0–100.</p>
-      </div>
-
-      <table className="w-full text-xs border-collapse mb-4">
-        <thead>
-          <tr className="border-b border-gray-800 text-gray-600 uppercase tracking-wider">
-            <th className="py-2 text-left pr-4">Metric</th>
-            <th className="py-2 text-left pr-4">Weight</th>
-            <th className="py-2 text-left pr-4">Direction</th>
-            <th className="py-2 text-left">Why it matters</th>
-          </tr>
-        </thead>
-        <tbody>
-          {SCORE_METRICS.map(m => (
-            <tr key={m.key} className="border-b border-gray-900">
-              <td className="py-2 pr-4 font-medium text-gray-300 whitespace-nowrap">{m.label}</td>
-              <td className="py-2 pr-4 text-blue-400 font-medium">{(m.weight * 100).toFixed(0)}%</td>
-              <td className="py-2 pr-4 whitespace-nowrap">
-                <span className={m.lowerIsBetter ? 'text-emerald-400' : 'text-purple-400'}>
-                  {m.lowerIsBetter ? '↓ Lower = better' : '↑ Higher = better'}
-                </span>
-              </td>
-              <td className="py-2 text-gray-500">{m.desc}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <div className="grid grid-cols-4 gap-2 text-xs">
-        {[
-          { range: '75–100', label: 'Strong Value',    color: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' },
-          { range: '55–74',  label: 'Moderate Value',  color: 'bg-blue-500/10 border-blue-500/30 text-blue-400' },
-          { range: '35–54',  label: 'Fair',            color: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400' },
-          { range: '0–34',   label: 'Expensive',       color: 'bg-red-500/10 border-red-500/30 text-red-400' },
-        ].map(s => (
-          <div key={s.range} className={`border rounded px-3 py-2 ${s.color}`}>
-            <div className="font-bold">{s.range}</div>
-            <div className="opacity-80">{s.label}</div>
+      <div className="pt-3 space-y-3">
+        <div className="flex gap-6 text-xs">
+          <div>
+            <span className="text-gray-300 font-bold">Mkt Score</span>
+            <span className="text-gray-600 ml-2">percentile rank vs entire universe — use to compare across sectors</span>
           </div>
-        ))}
+          <div>
+            <span className="text-gray-300 font-bold">Sec Score</span>
+            <span className="text-gray-600 ml-2">percentile rank within sector only — use to find the best name within a sector</span>
+          </div>
+        </div>
+        <p className="text-[11px] text-gray-600 leading-relaxed">
+          Each metric is percentile-ranked within its comparison pool, multiplied by its weight, summed, and normalised to 0–100.
+          Weights and metrics are fully adjustable — use the panel below.
+        </p>
+        <div className="flex gap-2 text-[11px]">
+          {[
+            { range: '75–100', label: 'Strong Value',   color: 'border-emerald-500/30 text-emerald-400' },
+            { range: '55–74',  label: 'Moderate Value', color: 'border-blue-500/30 text-blue-400' },
+            { range: '35–54',  label: 'Fair',           color: 'border-yellow-500/30 text-yellow-400' },
+            { range: '0–34',   label: 'Expensive',      color: 'border-red-500/30 text-red-400' },
+          ].map(s => (
+            <div key={s.range} className={`border px-2.5 py-1 ${s.color}`}>
+              <span className="font-bold">{s.range}</span>
+              <span className="opacity-70 ml-1.5">{s.label}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </Section>
   )
