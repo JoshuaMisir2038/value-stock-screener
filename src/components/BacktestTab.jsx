@@ -61,7 +61,7 @@ function dotColor(score) {
   return (SCORE_COLORS.find(c => score >= c.min) || SCORE_COLORS[3]).color
 }
 
-function ScatterPlot({ points }) {
+function ScatterPlot({ points, horizonLabel = '1Y' }) {
   const [tooltip, setTooltip] = useState(null)
 
   const W = 580, H = 300
@@ -123,7 +123,7 @@ function ScatterPlot({ points }) {
         </text>
         <text x={12} y={PAD.top + plotH / 2} textAnchor="middle" fontSize="10" fill="#6b7280"
           transform={`rotate(-90, 12, ${PAD.top + plotH / 2})`}>
-          1Y Return %
+          {horizonLabel} Return %
         </text>
 
         {/* Trend line */}
@@ -165,7 +165,7 @@ function ScatterPlot({ points }) {
           <div className="mt-1 grid grid-cols-2 gap-x-3">
             <span className="text-gray-500">Score</span>
             <span className="text-white font-medium">{tooltip.x}</span>
-            <span className="text-gray-500">1Y Return</span>
+            <span className="text-gray-500">{horizonLabel} Return</span>
             <span className={tooltip.y >= 0 ? 'text-emerald-400' : 'text-red-400'}>
               {tooltip.y > 0 ? '+' : ''}{tooltip.y.toFixed(1)}%
             </span>
@@ -186,7 +186,7 @@ function ScatterPlot({ points }) {
   )
 }
 
-// ── Multi-year lookback ───────────────────────────────────────────────────────
+// ── Time horizons ──────────────────────────────────────────────────────────────
 
 const HORIZONS = [
   { key: 'return1y', label: '1Y', years: 1 },
@@ -194,6 +194,14 @@ const HORIZONS = [
   { key: 'return3y', label: '3Y', years: 3 },
   { key: 'return4y', label: '4Y', years: 4 },
   { key: 'return5y', label: '5Y', years: 5 },
+]
+
+// All horizons shown in scatter/decile (no 4Y — data sparse)
+const MAIN_HORIZONS = [
+  { key: 'return1y', label: '1Y' },
+  { key: 'return2y', label: '2Y' },
+  { key: 'return3y', label: '3Y' },
+  { key: 'return5y', label: '5Y' },
 ]
 
 function HorizonChart({ rows }) {
@@ -347,17 +355,34 @@ function MultiYearLookback({ stocks, spy }) {
 
 // ── Decile table ──────────────────────────────────────────────────────────────
 
-function DecileTable({ deciles, spy }) {
+const DECILE_COLS = [
+  { key: 'avg1m',  spyKey: 'return1m', label: '1M'  },
+  { key: 'avg3m',  spyKey: 'return3m', label: '3M'  },
+  { key: 'avg6m',  spyKey: 'return6m', label: '6M'  },
+  { key: 'avg1y',  spyKey: 'return1y', label: '1Y'  },
+  { key: 'avg2y',  spyKey: 'return2y', label: '2Y'  },
+  { key: 'avg3y',  spyKey: 'return3y', label: '3Y'  },
+  { key: 'avg5y',  spyKey: 'return5y', label: '5Y'  },
+]
+
+function DecileTable({ deciles, spy, activeHorizon }) {
   return (
+    <div className="overflow-x-auto">
     <table className="w-full text-sm border-collapse">
       <thead>
         <tr className="border-b border-gray-800 text-xs text-gray-600 uppercase tracking-wider">
-          <th className="px-4 py-2.5 text-left">Score Range</th>
+          <th className="px-4 py-2.5 text-left sticky left-0 bg-gray-950 z-10">Score Range</th>
           <th className="px-4 py-2.5 text-right">Stocks</th>
-          <th className="px-4 py-2.5 text-right">Avg 1M</th>
-          <th className="px-4 py-2.5 text-right">Avg 3M</th>
-          <th className="px-4 py-2.5 text-right">Avg 6M</th>
-          <th className="px-4 py-2.5 text-right">Avg 1Y</th>
+          {DECILE_COLS.map(c => (
+            <th
+              key={c.key}
+              className={`px-4 py-2.5 text-right whitespace-nowrap transition-colors ${
+                c.label === activeHorizon ? 'text-blue-400 bg-blue-500/10' : ''
+              }`}
+            >
+              Avg {c.label}
+            </th>
+          ))}
         </tr>
       </thead>
       <tbody>
@@ -366,55 +391,68 @@ function DecileTable({ deciles, spy }) {
             key={d.range}
             className={`border-b border-gray-900 hover:bg-gray-900/50 ${i % 2 !== 0 ? 'bg-gray-950/40' : ''}`}
           >
-            <td className="px-4 py-2.5">
+            <td className="px-4 py-2.5 sticky left-0 bg-inherit z-10">
               <div className="flex items-center gap-2">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: dotColor(parseInt(d.range.split('–')[0])) }}
-                />
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: dotColor(parseInt(d.range.split('–')[0])) }} />
                 <span className="text-gray-300 font-medium">{d.range}</span>
               </div>
             </td>
             <td className="px-4 py-2.5 text-right text-gray-500">{d.count}</td>
-            <td className="px-4 py-2.5 text-right"><ReturnCell value={d.avg1m} /></td>
-            <td className="px-4 py-2.5 text-right"><ReturnCell value={d.avg3m} /></td>
-            <td className="px-4 py-2.5 text-right"><ReturnCell value={d.avg6m} /></td>
-            <td className="px-4 py-2.5 text-right"><ReturnCell value={d.avg1y} bold /></td>
+            {DECILE_COLS.map(c => (
+              <td
+                key={c.key}
+                className={`px-4 py-2.5 text-right ${c.label === activeHorizon ? 'bg-blue-500/5' : ''}`}
+              >
+                <ReturnCell value={d[c.key]} bold={c.label === activeHorizon} />
+              </td>
+            ))}
           </tr>
         ))}
-        {/* SPY benchmark row */}
         {spy && (
           <tr className="border-t border-gray-700 bg-blue-500/5">
-            <td className="px-4 py-2.5">
+            <td className="px-4 py-2.5 sticky left-0 bg-blue-950/30 z-10">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-blue-400" />
                 <span className="text-blue-400 font-medium">S&amp;P 500 (SPY)</span>
               </div>
             </td>
             <td className="px-4 py-2.5 text-right text-gray-600">—</td>
-            <td className="px-4 py-2.5 text-right"><ReturnCell value={spy.return1m} /></td>
-            <td className="px-4 py-2.5 text-right"><ReturnCell value={spy.return3m} /></td>
-            <td className="px-4 py-2.5 text-right"><ReturnCell value={spy.return6m} /></td>
-            <td className="px-4 py-2.5 text-right"><ReturnCell value={spy.return1y} bold /></td>
+            {DECILE_COLS.map(c => (
+              <td
+                key={c.key}
+                className={`px-4 py-2.5 text-right ${c.label === activeHorizon ? 'bg-blue-500/10' : ''}`}
+              >
+                <ReturnCell value={spy[c.spyKey]} bold={c.label === activeHorizon} />
+              </td>
+            ))}
           </tr>
         )}
       </tbody>
     </table>
+    </div>
   )
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function BacktestTab({ stocks, benchmark, loading }) {
-  // Only stocks with both a value score and at least 1Y return data
+  const [horizon, setHorizon] = useState(MAIN_HORIZONS[0])
+
+  // Base valid set: has score + 1Y return (used for decile table which shows all horizons)
   const valid = useMemo(
     () => stocks.filter(s => s.valueScore != null && s.return1y != null),
     [stocks]
   )
 
+  // Horizon-specific valid set for scatter + summary cards
+  const validH = useMemo(
+    () => stocks.filter(s => s.valueScore != null && s[horizon.key] != null),
+    [stocks, horizon]
+  )
+
   const scatterPoints = useMemo(
-    () => valid.map(s => ({ x: s.valueScore, y: s.return1y, symbol: s.symbol, name: s.name })),
-    [valid]
+    () => validH.map(s => ({ x: s.valueScore, y: s[horizon.key], symbol: s.symbol, name: s.name })),
+    [validH, horizon]
   )
 
   const deciles = useMemo(() => {
@@ -433,20 +471,17 @@ export default function BacktestTab({ stocks, benchmark, loading }) {
       avg3m:  avg(b.stocks.map(s => s.return3m)),
       avg6m:  avg(b.stocks.map(s => s.return6m)),
       avg1y:  avg(b.stocks.map(s => s.return1y)),
+      avg2y:  avg(b.stocks.map(s => s.return2y)),
+      avg3y:  avg(b.stocks.map(s => s.return3y)),
+      avg5y:  avg(b.stocks.map(s => s.return5y)),
     }))
   }, [valid])
 
-  const topQuartile = useMemo(
-    () => valid.filter(s => s.valueScore >= 75),
-    [valid]
-  )
-  const bottomQuartile = useMemo(
-    () => valid.filter(s => s.valueScore < 25),
-    [valid]
-  )
+  const topQuartile    = useMemo(() => validH.filter(s => s.valueScore >= 75), [validH])
+  const bottomQuartile = useMemo(() => validH.filter(s => s.valueScore <  25), [validH])
 
-  const topAvg1y   = avg(topQuartile.map(s => s.return1y))
-  const bottomAvg1y = avg(bottomQuartile.map(s => s.return1y))
+  const topAvg    = avg(topQuartile.map(s => s[horizon.key]))
+  const bottomAvg = avg(bottomQuartile.map(s => s[horizon.key]))
   const spy = benchmark?.spy
 
   const { r2 } = useMemo(() => linearRegression(scatterPoints), [scatterPoints])
@@ -468,40 +503,53 @@ export default function BacktestTab({ stocks, benchmark, loading }) {
     )
   }
 
-  const spread = topAvg1y != null && spy?.return1y != null
-    ? topAvg1y - spy.return1y
-    : null
+  const spyReturn = spy?.[horizon.key] ?? null
+  const spread    = topAvg != null && spyReturn != null ? topAvg - spyReturn : null
 
   return (
     <div className="space-y-8">
-      {/* Description */}
-      <div>
-        <p className="text-xs text-gray-500 leading-relaxed max-w-2xl">
-          For each of the {valid.length.toLocaleString()} stocks in the screener, this plots the current value score
-          against the actual 1-year price return. If the model works, high-scored stocks should outperform
-          low-scored ones. Note: this uses <em>current</em> value scores, not historical ones —
-          so it's directional, not a rigorous backtest.
+      {/* Header + horizon selector */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <p className="text-xs text-gray-500 leading-relaxed max-w-xl">
+          Current value scores plotted against actual price returns. If the model works, high-scored
+          stocks should outperform low-scored ones. Note: uses <em>current</em> scores, not point-in-time.
         </p>
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-[10px] text-gray-700 uppercase tracking-wider mr-1">Horizon:</span>
+          {MAIN_HORIZONS.map(h => (
+            <button
+              key={h.key}
+              onClick={() => setHorizon(h)}
+              className={`px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase border transition-colors ${
+                horizon.key === h.key
+                  ? 'bg-blue-500 border-blue-500 text-black'
+                  : 'border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-300'
+              }`}
+            >
+              {h.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary cards — update with selected horizon */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <SummaryCard
-          label="Score >75 avg 1Y return"
-          value={topAvg1y != null ? `${topAvg1y > 0 ? '+' : ''}${topAvg1y.toFixed(1)}%` : '—'}
+          label={`Score >75 avg ${horizon.label} return`}
+          value={topAvg != null ? `${topAvg > 0 ? '+' : ''}${topAvg.toFixed(1)}%` : '—'}
           sub={`${topQuartile.length} stocks`}
-          accent={topAvg1y > 0 ? 'text-emerald-400' : 'text-red-400'}
+          accent={topAvg > 0 ? 'text-emerald-400' : 'text-red-400'}
         />
         <SummaryCard
-          label="S&P 500 (SPY) 1Y return"
-          value={spy?.return1y != null ? `${spy.return1y > 0 ? '+' : ''}${spy.return1y.toFixed(1)}%` : '—'}
+          label={`S&P 500 (SPY) ${horizon.label} return`}
+          value={spyReturn != null ? `${spyReturn > 0 ? '+' : ''}${spyReturn.toFixed(1)}%` : '—'}
           sub="benchmark"
           accent="text-blue-400"
         />
         <SummaryCard
           label="Top quartile vs S&P"
           value={spread != null ? `${spread > 0 ? '+' : ''}${spread.toFixed(1)}%` : '—'}
-          sub={spread > 0 ? 'outperforming' : spread < 0 ? 'underperforming' : ''}
+          sub={spread != null ? (spread > 0 ? 'outperforming' : 'underperforming') : ''}
           accent={spread > 0 ? 'text-emerald-400' : 'text-red-400'}
         />
         <SummaryCard
@@ -523,11 +571,10 @@ export default function BacktestTab({ stocks, benchmark, loading }) {
       {/* Scatter plot */}
       <div>
         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">
-          Value Score vs 1-Year Return
+          Value Score vs {horizon.label} Return ({validH.length.toLocaleString()} stocks)
         </h3>
         <div className="border border-gray-800 rounded p-4 bg-gray-950/30">
-          <ScatterPlot points={scatterPoints} />
-          {/* Legend */}
+          <ScatterPlot points={scatterPoints} horizonLabel={horizon.label} />
           <div className="flex gap-4 mt-3 text-xs text-gray-600">
             {[
               { color: '#34d399', label: 'Score 75–100' },
@@ -544,17 +591,17 @@ export default function BacktestTab({ stocks, benchmark, loading }) {
         </div>
       </div>
 
-      {/* Decile table */}
+      {/* Decile table — all horizons, active one highlighted */}
       <div>
         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">
           Average Returns by Score Decile
         </h3>
         <div className="border border-gray-800 rounded overflow-hidden bg-gray-950/30">
-          <DecileTable deciles={deciles} spy={spy} />
+          <DecileTable deciles={deciles} spy={spy} activeHorizon={horizon.label} />
         </div>
         <p className="text-xs text-gray-700 mt-2">
-          Survivorship bias note: only stocks currently in the screener (mkt cap &gt;$100M, still trading) are included.
-          Delisted or acquired stocks are excluded, which may inflate historical averages.
+          Survivorship bias: only stocks currently in the screener (mkt cap &gt;$100M, still trading) are included.
+          Delisted or acquired stocks are excluded, which may inflate averages. Longer horizons have fewer stocks with full data.
         </p>
       </div>
     </div>
