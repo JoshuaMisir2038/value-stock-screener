@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
-import { computeScores } from '../utils/scoring'
 
 export function useStocks() {
-  const [stocks, setStocks] = useState([])
+  const [rawStocks, setRawStocks] = useState([])
   const [benchmark, setBenchmark] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -20,8 +19,7 @@ export function useStocks() {
           seen.add(s.symbol)
           return true
         })
-        const scored = computeScores(unique)
-        setStocks(scored)
+        setRawStocks(unique)
         setLastUpdated(json.lastUpdated)
         setBenchmark(json.benchmark || null)
       } catch (err) {
@@ -33,5 +31,5 @@ export function useStocks() {
     load()
   }, [])
 
-  return { stocks, loading, error, lastUpdated, benchmark }
+  return { rawStocks, loading, error, lastUpdated, benchmark }
 }

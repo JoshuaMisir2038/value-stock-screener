@@ -6,7 +6,7 @@ import {
   createColumnHelper,
 } from '@tanstack/react-table'
 import { useState } from 'react'
-import { ChevronUp, ChevronDown, ChevronsUpDown, History } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronsUpDown, History, Plus, Check } from 'lucide-react'
 import ScoreBadge from './ScoreBadge'
 import MetricCell from './MetricCell'
 import ScoreHistoryModal from './ScoreHistoryModal'
@@ -16,7 +16,7 @@ const col = createColumnHelper()
 
 // Column groups for the sticky sub-header
 const GROUPS = [
-  { label: '',            span: 6, border: false },
+  { label: '',            span: 7, border: false },
   { label: 'VALUATION',  span: 7, border: true },
   { label: 'MARGINS',    span: 3, border: true },
   { label: 'GROWTH',     span: 3, border: true },
@@ -26,7 +26,37 @@ const GROUPS = [
   { label: 'ANNUAL REVENUE', span: 3, border: true },
 ]
 
+// Terminal colors matching CompareModal
+const COMPARE_COLORS = ['text-orange-400 border-orange-500', 'text-cyan-400 border-cyan-500', 'text-yellow-400 border-yellow-400', 'text-purple-400 border-purple-500']
+
 const COLUMNS = [
+  // Compare toggle
+  col.display({
+    id: '_compare',
+    header: () => <span className="text-gray-700 uppercase text-[9px] tracking-wider">CMP</span>,
+    cell: i => {
+      const meta = i.table.options.meta
+      const symbol = i.row.original.symbol
+      const idx = meta?.compareStocks?.indexOf(symbol) ?? -1
+      const isSelected = idx !== -1
+      const colorClass = isSelected ? COMPARE_COLORS[idx] : ''
+      return (
+        <button
+          onClick={e => { e.stopPropagation(); meta?.onToggleCompare(symbol) }}
+          title={isSelected ? 'Remove from comparison' : 'Add to comparison'}
+          className={`w-5 h-5 flex items-center justify-center border transition-colors ${
+            isSelected
+              ? `${colorClass} bg-gray-800`
+              : 'border-gray-700 text-gray-700 hover:border-gray-500 hover:text-gray-400'
+          }`}
+        >
+          {isSelected ? <Check size={10} /> : <Plus size={10} />}
+        </button>
+      )
+    },
+    size: 36,
+    enableSorting: false,
+  }),
   // Identity
   col.accessor('valueScore',      { header: 'Mkt Score',    cell: i => (
     <div className="flex items-center gap-1">
@@ -111,7 +141,7 @@ function SortIcon({ isSorted }) {
   return <ChevronsUpDown size={11} className="inline ml-1 text-gray-700" />
 }
 
-export default function StockTable({ data }) {
+export default function StockTable({ data, compareStocks = [], onToggleCompare }) {
   const [sorting, setSorting] = useState([{ id: 'valueScore', desc: true }])
   const [historyStock, setHistoryStock] = useState(null)
   const [detailStock, setDetailStock] = useState(null)
@@ -124,8 +154,10 @@ export default function StockTable({ data }) {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     meta: {
-      onShowHistory: stock => setHistoryStock(stock),
-      onShowDetail:  stock => setDetailStock(stock),
+      onShowHistory:   stock => setHistoryStock(stock),
+      onShowDetail:    stock => setDetailStock(stock),
+      compareStocks,
+      onToggleCompare: onToggleCompare ?? (() => {}),
     },
   })
 
@@ -151,7 +183,7 @@ export default function StockTable({ data }) {
             <tr key={headerGroup.id} className="border-b border-gray-800">
               {headerGroup.headers.map((header, idx) => {
                 // Add border-left at group boundaries
-                const groupBoundaries = [6, 13, 16, 19, 22, 23, 24, 27]
+                const groupBoundaries = [7, 14, 17, 20, 23, 24, 25, 28]
                 const hasBorder = groupBoundaries.includes(idx)
                 return (
                   <th
@@ -169,13 +201,20 @@ export default function StockTable({ data }) {
           ))}
         </thead>
         <tbody>
-          {table.getRowModel().rows.map((row, i) => (
+          {table.getRowModel().rows.map((row, i) => {
+            const sym = row.original.symbol
+            const cmpIdx = compareStocks.indexOf(sym)
+            const isCompared = cmpIdx !== -1
+            const leftBorderColor = isCompared
+              ? ['border-l-orange-500','border-l-cyan-500','border-l-yellow-400','border-l-purple-500'][cmpIdx]
+              : ''
+            return (
             <tr
               key={row.id}
-              className={`border-b border-gray-900 hover:bg-gray-900/50 transition-colors ${i % 2 === 0 ? '' : 'bg-gray-950/40'}`}
+              className={`border-b border-gray-900 hover:bg-gray-900/50 transition-colors ${i % 2 === 0 ? '' : 'bg-gray-950/40'} ${isCompared ? `border-l-2 ${leftBorderColor} bg-gray-800/30` : ''}`}
             >
               {row.getVisibleCells().map((cell, idx) => {
-                const groupBoundaries = [6, 13, 16, 19, 22, 23, 24, 27]
+                const groupBoundaries = [7, 14, 17, 20, 23, 24, 25, 28]
                 const hasBorder = groupBoundaries.includes(idx)
                 return (
                   <td key={cell.id} className={`px-3 py-2.5 text-gray-300 ${hasBorder ? 'border-l border-gray-900' : ''}`}>
@@ -184,7 +223,8 @@ export default function StockTable({ data }) {
                 )
               })}
             </tr>
-          ))}
+            )
+          })}
         </tbody>
       </table>
 
