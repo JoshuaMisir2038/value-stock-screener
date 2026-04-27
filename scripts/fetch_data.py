@@ -624,7 +624,7 @@ def main():
                 result['pctFromMa200'] = pct
             if result['price'] and result.get('ma50'):
                 result['aboveMa50'] = result['price'] >= result['ma50']
-                result['goldenCross'] = (result.get('ma50', 0) >= result.get('ma200', 0))
+                result['goldenCross'] = ((result.get('ma50') or 0) >= (result.get('ma200') or 0))
             stocks.append(result)
             print(f"  [{i+1}/{len(tickers_with_price)}] {ticker} ✓")
         else:

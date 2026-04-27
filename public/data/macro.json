@@ -1,17 +1,13 @@
 {
-  "asOf": "2026-04-22 00:21 UTC",
+  "asOf": "2026-04-27 13:40 UTC",
   "vix": {
-    "current": 19.5,
-    "prev": 18.87,
-    "change1d": 0.63,
-    "change1w": 1.14,
-    "high52": 33.82,
+    "current": 19.07,
+    "prev": 18.71,
+    "change1d": 0.36,
+    "change1w": 0.2,
+    "high52": 31.05,
     "low52": 13.47,
     "history": [
-      {
-        "date": "2025-05-04",
-        "value": 22.68
-      },
       {
         "date": "2025-05-11",
         "value": 21.9
@@ -214,14 +210,18 @@
       },
       {
         "date": "2026-04-26",
-        "value": 19.5
+        "value": 18.71
+      },
+      {
+        "date": "2026-05-03",
+        "value": 19.07
       }
     ]
   },
   "pcr": {
     "equity": {
-      "value": 1.36,
-      "date": "2026-04-21",
+      "value": 1.47,
+      "date": "2026-04-27",
       "source": "SPY + QQQ + IWM options volume",
       "history": []
     }
@@ -668,16 +668,12 @@
       "unit": "%",
       "desc": "30-year fixed-rate mortgage average (Freddie Mac)",
       "goodLow": true,
-      "value": 6.3,
-      "date": "2026-04-16",
-      "prev": 6.37,
+      "value": 6.23,
+      "date": "2026-04-23",
+      "prev": 6.3,
       "change": -0.07,
-      "changeYoY": 0.21,
+      "changeYoY": 0.13,
       "history": [
-        {
-          "date": "2025-11",
-          "value": 6.22
-        },
         {
           "date": "2025-11",
           "value": 6.24
@@ -769,6 +765,10 @@
         {
           "date": "2026-04",
           "value": 6.3
+        },
+        {
+          "date": "2026-04",
+          "value": 6.23
         }
       ]
     },
@@ -777,24 +777,12 @@
       "unit": "%",
       "desc": "Yield curve spread \u2014 negative = inverted (recession signal)",
       "goodLow": false,
-      "value": 0.52,
-      "date": "2026-04-21",
-      "prev": 0.54,
-      "change": -0.02,
-      "changeYoY": 0.01,
+      "value": 0.53,
+      "date": "2026-04-24",
+      "prev": 0.51,
+      "change": 0.02,
+      "changeYoY": 0.03,
       "history": [
-        {
-          "date": "2026-03",
-          "value": 0.46
-        },
-        {
-          "date": "2026-03",
-          "value": 0.51
-        },
-        {
-          "date": "2026-03",
-          "value": 0.51
-        },
         {
           "date": "2026-03",
           "value": 0.49
@@ -878,6 +866,18 @@
         {
           "date": "2026-04",
           "value": 0.52
+        },
+        {
+          "date": "2026-04",
+          "value": 0.51
+        },
+        {
+          "date": "2026-04",
+          "value": 0.51
+        },
+        {
+          "date": "2026-04",
+          "value": 0.53
         }
       ]
     },
@@ -886,16 +886,12 @@
       "unit": "",
       "desc": "University of Michigan Consumer Sentiment Index",
       "goodLow": false,
-      "value": 56.6,
-      "date": "2026-02-01",
-      "prev": 56.4,
-      "change": 0.2,
-      "changeYoY": -8.1,
+      "value": 53.3,
+      "date": "2026-03-01",
+      "prev": 56.6,
+      "change": -3.3,
+      "changeYoY": -3.7,
       "history": [
-        {
-          "date": "2024-03",
-          "value": 79.4
-        },
         {
           "date": "2024-04",
           "value": 77.2
@@ -987,6 +983,10 @@
         {
           "date": "2026-02",
           "value": 56.6
+        },
+        {
+          "date": "2026-03",
+          "value": 53.3
         }
       ]
     }
