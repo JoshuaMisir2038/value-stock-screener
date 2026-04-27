@@ -116,34 +116,43 @@ def _wiki_tickers(url, col):
     return pd.read_html(io.StringIO(html))[0][col].tolist()
 
 
+MAX_TICKERS = 2500  # cap that fits comfortably inside the 90-min job timeout
+
 def get_tickers():
     """
-    Priority order:
-      1. NASDAQ FTP symbol directory  (~6 000 US common stocks)
-      2. Wikipedia S&P 500 + 400 + 600 (~1 500 stocks, used if NASDAQ FTP fails)
-      3. Hardcoded fallback (~540 stocks)
+    Build a prioritised ticker list capped at MAX_TICKERS:
+      - Core: S&P 500 + 400 + 600 from Wikipedia (~1 500, best data quality)
+      - Fill: remaining slots from NASDAQ FTP directory (broader coverage)
+      - Fallback: hardcoded list if both network sources fail
     """
-    # ── 1. NASDAQ FTP ──────────────────────────────────────────────────────────
-    try:
-        tickers = _nasdaq_ftp_tickers()
-        if len(tickers) > 2000:
-            print(f"Loaded {len(tickers)} tickers from NASDAQ FTP symbol directory")
-            return tickers
-        print(f"NASDAQ FTP returned only {len(tickers)} tickers — trying Wikipedia")
-    except Exception as e:
-        print(f"NASDAQ FTP fetch failed ({e}) — trying Wikipedia")
+    sp_tickers = []
 
-    # ── 2. Wikipedia S&P indices ───────────────────────────────────────────────
+    # ── 1. S&P 500 / 400 / 600 from Wikipedia (core, highest priority) ────────
     try:
         sp500 = _wiki_tickers('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies', 'Symbol')
         sp400 = _wiki_tickers('https://en.wikipedia.org/wiki/List_of_S%26P_400_companies', 'Symbol')
         sp600 = _wiki_tickers('https://en.wikipedia.org/wiki/List_of_S%26P_600_companies', 'Symbol')
-        combined = list({t.replace('.', '-') for t in sp500 + sp400 + sp600 if isinstance(t, str)})
-        if combined:
-            print(f"Loaded {len(combined)} tickers from Wikipedia (S&P 500/400/600)")
-            return combined
+        sp_tickers = list({t.replace('.', '-') for t in sp500 + sp400 + sp600 if isinstance(t, str)})
+        print(f"S&P 500/400/600: {len(sp_tickers)} tickers from Wikipedia")
     except Exception as e:
-        print(f"Wikipedia fetch failed ({e}) — using hardcoded fallback")
+        print(f"Wikipedia fetch failed ({e})")
+
+    # ── 2. Fill remaining slots from NASDAQ FTP ────────────────────────────────
+    extra_tickers = []
+    try:
+        all_nasdaq = _nasdaq_ftp_tickers()
+        sp_set = set(sp_tickers)
+        extra_tickers = [t for t in all_nasdaq if t not in sp_set]
+        remaining = MAX_TICKERS - len(sp_tickers)
+        extra_tickers = extra_tickers[:max(0, remaining)]
+        print(f"NASDAQ FTP: adding {len(extra_tickers)} extra tickers (cap {MAX_TICKERS})")
+    except Exception as e:
+        print(f"NASDAQ FTP fetch failed ({e})")
+
+    combined = sp_tickers + extra_tickers
+    if combined:
+        print(f"Total ticker universe: {len(combined)}")
+        return combined
 
     # ── 3. Hardcoded fallback ──────────────────────────────────────────────────
     print(f"Using hardcoded fallback list ({len(_FALLBACK_TICKERS)} tickers)")

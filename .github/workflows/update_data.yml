@@ -8,7 +8,7 @@ on:
     - cron: '0 17 * * 1-5'
     # 4:30pm ET (market close) = 8:30pm UTC
     - cron: '30 20 * * 1-5'
-  workflow_dispatch: # allow manual trigger from GitHub UI
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -16,7 +16,7 @@ permissions:
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repo
@@ -30,29 +30,46 @@ jobs:
       - name: Install dependencies
         run: pip install yfinance pandas requests lxml urllib3
 
+      # continue-on-error on every script so a timeout or crash never
+      # prevents the commit step from running
       - name: Fetch stock data
         run: python scripts/fetch_data.py
+        continue-on-error: true
 
       - name: Fetch bond and commodity data
         run: python scripts/fetch_market_data.py
+        continue-on-error: true
 
       - name: Fetch macro data (VIX, PCR, FRED)
         run: python scripts/fetch_macro.py
+        continue-on-error: true
 
       - name: Run options backtest
         run: python scripts/run_backtest.py
+        continue-on-error: true
 
       - name: Snapshot value scores (once per day)
         run: python scripts/snapshot_scores.py
+        continue-on-error: true
+
+      # Always stamp the run time — ensures there is always something to
+      # commit, which (a) keeps the workflow active and (b) makes it easy
+      # to see in git log that the job ran even when data didn't change.
+      - name: Stamp run time
+        if: always()
+        run: |
+          mkdir -p public/data
+          echo "{\"lastRun\": \"$(date -u '+%Y-%m-%dT%H:%M:%S UTC')\"}" > public/data/last_run.json
 
       - name: Commit updated data
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/data/stocks.json public/data/options.json public/data/bonds.json public/data/commodities.json public/data/backtest_options.json public/data/macro.json public/data/score_history.json
+          git add public/data/
           git diff --cached --quiet || git commit -m "chore: update market data $(date -u '+%Y-%m-%dT%H:%M UTC')"
           for i in 1 2 3; do
             git pull --rebase origin main && git push origin main && break
-            echo "Push attempt $i failed, retrying in 10s..."
-            sleep 10
+            echo "Push attempt $i failed, retrying in 15s..."
+            sleep 15
           done
