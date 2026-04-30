@@ -7,8 +7,6 @@ import json
 import time
 import os
 import warnings
-import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone, date, timedelta
 
 import io
@@ -584,17 +582,14 @@ def main():
     technicals = batch_download_technicals(TICKERS)
     print(f"  Got technicals for {len(technicals)} tickers.")
 
-    # ── Step 2: Fetch fundamentals (parallel) ──
+    # ── Step 2: Fetch fundamentals ──
     # Only fetch for tickers that had price data — skips ~40% of the list immediately
     tickers_with_price = [t for t in TICKERS if t in technicals]
     tickers_no_price   = [t for t in TICKERS if t not in technicals]
     print(f"\nFetching fundamentals for {len(tickers_with_price)} tickers with price data "
           f"(skipping {len(tickers_no_price)} with no price history)")
-
-    _print_lock = threading.Lock()
-
-    def _fetch_one(args):
-        idx, ticker = args
+    stocks = []
+    for i, ticker in enumerate(tickers_with_price):
         friday_close = technicals.get(ticker, {}).get('fridayClose')
         result = None
         for attempt in range(2):
@@ -602,55 +597,43 @@ def main():
             if result is not None:
                 break
             if attempt == 0:
-                time.sleep(3)
-        if not result:
-            return idx, ticker, None
-        tech = technicals.get(ticker, {})
-        result.update({
-            'rsi':      tech.get('rsi'),
-            'ma200':    tech.get('ma200'),
-            'ma50':     tech.get('ma50'),
-            'hv21':     tech.get('hv21'),
-            'change1d': tech.get('change1d'),
-            'asOf':     tech.get('asOf'),
-            'return1m': tech.get('return1m'),
-            'return3m': tech.get('return3m'),
-            'return6m': tech.get('return6m'),
-            'return1y': tech.get('return1y'),
-            'return2y': tech.get('return2y'),
-            'return3y': tech.get('return3y'),
-            'return4y': tech.get('return4y'),
-            'return5y': tech.get('return5y'),
-        })
-        if result['price'] and result['ma200']:
-            above = result['price'] >= result['ma200']
-            pct = round((result['price'] - result['ma200']) / result['ma200'] * 100, 1)
-            result['aboveMa200'] = above
-            result['pctFromMa200'] = pct
-        if result['price'] and result.get('ma50'):
-            result['aboveMa50'] = result['price'] >= result['ma50']
-            result['goldenCross'] = ((result.get('ma50') or 0) >= (result.get('ma200') or 0))
-        return idx, ticker, result
+                time.sleep(2)
+        if result:
+            tech = technicals.get(ticker, {})
+            result.update({
+                'rsi':       tech.get('rsi'),
+                'ma200':     tech.get('ma200'),
+                'ma50':      tech.get('ma50'),
+                'hv21':      tech.get('hv21'),
+                'change1d':  tech.get('change1d'),
+                'asOf':      tech.get('asOf'),
+                'return1m':  tech.get('return1m'),
+                'return3m':  tech.get('return3m'),
+                'return6m':  tech.get('return6m'),
+                'return1y':  tech.get('return1y'),
+                'return2y':  tech.get('return2y'),
+                'return3y':  tech.get('return3y'),
+                'return4y':  tech.get('return4y'),
+                'return5y':  tech.get('return5y'),
+            })
+            if result['price'] and result['ma200']:
+                above = result['price'] >= result['ma200']
+                pct = round((result['price'] - result['ma200']) / result['ma200'] * 100, 1)
+                result['aboveMa200'] = above
+                result['pctFromMa200'] = pct
+            if result['price'] and result.get('ma50'):
+                result['aboveMa50'] = result['price'] >= result['ma50']
+                result['goldenCross'] = ((result.get('ma50') or 0) >= (result.get('ma200') or 0))
+            stocks.append(result)
+            print(f"  [{i+1}/{len(tickers_with_price)}] {ticker} ✓")
+        else:
+            print(f"  [{i+1}/{len(tickers_with_price)}] {ticker} skipped")
 
-    work = list(enumerate(tickers_with_price))
-    stocks_map = {}
-    completed_count = 0
-
-    with ThreadPoolExecutor(max_workers=6) as executor:
-        futures = {executor.submit(_fetch_one, item): item for item in work}
-        for future in as_completed(futures):
-            idx, ticker, result = future.result()
-            completed_count += 1
-            if result:
-                stocks_map[idx] = result
-                with _print_lock:
-                    print(f"  [{completed_count}/{len(tickers_with_price)}] {ticker} ✓")
-            else:
-                with _print_lock:
-                    print(f"  [{completed_count}/{len(tickers_with_price)}] {ticker} skipped")
-
-    # Restore original ticker order
-    stocks = [stocks_map[i] for i in sorted(stocks_map.keys())]
+        # Steady rate: 0.1s per ticker, longer pause every 100 to avoid rate limits
+        if (i + 1) % 100 == 0:
+            time.sleep(5)
+        else:
+            time.sleep(0.1)
 
     # ── Step 3: Score ──
     sectors = {}
