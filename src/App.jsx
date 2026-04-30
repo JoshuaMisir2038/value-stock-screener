@@ -16,10 +16,11 @@ import GitHubTrendingTab from './components/GitHubTrendingTab'
 import CustomScreenerTab from './components/CustomScreenerTab'
 import CustomBacktestTab from './components/CustomBacktestTab'
 import DCFTab from './components/DCFTab'
+import EducationTab from './components/EducationTab'
 import { EquityMethodology } from './components/Methodology'
 import TickerBanner from './components/TickerBanner'
 import CompareModal from './components/CompareModal'
-import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch, SlidersHorizontal, TestTube2, X, GitCompare, Calculator } from 'lucide-react'
+import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch, SlidersHorizontal, TestTube2, X, GitCompare, Calculator, BookOpen } from 'lucide-react'
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -42,6 +43,7 @@ const TABS = [
   { id: 'customscreener', label: 'CUSTOM SCREENER',    icon: SlidersHorizontal },
   { id: 'custombacktest', label: 'CUSTOM BACKTEST',    icon: TestTube2 },
   { id: 'dcf',            label: 'DCF CALCULATOR',     icon: Calculator },
+  { id: 'education',      label: 'EDUCATION',          icon: BookOpen },
 ]
 
 export default function App() {
@@ -198,6 +200,7 @@ export default function App() {
         {tab === 'customscreener' && <CustomScreenerTab stocks={stocks} benchmark={benchmark} onSendToBacktest={handleSendToBacktest} />}
         {tab === 'custombacktest' && <CustomBacktestTab stocks={stocks} benchmark={benchmark} backtestPayload={backtestPayload} />}
         {tab === 'dcf'            && <DCFTab stocks={stocks} />}
+        {tab === 'education'      && <EducationTab />}
       </div>
 
       {/* Floating comparison tray */}
