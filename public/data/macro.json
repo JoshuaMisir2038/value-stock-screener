@@ -1,10 +1,10 @@
 {
-  "asOf": "2026-05-01 18:18 UTC",
+  "asOf": "2026-05-01 21:44 UTC",
   "vix": {
-    "current": 16.9,
+    "current": 16.99,
     "prev": 16.89,
-    "change1d": 0.01,
-    "change1w": -1.81,
+    "change1d": 0.1,
+    "change1w": -1.72,
     "high52": 31.05,
     "low52": 13.47,
     "history": [
@@ -214,13 +214,13 @@
       },
       {
         "date": "2026-05-03",
-        "value": 16.9
+        "value": 16.99
       }
     ]
   },
   "pcr": {
     "equity": {
-      "value": 1.16,
+      "value": 1.18,
       "date": "2026-05-01",
       "source": "SPY + QQQ + IWM options volume",
       "history": []
@@ -233,15 +233,11 @@
       "desc": "Federal Reserve target interest rate",
       "goodLow": true,
       "value": 3.64,
-      "date": "2026-03-01",
+      "date": "2026-04-01",
       "prev": 3.64,
       "change": 0.0,
       "changeYoY": -0.69,
       "history": [
-        {
-          "date": "2024-04",
-          "value": 5.33
-        },
         {
           "date": "2024-05",
           "value": 5.33
@@ -332,6 +328,10 @@
         },
         {
           "date": "2026-03",
+          "value": 3.64
+        },
+        {
+          "date": "2026-04",
           "value": 3.64
         }
       ]
