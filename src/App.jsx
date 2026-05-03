@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useStocks } from './hooks/useStocks'
 import { useWatchlist } from './hooks/useWatchlist'
+import { useAuth } from './hooks/useAuth'
 import { computeScoresWithMetrics } from './utils/scoring'
 import ScoreWeightsPanel, { defaultMetricConfig } from './components/ScoreWeightsPanel'
 import StockTable from './components/StockTable'
@@ -19,11 +20,14 @@ import CustomBacktestTab from './components/CustomBacktestTab'
 import DCFTab from './components/DCFTab'
 import EducationTab from './components/EducationTab'
 import WatchlistTab from './components/WatchlistTab'
+import AuthModal from './components/AuthModal'
+import AlertsPanel from './components/AlertsPanel'
 import ChatWidget from './components/ChatWidget'
+import { supabase } from './lib/supabase'
 import { EquityMethodology } from './components/Methodology'
 import TickerBanner from './components/TickerBanner'
 import CompareModal from './components/CompareModal'
-import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch, SlidersHorizontal, TestTube2, X, GitCompare, Calculator, BookOpen, Star } from 'lucide-react'
+import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch, SlidersHorizontal, TestTube2, X, GitCompare, Calculator, BookOpen, Star, Bell, User, LogOut } from 'lucide-react'
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -62,6 +66,9 @@ export default function App() {
   const [backtestPayload, setBacktestPayload] = useState(null)
   const [compareSymbols, setCompareSymbols] = useState([])
   const { watchlist, toggle: toggleWatch, setNote: setWatchNote, remove: removeFromWatch } = useWatchlist()
+  const { user, signIn, signOut } = useAuth()
+  const [showAuth,   setShowAuth]   = useState(false)
+  const [showAlerts, setShowAlerts] = useState(false)
   const [showCompare, setShowCompare] = useState(false)
 
   const handleToggleCompare = symbol => {
@@ -124,6 +131,37 @@ export default function App() {
             <div className="text-blue-500 font-bold tracking-widest text-xs border border-blue-500 px-3 py-1">
               LIVE
             </div>
+
+            {/* Auth controls — only shown when Supabase is configured */}
+            {supabase && (
+              user ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowAlerts(true)}
+                    className="flex items-center gap-1.5 px-3 py-1 text-[11px] border border-gray-700 text-gray-400 hover:border-blue-500/50 hover:text-blue-400 transition-colors"
+                    title="Manage alerts"
+                  >
+                    <Bell size={11} />
+                    Alerts
+                  </button>
+                  <button
+                    onClick={signOut}
+                    className="flex items-center gap-1.5 px-2 py-1 text-[11px] text-gray-600 hover:text-gray-400 transition-colors"
+                    title={`Signed in as ${user.email}`}
+                  >
+                    <LogOut size={11} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAuth(true)}
+                  className="flex items-center gap-1.5 px-3 py-1 text-[11px] border border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-300 transition-colors"
+                >
+                  <User size={11} />
+                  Sign In
+                </button>
+              )
+            )}
           </div>
         </div>
 
@@ -273,6 +311,18 @@ export default function App() {
       )}
 
       <ChatWidget stocks={stocks} />
+
+      {showAuth && (
+        <AuthModal onClose={() => setShowAuth(false)} signIn={signIn} />
+      )}
+
+      {showAlerts && user && (
+        <AlertsPanel
+          user={user}
+          stocks={stocks}
+          onClose={() => setShowAlerts(false)}
+        />
+      )}
     </div>
   )
 }
