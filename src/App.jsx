@@ -17,6 +17,7 @@ import CustomScreenerTab from './components/CustomScreenerTab'
 import CustomBacktestTab from './components/CustomBacktestTab'
 import DCFTab from './components/DCFTab'
 import EducationTab from './components/EducationTab'
+import ChatWidget from './components/ChatWidget'
 import { EquityMethodology } from './components/Methodology'
 import TickerBanner from './components/TickerBanner'
 import CompareModal from './components/CompareModal'
@@ -256,6 +257,8 @@ export default function App() {
           onClose={() => setShowCompare(false)}
         />
       )}
+
+      <ChatWidget stocks={stocks} />
     </div>
   )
 }
