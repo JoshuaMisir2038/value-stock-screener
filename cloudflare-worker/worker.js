@@ -1,19 +1,20 @@
 /**
  * Value Finder AI Chat — Cloudflare Worker
  *
- * Proxies requests to the Anthropic API so the key never reaches the browser.
+ * Proxies requests to the Groq API so the key never reaches the browser.
  *
  * Setup:
  *   1. Create a new Worker in the Cloudflare dashboard (Workers & Pages → Create)
- *   2. Paste this entire file into the editor
- *   3. Go to Settings → Variables → Add a secret named ANTHROPIC_API_KEY
- *   4. Set the ALLOWED_ORIGIN below to your GitHub Pages URL
+ *   2. Paste this entire file into the editor and click Deploy
+ *   3. Go to Settings → Variables → Add a secret named GROQ_API_KEY
+ *      (get a free key at console.groq.com)
+ *   4. Confirm ALLOWED_ORIGIN below matches your GitHub Pages URL
  *   5. (Optional) Enable Cloudflare Rate Limiting in the dashboard for extra protection
  */
 
 const ALLOWED_ORIGIN = 'https://joshuamisir2038.github.io'
-const ANTHROPIC_API  = 'https://api.anthropic.com/v1/messages'
-const MODEL          = 'claude-haiku-4-5-20251001'
+const GROQ_API       = 'https://api.groq.com/openai/v1/chat/completions'
+const MODEL          = 'llama-3.3-70b-versatile'
 const MAX_TOKENS     = 1024
 
 // ── CORS headers ─────────────────────────────────────────────────────────────
@@ -63,39 +64,40 @@ export default {
       })
     }
 
-    // Sanitise: only allow role/content fields through
-    const safeMessages = messages.map(m => ({
-      role:    m.role === 'assistant' ? 'assistant' : 'user',
-      content: String(m.content).slice(0, 8000), // hard cap per turn
-    }))
+    // Groq uses OpenAI format: system prompt goes as first message with role "system"
+    const groqMessages = [
+      ...(system ? [{ role: 'system', content: String(system).slice(0, 12000) }] : []),
+      ...messages.map(m => ({
+        role:    m.role === 'assistant' ? 'assistant' : 'user',
+        content: String(m.content).slice(0, 8000),
+      })),
+    ]
 
-    // Call Anthropic with streaming
-    const anthropicResp = await fetch(ANTHROPIC_API, {
+    // Call Groq with streaming
+    const groqResp = await fetch(GROQ_API, {
       method:  'POST',
       headers: {
-        'Content-Type':    'application/json',
-        'x-api-key':       env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${env.GROQ_API_KEY}`,
       },
       body: JSON.stringify({
         model:      MODEL,
         max_tokens: MAX_TOKENS,
         stream:     true,
-        system:     system ? String(system).slice(0, 12000) : undefined,
-        messages:   safeMessages,
+        messages:   groqMessages,
       }),
     })
 
-    if (!anthropicResp.ok) {
-      const err = await anthropicResp.text()
+    if (!groqResp.ok) {
+      const err = await groqResp.text()
       return new Response(JSON.stringify({ error: err }), {
-        status: anthropicResp.status,
+        status: groqResp.status,
         headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
       })
     }
 
     // Stream the SSE response straight back to the browser
-    return new Response(anthropicResp.body, {
+    return new Response(groqResp.body, {
       status:  200,
       headers: {
         'Content-Type':      'text/event-stream',

@@ -98,7 +98,7 @@ async function* streamResponse(response) {
       if (data === '[DONE]') return
       try {
         const parsed = JSON.parse(data)
-        const delta  = parsed?.delta?.text ?? parsed?.delta?.type === 'text_delta' ? parsed.delta.text : null
+        const delta  = parsed?.choices?.[0]?.delta?.content
         if (delta) yield delta
       } catch {
         // ignore malformed SSE lines
@@ -270,7 +270,7 @@ export default function ChatWidget({ stocks }) {
               </div>
               <div>
                 <div className="text-[11px] font-bold text-white tracking-widest uppercase">Value Finder AI</div>
-                <div className="text-[9px] text-gray-600">Powered by Claude · {stocks?.length ?? 0} stocks loaded</div>
+                <div className="text-[9px] text-gray-600">Powered by Llama 3.3 · {stocks?.length ?? 0} stocks loaded</div>
               </div>
             </div>
             <div className="flex items-center gap-2">
