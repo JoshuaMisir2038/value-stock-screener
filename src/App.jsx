@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useStocks } from './hooks/useStocks'
+import { useWatchlist } from './hooks/useWatchlist'
 import { computeScoresWithMetrics } from './utils/scoring'
 import ScoreWeightsPanel, { defaultMetricConfig } from './components/ScoreWeightsPanel'
 import StockTable from './components/StockTable'
@@ -17,11 +18,12 @@ import CustomScreenerTab from './components/CustomScreenerTab'
 import CustomBacktestTab from './components/CustomBacktestTab'
 import DCFTab from './components/DCFTab'
 import EducationTab from './components/EducationTab'
+import WatchlistTab from './components/WatchlistTab'
 import ChatWidget from './components/ChatWidget'
 import { EquityMethodology } from './components/Methodology'
 import TickerBanner from './components/TickerBanner'
 import CompareModal from './components/CompareModal'
-import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch, SlidersHorizontal, TestTube2, X, GitCompare, Calculator, BookOpen } from 'lucide-react'
+import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch, SlidersHorizontal, TestTube2, X, GitCompare, Calculator, BookOpen, Star } from 'lucide-react'
 
 const DEFAULT_FILTERS = {
   search: '',
@@ -45,6 +47,7 @@ const TABS = [
   { id: 'custombacktest', label: 'CUSTOM BACKTEST',    icon: TestTube2 },
   { id: 'dcf',            label: 'DCF CALCULATOR',     icon: Calculator },
   { id: 'education',      label: 'EDUCATION',          icon: BookOpen },
+  { id: 'watchlist',      label: 'WATCHLIST',          icon: Star },
 ]
 
 export default function App() {
@@ -58,6 +61,7 @@ export default function App() {
   const [tab, setTab] = useState('screener')
   const [backtestPayload, setBacktestPayload] = useState(null)
   const [compareSymbols, setCompareSymbols] = useState([])
+  const { watchlist, toggle: toggleWatch, setNote: setWatchNote, remove: removeFromWatch } = useWatchlist()
   const [showCompare, setShowCompare] = useState(false)
 
   const handleToggleCompare = symbol => {
@@ -184,6 +188,8 @@ export default function App() {
                 data={filtered}
                 compareStocks={compareSymbols}
                 onToggleCompare={handleToggleCompare}
+                watchlist={watchlist}
+                onToggleWatch={toggleWatch}
               />
             )}
           </>
@@ -202,6 +208,14 @@ export default function App() {
         {tab === 'custombacktest' && <CustomBacktestTab stocks={stocks} benchmark={benchmark} backtestPayload={backtestPayload} />}
         {tab === 'dcf'            && <DCFTab stocks={stocks} />}
         {tab === 'education'      && <EducationTab />}
+        {tab === 'watchlist'      && (
+          <WatchlistTab
+            stocks={stocks}
+            watchlist={watchlist}
+            onRemove={removeFromWatch}
+            onSetNote={setWatchNote}
+          />
+        )}
       </div>
 
       {/* Floating comparison tray */}

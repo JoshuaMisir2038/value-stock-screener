@@ -6,7 +6,7 @@ import {
   createColumnHelper,
 } from '@tanstack/react-table'
 import { useState } from 'react'
-import { ChevronUp, ChevronDown, ChevronsUpDown, History, Plus, Check } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronsUpDown, History, Plus, Check, Star } from 'lucide-react'
 import ScoreBadge from './ScoreBadge'
 import MetricCell from './MetricCell'
 import ScoreHistoryModal from './ScoreHistoryModal'
@@ -16,7 +16,7 @@ const col = createColumnHelper()
 
 // Column groups for the sticky sub-header
 const GROUPS = [
-  { label: '',            span: 7, border: false },
+  { label: '',            span: 8, border: false },
   { label: 'VALUATION',  span: 7, border: true },
   { label: 'MARGINS',    span: 3, border: true },
   { label: 'GROWTH',     span: 3, border: true },
@@ -30,6 +30,30 @@ const GROUPS = [
 const COMPARE_COLORS = ['text-orange-400 border-orange-500', 'text-cyan-400 border-cyan-500', 'text-yellow-400 border-yellow-400', 'text-purple-400 border-purple-500']
 
 const COLUMNS = [
+  // Watchlist star
+  col.display({
+    id: '_watchlist',
+    header: () => <Star size={10} className="text-gray-700" />,
+    cell: i => {
+      const meta     = i.table.options.meta
+      const symbol   = i.row.original.symbol
+      const watched  = meta?.watchlist?.[symbol]
+      return (
+        <button
+          onClick={e => { e.stopPropagation(); meta?.onToggleWatch(symbol) }}
+          title={watched ? 'Remove from watchlist' : 'Add to watchlist'}
+          className="transition-colors"
+        >
+          <Star
+            size={12}
+            className={watched ? 'text-yellow-400 fill-yellow-400' : 'text-gray-700 hover:text-gray-500'}
+          />
+        </button>
+      )
+    },
+    size: 32,
+    enableSorting: false,
+  }),
   // Compare toggle
   col.display({
     id: '_compare',
@@ -141,7 +165,7 @@ function SortIcon({ isSorted }) {
   return <ChevronsUpDown size={11} className="inline ml-1 text-gray-700" />
 }
 
-export default function StockTable({ data, compareStocks = [], onToggleCompare }) {
+export default function StockTable({ data, compareStocks = [], onToggleCompare, watchlist = {}, onToggleWatch }) {
   const [sorting, setSorting] = useState([{ id: 'valueScore', desc: true }])
   const [historyStock, setHistoryStock] = useState(null)
   const [detailStock, setDetailStock] = useState(null)
@@ -158,6 +182,8 @@ export default function StockTable({ data, compareStocks = [], onToggleCompare }
       onShowDetail:    stock => setDetailStock(stock),
       compareStocks,
       onToggleCompare: onToggleCompare ?? (() => {}),
+      watchlist,
+      onToggleWatch:   onToggleWatch ?? (() => {}),
     },
   })
 
@@ -183,7 +209,7 @@ export default function StockTable({ data, compareStocks = [], onToggleCompare }
             <tr key={headerGroup.id} className="border-b border-gray-800">
               {headerGroup.headers.map((header, idx) => {
                 // Add border-left at group boundaries
-                const groupBoundaries = [7, 14, 17, 20, 23, 24, 25, 28]
+                const groupBoundaries = [8, 15, 18, 21, 24, 25, 26, 29]
                 const hasBorder = groupBoundaries.includes(idx)
                 return (
                   <th
@@ -214,7 +240,7 @@ export default function StockTable({ data, compareStocks = [], onToggleCompare }
               className={`border-b border-gray-900 hover:bg-gray-900/50 transition-colors ${i % 2 === 0 ? '' : 'bg-gray-950/40'} ${isCompared ? `border-l-2 ${leftBorderColor} bg-gray-800/30` : ''}`}
             >
               {row.getVisibleCells().map((cell, idx) => {
-                const groupBoundaries = [7, 14, 17, 20, 23, 24, 25, 28]
+                const groupBoundaries = [8, 15, 18, 21, 24, 25, 26, 29]
                 const hasBorder = groupBoundaries.includes(idx)
                 return (
                   <td key={cell.id} className={`px-3 py-2.5 text-gray-300 ${hasBorder ? 'border-l border-gray-900' : ''}`}>
