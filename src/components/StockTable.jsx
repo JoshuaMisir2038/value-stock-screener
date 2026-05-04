@@ -172,7 +172,20 @@ export default function StockTable({ data, compareStocks = [], onToggleCompare, 
   const [sorting, setSorting] = useState([{ id: 'valueScore', desc: true }])
   const [historyStock, setHistoryStock] = useState(null)
   const [detailStock,  setDetailStock]  = useState(null)
-  const scrollRef = useRef(null)
+  const scrollRef    = useRef(null)
+  const topScrollRef = useRef(null)
+
+  function syncFromTop() {
+    const table = scrollRef.current, top = topScrollRef.current
+    if (table && top && table.scrollLeft !== top.scrollLeft)
+      table.scrollLeft = top.scrollLeft
+  }
+
+  function syncFromTable() {
+    const table = scrollRef.current, top = topScrollRef.current
+    if (table && top && top.scrollLeft !== table.scrollLeft)
+      top.scrollLeft = table.scrollLeft
+  }
 
   const table = useReactTable({
     data,
@@ -206,9 +219,20 @@ export default function StockTable({ data, compareStocks = [], onToggleCompare, 
 
   return (
     <>
+    {/* Top phantom scrollbar — synced to table scroll */}
+    <div
+      ref={topScrollRef}
+      onScroll={syncFromTop}
+      className="aletheia-scroll border-x border-t border-gray-800/50"
+      style={{ overflowX: 'scroll', overflowY: 'hidden', height: 12 }}
+    >
+      <div style={{ minWidth: '2400px', height: 1 }} />
+    </div>
+
     {/* Scroll container — fixed height, scrolls in both axes */}
     <div
       ref={scrollRef}
+      onScroll={syncFromTable}
       className="border border-gray-800/50 aletheia-scroll"
       style={{ height: 'calc(100vh - 320px)', minHeight: 400, overflowX: 'scroll', overflowY: 'auto' }}
     >
