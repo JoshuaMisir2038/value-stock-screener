@@ -103,7 +103,7 @@ function getGroup(tabId) {
 }
 
 export default function App() {
-  const { rawStocks, loading, error, lastUpdated, benchmark } = useStocks()
+  const { rawStocks, loading, refreshing, error, lastUpdated, benchmark } = useStocks()
   const [scoreMetrics, setScoreMetrics] = useState(() => defaultMetricConfig())
   const stocks = useMemo(
     () => computeScoresWithMetrics(rawStocks, scoreMetrics),
@@ -168,9 +168,9 @@ export default function App() {
           <div className="flex items-center gap-6 text-[11px]">
             {lastUpdated && (
               <div className="flex items-center gap-1.5 text-gray-600 border border-gray-800 px-3 py-1">
-                <RefreshCw size={10} />
+                <RefreshCw size={10} className={refreshing ? 'animate-spin' : ''} />
                 <span className="uppercase tracking-wider">
-                  UPDATED {new Date(lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}
+                  {refreshing ? 'REFRESHING...' : `UPDATED ${new Date(lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}`}
                 </span>
               </div>
             )}

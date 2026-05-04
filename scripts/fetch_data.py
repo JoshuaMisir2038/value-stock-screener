@@ -666,16 +666,30 @@ def main():
     except Exception as e:
         print(f"  SPY error: {e}")
 
-    # Save stocks.json
+    # Save stocks.json — compact: strip nulls, trim float precision
+    def clean_stock(s):
+        out = {}
+        for k, v in s.items():
+            if v is None:
+                continue  # omit null fields entirely — saves ~25% of file size
+            if isinstance(v, float):
+                # 2 dp for prices/ratios, keeps file small without losing meaning
+                out[k] = round(v, 2)
+            else:
+                out[k] = v
+        return out
+
+    clean_stocks = [clean_stock(s) for s in stocks]
+
     with open(os.path.join(base, 'stocks.json'), 'w') as f:
         json.dump({
             'lastUpdated': datetime.now(timezone.utc).isoformat(),
             'asOf': as_of,
-            'count': len(stocks),
+            'count': len(clean_stocks),
             'benchmark': {'spy': spy_benchmark},
-            'stocks': stocks,
-        }, f)
-    print(f"\nSaved {len(stocks)} stocks.")
+            'stocks': clean_stocks,
+        }, f, separators=(',', ':'))   # compact separators shave another ~5%
+    print(f"\nSaved {len(clean_stocks)} stocks.")
 
     # ── Step 4: Find options candidates ──
     scored = [s for s in stocks if s.get('valueScore') is not None and s.get('rsi') and s.get('ma200')]
