@@ -19,6 +19,7 @@ import CustomScreenerTab from './components/CustomScreenerTab'
 import CustomBacktestTab from './components/CustomBacktestTab'
 import DCFTab from './components/DCFTab'
 import EducationTab from './components/EducationTab'
+import PredictionMarketsTab from './components/PredictionMarketsTab'
 import WatchlistTab from './components/WatchlistTab'
 import AuthModal from './components/AuthModal'
 import AlertsPanel from './components/AlertsPanel'
@@ -62,9 +63,10 @@ const TAB_GROUPS = [
     label: 'MARKETS',
     icon: Globe,
     tabs: [
-      { id: 'bonds',       label: 'BONDS',       icon: Landmark },
-      { id: 'commodities', label: 'COMMODITIES', icon: Package },
-      { id: 'macro',       label: 'MACRO',       icon: Globe },
+      { id: 'bonds',       label: 'BONDS',        icon: Landmark },
+      { id: 'commodities', label: 'COMMODITIES',  icon: Package },
+      { id: 'macro',       label: 'MACRO',         icon: Globe },
+      { id: 'predictions', label: 'PREDICTIONS',  icon: TrendingUp },
     ],
   },
   {
@@ -308,6 +310,7 @@ export default function App() {
         {tab === 'backtest'    && <BacktestTab stocks={stocks} benchmark={benchmark} loading={loading} />}
         {tab === 'optbacktest' && <OptionsBacktestTab />}
         {tab === 'macro'       && <MacroTab />}
+        {tab === 'predictions' && <PredictionMarketsTab />}
         {tab === 'hackernews'  && <HackerNewsTab />}
         {tab === 'news'        && <GlobalNewsTab />}
         {tab === 'github'         && <GitHubTrendingTab />}
