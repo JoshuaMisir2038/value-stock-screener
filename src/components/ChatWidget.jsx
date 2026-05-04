@@ -3,7 +3,7 @@ import { MessageSquare, X, Send, RotateCcw, ChevronDown, Bot } from 'lucide-reac
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const WORKER_URL = 'https://value-finder-chat.YOUR-SUBDOMAIN.workers.dev'
+const WORKER_URL = 'https://small-resonance-5e82.misirjosh.workers.dev'
 
 // ── System prompt factory ─────────────────────────────────────────────────────
 
