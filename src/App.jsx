@@ -24,6 +24,7 @@ import AuthModal from './components/AuthModal'
 import AlertsPanel from './components/AlertsPanel'
 import ChatWidget from './components/ChatWidget'
 import { supabase } from './lib/supabase'
+import AletheiaLogo from './components/AletheiaLogo'
 import { EquityMethodology } from './components/Methodology'
 import TickerBanner from './components/TickerBanner'
 import CompareModal from './components/CompareModal'
@@ -158,12 +159,10 @@ export default function App() {
         {/* Terminal top bar */}
         <div className="max-w-screen-2xl mx-auto px-4 py-2 flex items-center justify-between border-b border-gray-800">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 overflow-hidden shrink-0 border border-gray-700">
-              <img src={`${import.meta.env.BASE_URL}desert.jpg`} alt="" className="w-full h-full object-cover scale-125" />
-            </div>
+            <AletheiaLogo size={48} />
             <div>
-              <h1 className="text-sm font-bold text-white tracking-widest uppercase">JOSHUA MISIR // VALUE FINDER</h1>
-              <p className="text-[11px] text-gray-400 italic font-bold">most stock screeners are trash, so i built my own</p>
+              <h1 className="text-sm font-bold text-white tracking-[0.2em] uppercase">ALETHEIA</h1>
+              <p className="text-[11px] text-gray-600 tracking-wider">ἀλήθεια &mdash; the unconcealment of value</p>
             </div>
           </div>
           <div className="flex items-center gap-6 text-[11px]">

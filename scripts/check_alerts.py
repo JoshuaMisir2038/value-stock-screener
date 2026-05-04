@@ -90,7 +90,7 @@ def build_email(alert, current_value, stock):
     html = f"""
     <div style="font-family:monospace;background:#0a0a0f;color:#e5e7eb;padding:32px;max-width:560px;margin:0 auto;">
       <div style="border-bottom:1px solid #374151;padding-bottom:16px;margin-bottom:24px;">
-        <span style="font-size:11px;color:#6b7280;letter-spacing:0.1em;text-transform:uppercase;">VALUE FINDER ALERT</span>
+        <span style="font-size:11px;color:#6b7280;letter-spacing:0.1em;text-transform:uppercase;">ALETHEIA ALERT</span>
       </div>
 
       <h2 style="font-size:20px;font-weight:bold;color:#ffffff;margin:0 0 4px;">{symbol} — {company}</h2>
@@ -108,7 +108,7 @@ def build_email(alert, current_value, stock):
       </a>
 
       <p style="color:#374151;font-size:10px;margin-top:24px;">
-        You're receiving this because you set an alert on Value Finder.<br>
+        You're receiving this because you set an alert on Aletheia.<br>
         Manage your alerts at <a href="{SCREENER_URL}" style="color:#4b5563;">{SCREENER_URL}</a>
       </p>
     </div>

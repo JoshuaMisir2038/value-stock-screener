@@ -19,7 +19,7 @@ VALUE SCORE (0–100): Weighted percentile rank across 9 metrics vs the entire ~
   SECTOR SCORE: same logic but ranked only within the stock's GICS sector.
 `.trim()
 
-  return `You are the AI assistant for Joshua Misir's Value Finder — a personal stock research dashboard that screens ~${count} US-listed stocks using a composite value score. Today is ${date}.
+  return `You are the AI assistant for Aletheia — a stock research dashboard (ἀλήθεια: Greek for "unconcealment of truth") that screens ~${count} US-listed stocks using a composite value score. Today is ${date}.
 
 ${scoringBlurb}
 
@@ -269,7 +269,7 @@ export default function ChatWidget({ stocks }) {
                 <Bot size={12} className="text-blue-400" />
               </div>
               <div>
-                <div className="text-[11px] font-bold text-white tracking-widest uppercase">Value Finder AI</div>
+                <div className="text-[11px] font-bold text-white tracking-widest uppercase">Aletheia AI</div>
                 <div className="text-[9px] text-gray-600">Powered by Llama 3.3 · {stocks?.length ?? 0} stocks loaded</div>
               </div>
             </div>
