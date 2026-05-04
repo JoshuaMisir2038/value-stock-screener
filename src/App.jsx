@@ -59,10 +59,9 @@ const TAB_GROUPS = [
     label: 'MARKETS',
     icon: Globe,
     tabs: [
-      { id: 'bonds',       label: 'BONDS',        icon: Landmark },
-      { id: 'commodities', label: 'COMMODITIES',  icon: Package },
-      { id: 'macro',       label: 'MACRO',         icon: Globe },
-      { id: 'predictions', label: 'PREDICTIONS',  icon: TrendingUp },
+      { id: 'bonds',       label: 'BONDS',       icon: Landmark },
+      { id: 'commodities', label: 'COMMODITIES', icon: Package },
+      { id: 'macro',       label: 'MACRO',        icon: Globe },
     ],
   },
   {
@@ -91,6 +90,14 @@ const TAB_GROUPS = [
     tabs: [
       { id: 'dcf',       label: 'DCF CALCULATOR', icon: Calculator },
       { id: 'education', label: 'EDUCATION',       icon: BookOpen },
+    ],
+  },
+  {
+    id: 'predict',
+    label: 'PREDICT',
+    icon: TrendingUp,
+    tabs: [
+      { id: 'predictions', label: 'PREDICTION MARKETS', icon: TrendingUp },
     ],
   },
 ]

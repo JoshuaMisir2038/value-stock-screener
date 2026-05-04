@@ -143,14 +143,16 @@ function MarketRow({ m }) {
             <span className={`px-1.5 py-0.5 border rounded-sm font-bold ${SOURCE_STYLES[m.source] ?? 'text-gray-500 border-gray-700'}`}>
               {m.source}
             </span>
-            {m.category && m.category !== 'General' && (
-              <span className="text-gray-600">{m.category}</span>
-            )}
             {m.volume > 0 && (
-              <span className="text-gray-600">Vol: <span className="text-gray-400">{fmtVolume(m.volume)}</span></span>
+              <span className="font-bold text-gray-200">
+                {fmtVolume(m.volume)} <span className="text-gray-600 font-normal">wagered</span>
+              </span>
+            )}
+            {m.category && m.category !== 'General' && (
+              <span className="text-gray-500">{m.category}</span>
             )}
             {end && (
-              <span className="text-gray-700">Closes {end}</span>
+              <span className="text-gray-600">Closes {end}</span>
             )}
             <a
               href={m.url}
