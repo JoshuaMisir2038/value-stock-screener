@@ -32,12 +32,7 @@ import TickerBanner from './components/TickerBanner'
 import CompareModal from './components/CompareModal'
 import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch, SlidersHorizontal, TestTube2, X, GitCompare, Calculator, BookOpen, Star, Bell, User, LogOut } from 'lucide-react'
 
-const DEFAULT_FILTERS = {
-  search: '',
-  sector: '',
-  minMarketCap: 0,
-  minScore: 0,
-}
+const DEFAULT_FILTERS = { search: '' }
 
 const TAB_GROUPS = [
   {
@@ -144,18 +139,14 @@ export default function App() {
   }, [stocks])
 
   const filtered = useMemo(() => {
-    const base = stocks.filter(s => {
-      if (filters.search) {
-        const q = filters.search.toLowerCase()
-        if (!s.symbol?.toLowerCase().includes(q) && !s.name?.toLowerCase().includes(q)) return false
-      }
-      if (filters.sector && s.sector !== filters.sector) return false
-      if (filters.minMarketCap && (s.marketCap || 0) < filters.minMarketCap) return false
-      if (filters.minScore && (s.valueScore || 0) < filters.minScore) return false
-      return true
-    })
+    const base = filters.search
+      ? stocks.filter(s => {
+          const q = filters.search.toLowerCase()
+          return s.symbol?.toLowerCase().includes(q) || s.name?.toLowerCase().includes(q)
+        })
+      : stocks
     return applyScreenerFilters(base, screenerFilters, sectors)
-  }, [stocks, filters, screenerFilters, sectors])
+  }, [stocks, filters.search, screenerFilters, sectors])
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -272,7 +263,7 @@ export default function App() {
             </div>
 
             <div className="mb-3">
-              <Filters sectors={sectors} filters={filters} onChange={setFilters} />
+              <Filters filters={filters} onChange={setFilters} />
             </div>
 
             <div className="mb-5">
