@@ -163,13 +163,13 @@ export default function App() {
           <div className="flex items-center gap-4">
             <AletheiaLogo size={48} />
             <div>
-              <h1 className="text-sm font-bold text-white tracking-[0.2em] uppercase">ALETHEIA</h1>
-              <p className="text-[11px] text-gray-600 tracking-wider">ἀλήθεια &mdash; the unconcealment of value</p>
+              <h1 className="text-sm font-extrabold text-white tracking-[0.2em] uppercase">ALETHEIA</h1>
+              <p className="text-[11px] text-gray-400 tracking-wider">ἀλήθεια &mdash; the unconcealment of value</p>
             </div>
           </div>
           <div className="flex items-center gap-6 text-[11px]">
             {lastUpdated && (
-              <div className="flex items-center gap-1.5 text-gray-600 border border-gray-800 px-3 py-1">
+              <div className="flex items-center gap-1.5 text-gray-400 border border-gray-700 px-3 py-1">
                 <RefreshCw size={10} className={refreshing ? 'animate-spin' : ''} />
                 <span className="uppercase tracking-wider">
                   {refreshing ? 'REFRESHING...' : `UPDATED ${new Date(lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}`}
@@ -224,7 +224,7 @@ export default function App() {
                 className={`flex items-center gap-1.5 px-4 py-2.5 text-[11px] font-bold tracking-widest border-b-2 transition-colors whitespace-nowrap ${
                   isActive
                     ? 'border-blue-500 text-white bg-gray-900/60'
-                    : 'border-transparent text-gray-600 hover:text-gray-400 hover:bg-gray-900/30'
+                    : 'border-transparent text-gray-300 hover:text-white hover:bg-gray-900/30'
                 }`}
               >
                 <Icon size={11} />
@@ -244,7 +244,7 @@ export default function App() {
                 className={`flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-medium tracking-wider border-b-2 transition-colors whitespace-nowrap ${
                   tab === id
                     ? 'border-blue-400 text-blue-400'
-                    : 'border-transparent text-gray-600 hover:text-gray-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-200'
                 }`}
               >
                 <Icon size={10} />
