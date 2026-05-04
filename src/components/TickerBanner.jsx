@@ -13,17 +13,17 @@ function TickerItem({ stock }) {
   const up  = chg !== null && chg >= 0
 
   return (
-    <span className="inline-flex items-center gap-2 px-5 shrink-0 border-r border-gray-800/60 last:border-0">
-      <span className="font-bold text-white text-xs tracking-wide">{stock.symbol}</span>
+    <span className="inline-flex items-center gap-2 px-5 shrink-0 border-r border-gray-700/50 last:border-0">
+      <span className="font-extrabold text-white text-xs tracking-widest">{stock.symbol}</span>
       {chg !== null ? (
-        <span className={`flex items-center gap-0.5 text-xs font-medium ${up ? 'text-emerald-400' : 'text-red-400'}`}>
+        <span className={`flex items-center gap-0.5 text-xs font-bold ${up ? 'text-emerald-300' : 'text-red-300'}`}>
           {up ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
           {up ? '+' : ''}{chg.toFixed(2)}%
         </span>
       ) : (
-        <span className="text-gray-600 text-xs">—</span>
+        <span className="text-gray-500 text-xs">—</span>
       )}
-      <span className="text-gray-600 text-[11px]">{formatMcap(stock.marketCap)}</span>
+      <span className="text-gray-400 text-[11px] font-medium">{formatMcap(stock.marketCap)}</span>
     </span>
   )
 }
@@ -33,7 +33,7 @@ function BannerRow({ stocks, duration, reverse }) {
   const items = [...stocks, ...stocks]
 
   return (
-    <div className="overflow-hidden h-8 flex items-center border-b border-gray-800/50 bg-gray-950/80">
+    <div className="overflow-hidden h-8 flex items-center border-b border-gray-800 bg-gray-950">
       <div
         className={`flex items-center whitespace-nowrap ${reverse ? 'ticker-reverse' : 'ticker-forward'}`}
         style={{ animationDuration: `${duration}s` }}
