@@ -81,6 +81,18 @@ const DESCRIPTIVE = [
       { label: 'Under 50',       test: lt(50)   },
     ],
   },
+  {
+    key: 'sectorScore', label: 'Sector Score',
+    options: [
+      { label: 'Any',             test: null    },
+      { label: 'Top in sector (≥80)', test: gte(80) },
+      { label: 'Strong (≥70)',    test: gte(70) },
+      { label: 'Over 60',        test: gt(60)   },
+      { label: 'Over 50',        test: gt(50)   },
+      { label: 'Under 30',       test: lt(30)   },
+      { label: 'Under 20',       test: lt(20)   },
+    ],
+  },
 ]
 
 const FUNDAMENTAL = [
@@ -280,6 +292,30 @@ const FUNDAMENTAL = [
       { label: 'Over 4x',     test: gt(4)    },
     ],
   },
+  {
+    key: 'currentRatio', label: 'Current Ratio',
+    options: [
+      { label: 'Any',        test: null     },
+      { label: 'Over 3',     test: gt(3)    },
+      { label: 'Over 2',     test: gt(2)    },
+      { label: 'Over 1.5',   test: gt(1.5)  },
+      { label: 'Over 1',     test: gt(1)    },
+      { label: 'Under 1',    test: lt(1)    },
+      { label: 'Under 0.5',  test: lt(0.5)  },
+    ],
+  },
+  {
+    key: 'ruleOf40', label: 'Rule of 40',
+    options: [
+      { label: 'Any',          test: null    },
+      { label: 'Elite (≥60)',  test: gte(60) },
+      { label: 'Healthy (≥40)',test: gte(40) },
+      { label: 'Over 30',      test: gt(30)  },
+      { label: 'Over 20',      test: gt(20)  },
+      { label: 'Under 20',     test: lt(20)  },
+      { label: 'Under 0',      test: lt(0)   },
+    ],
+  },
 ]
 
 const TECHNICAL = [
@@ -304,9 +340,45 @@ const TECHNICAL = [
   {
     key: 'aboveMa200', label: 'vs 200-Day MA', boolean: true,
     options: [
-      { label: 'Any',     test: null                    },
-      { label: 'Above',   test: v => v === true          },
-      { label: 'Below',   test: v => v === false         },
+      { label: 'Any',     test: null              },
+      { label: 'Above',   test: v => v === true   },
+      { label: 'Below',   test: v => v === false  },
+    ],
+  },
+  {
+    key: 'aboveMa50', label: 'vs 50-Day MA', boolean: true,
+    options: [
+      { label: 'Any',     test: null              },
+      { label: 'Above',   test: v => v === true   },
+      { label: 'Below',   test: v => v === false  },
+    ],
+  },
+  {
+    key: 'pctFromMa200', label: '% from 200MA',
+    options: [
+      { label: 'Any',           test: null      },
+      { label: 'Over +20%',     test: gt(20)    },
+      { label: 'Over +10%',     test: gt(10)    },
+      { label: 'Over +5%',      test: gt(5)     },
+      { label: 'Near (±5%)',    test: between(-5, 5) },
+      { label: 'Under -5%',     test: lt(-5)    },
+      { label: 'Under -10%',    test: lt(-10)   },
+      { label: 'Under -20%',    test: lt(-20)   },
+      { label: 'Under -30%',    test: lt(-30)   },
+    ],
+  },
+  {
+    key: 'hv21', label: 'Volatility (21d)', pct: true,
+    options: [
+      { label: 'Any',              test: null    },
+      { label: 'Low (<20%)',       test: lt(20)  },
+      { label: 'Moderate (20–40%)',test: between(20, 40) },
+      { label: 'High (>40%)',      test: gt(40)  },
+      { label: 'Very High (>60%)', test: gt(60)  },
+      { label: 'Under 15%',        test: lt(15)  },
+      { label: 'Under 30%',        test: lt(30)  },
+      { label: 'Over 30%',         test: gt(30)  },
+      { label: 'Over 50%',         test: gt(50)  },
     ],
   },
   {
@@ -345,6 +417,19 @@ const TECHNICAL = [
     ],
   },
   {
+    key: 'return6m', label: '6M Return',
+    options: [
+      { label: 'Any',        test: null    },
+      { label: 'Positive',   test: gt(0)   },
+      { label: 'Over 10%',   test: gt(10)  },
+      { label: 'Over 20%',   test: gt(20)  },
+      { label: 'Over 30%',   test: gt(30)  },
+      { label: 'Negative',   test: lt(0)   },
+      { label: 'Under -10%', test: lt(-10) },
+      { label: 'Under -20%', test: lt(-20) },
+    ],
+  },
+  {
     key: 'return1y', label: '1Y Return',
     options: [
       { label: 'Any',        test: null    },
@@ -356,6 +441,45 @@ const TECHNICAL = [
       { label: 'Negative',   test: lt(0)   },
       { label: 'Under -10%', test: lt(-10) },
       { label: 'Under -20%', test: lt(-20) },
+      { label: 'Under -30%', test: lt(-30) },
+    ],
+  },
+  {
+    key: 'return2y', label: '2Y Return',
+    options: [
+      { label: 'Any',        test: null    },
+      { label: 'Positive',   test: gt(0)   },
+      { label: 'Over 20%',   test: gt(20)  },
+      { label: 'Over 50%',   test: gt(50)  },
+      { label: 'Over 100%',  test: gt(100) },
+      { label: 'Negative',   test: lt(0)   },
+      { label: 'Under -20%', test: lt(-20) },
+      { label: 'Under -40%', test: lt(-40) },
+    ],
+  },
+  {
+    key: 'return3y', label: '3Y Return',
+    options: [
+      { label: 'Any',        test: null    },
+      { label: 'Positive',   test: gt(0)   },
+      { label: 'Over 30%',   test: gt(30)  },
+      { label: 'Over 50%',   test: gt(50)  },
+      { label: 'Over 100%',  test: gt(100) },
+      { label: 'Over 200%',  test: gt(200) },
+      { label: 'Negative',   test: lt(0)   },
+      { label: 'Under -30%', test: lt(-30) },
+    ],
+  },
+  {
+    key: 'return5y', label: '5Y Return',
+    options: [
+      { label: 'Any',        test: null    },
+      { label: 'Positive',   test: gt(0)   },
+      { label: 'Over 50%',   test: gt(50)  },
+      { label: 'Over 100%',  test: gt(100) },
+      { label: 'Over 200%',  test: gt(200) },
+      { label: 'Over 500%',  test: gt(500) },
+      { label: 'Negative',   test: lt(0)   },
       { label: 'Under -30%', test: lt(-30) },
     ],
   },
