@@ -36,23 +36,70 @@ const DEFAULT_FILTERS = {
   minScore: 0,
 }
 
-const TABS = [
-  { id: 'screener',       label: 'VALUE SCREENER',    icon: BarChart2 },
-  { id: 'options',        label: 'OPTIONS IDEAS',      icon: Layers },
-  { id: 'bonds',          label: 'BONDS',              icon: Landmark },
-  { id: 'commodities',    label: 'COMMODITIES',        icon: Package },
-  { id: 'backtest',       label: 'SCORE BACKTEST',     icon: Activity },
-  { id: 'optbacktest',    label: 'OPTIONS BACKTEST',   icon: FlaskConical },
-  { id: 'macro',          label: 'MACRO',              icon: Globe },
-  { id: 'hackernews',     label: 'HACKER NEWS',        icon: Flame },
-  { id: 'news',           label: 'GLOBAL NEWS',        icon: Newspaper },
-  { id: 'github',         label: 'GITHUB TRENDING',    icon: GitBranch },
-  { id: 'customscreener', label: 'CUSTOM SCREENER',    icon: SlidersHorizontal },
-  { id: 'custombacktest', label: 'CUSTOM BACKTEST',    icon: TestTube2 },
-  { id: 'dcf',            label: 'DCF CALCULATOR',     icon: Calculator },
-  { id: 'education',      label: 'EDUCATION',          icon: BookOpen },
-  { id: 'watchlist',      label: 'WATCHLIST',          icon: Star },
+const TAB_GROUPS = [
+  {
+    id: 'screener',
+    label: 'SCREENER',
+    icon: BarChart2,
+    tabs: [
+      { id: 'screener',       label: 'VALUE SCREENER',  icon: BarChart2 },
+      { id: 'customscreener', label: 'CUSTOM',          icon: SlidersHorizontal },
+      { id: 'watchlist',      label: 'WATCHLIST',       icon: Star },
+    ],
+  },
+  {
+    id: 'options',
+    label: 'OPTIONS',
+    icon: Layers,
+    tabs: [
+      { id: 'options',     label: 'IDEAS',    icon: Layers },
+      { id: 'optbacktest', label: 'BACKTEST', icon: FlaskConical },
+    ],
+  },
+  {
+    id: 'markets',
+    label: 'MARKETS',
+    icon: Globe,
+    tabs: [
+      { id: 'bonds',       label: 'BONDS',       icon: Landmark },
+      { id: 'commodities', label: 'COMMODITIES', icon: Package },
+      { id: 'macro',       label: 'MACRO',       icon: Globe },
+    ],
+  },
+  {
+    id: 'backtests',
+    label: 'BACKTESTS',
+    icon: Activity,
+    tabs: [
+      { id: 'backtest',      label: 'SCORE',   icon: Activity },
+      { id: 'custombacktest', label: 'CUSTOM', icon: TestTube2 },
+    ],
+  },
+  {
+    id: 'news',
+    label: 'NEWS',
+    icon: Newspaper,
+    tabs: [
+      { id: 'hackernews', label: 'HACKER NEWS',     icon: Flame },
+      { id: 'news',       label: 'GLOBAL NEWS',     icon: Newspaper },
+      { id: 'github',     label: 'GITHUB TRENDING', icon: GitBranch },
+    ],
+  },
+  {
+    id: 'tools',
+    label: 'TOOLS',
+    icon: Calculator,
+    tabs: [
+      { id: 'dcf',       label: 'DCF CALCULATOR', icon: Calculator },
+      { id: 'education', label: 'EDUCATION',       icon: BookOpen },
+    ],
+  },
 ]
+
+// Derive which group contains a given tab id
+function getGroup(tabId) {
+  return TAB_GROUPS.find(g => g.tabs.some(t => t.id === tabId)) ?? TAB_GROUPS[0]
+}
 
 export default function App() {
   const { rawStocks, loading, error, lastUpdated, benchmark } = useStocks()
@@ -165,23 +212,46 @@ export default function App() {
           </div>
         </div>
 
-        {/* Tab row */}
-        <div className="max-w-screen-2xl mx-auto px-4 flex overflow-x-auto">
-          {TABS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => setTab(id)}
-              className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium tracking-wider border-b-2 transition-colors whitespace-nowrap ${
-                tab === id
-                  ? 'border-blue-500 text-blue-500 bg-gray-900'
-                  : 'border-transparent text-gray-600 hover:text-gray-400 hover:bg-gray-900'
-              }`}
-            >
-              <Icon size={11} />
-              {label}
-            </button>
-          ))}
+        {/* Primary group row */}
+        <div className="max-w-screen-2xl mx-auto px-4 flex border-b border-gray-800">
+          {TAB_GROUPS.map(({ id, label, icon: Icon, tabs }) => {
+            const isActive = getGroup(tab).id === id
+            return (
+              <button
+                key={id}
+                onClick={() => !isActive && setTab(tabs[0].id)}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-[11px] font-bold tracking-widest border-b-2 transition-colors whitespace-nowrap ${
+                  isActive
+                    ? 'border-blue-500 text-white bg-gray-900/60'
+                    : 'border-transparent text-gray-600 hover:text-gray-400 hover:bg-gray-900/30'
+                }`}
+              >
+                <Icon size={11} />
+                {label}
+              </button>
+            )
+          })}
         </div>
+
+        {/* Secondary sub-tab row — only shown when active group has > 1 tab */}
+        {getGroup(tab).tabs.length > 1 && (
+          <div className="max-w-screen-2xl mx-auto px-4 flex bg-gray-900/40">
+            {getGroup(tab).tabs.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setTab(id)}
+                className={`flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-medium tracking-wider border-b-2 transition-colors whitespace-nowrap ${
+                  tab === id
+                    ? 'border-blue-400 text-blue-400'
+                    : 'border-transparent text-gray-600 hover:text-gray-400'
+                }`}
+              >
+                <Icon size={10} />
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {!loading && stocks.length > 0 && <TickerBanner stocks={stocks} />}
