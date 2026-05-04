@@ -16,7 +16,7 @@ function TickerItem({ stock }) {
     <span className="inline-flex items-center gap-2 px-5 shrink-0 border-r border-gray-700/50 last:border-0">
       <span className="font-extrabold text-white text-xs tracking-widest">{stock.symbol}</span>
       {chg !== null ? (
-        <span className={`flex items-center gap-0.5 text-xs font-bold ${up ? 'text-emerald-300' : 'text-red-300'}`}>
+        <span className={`flex items-center gap-0.5 text-xs font-bold ${up ? 'text-green-400' : 'text-red-500'}`}>
           {up ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
           {up ? '+' : ''}{chg.toFixed(2)}%
         </span>
