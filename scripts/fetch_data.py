@@ -339,7 +339,6 @@ def fetch_fundamental(ticker, friday_close):
             'symbol':          ticker,
             'name':            info.get('longName') or info.get('shortName') or ticker,
             'sector':          info.get('sector') or 'Unknown',
-            'industry':        info.get('industry') or '',
             'marketCap':       market_cap,
             'price':           price,
             # Valuation
@@ -606,7 +605,6 @@ def main():
                 'ma50':      tech.get('ma50'),
                 'hv21':      tech.get('hv21'),
                 'change1d':  tech.get('change1d'),
-                'asOf':      tech.get('asOf'),
                 'return1m':  tech.get('return1m'),
                 'return3m':  tech.get('return3m'),
                 'return6m':  tech.get('return6m'),

@@ -5,7 +5,8 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table'
-import { useState } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
+import { useState, useRef } from 'react'
 import { ChevronUp, ChevronDown, ChevronsUpDown, History, Plus, Check, Star } from 'lucide-react'
 import ScoreBadge from './ScoreBadge'
 import MetricCell from './MetricCell'
@@ -165,10 +166,13 @@ function SortIcon({ isSorted }) {
   return <ChevronsUpDown size={11} className="inline ml-1 text-gray-700" />
 }
 
+const ROW_HEIGHT = 42
+
 export default function StockTable({ data, compareStocks = [], onToggleCompare, watchlist = {}, onToggleWatch }) {
   const [sorting, setSorting] = useState([{ id: 'valueScore', desc: true }])
   const [historyStock, setHistoryStock] = useState(null)
-  const [detailStock, setDetailStock] = useState(null)
+  const [detailStock,  setDetailStock]  = useState(null)
+  const scrollRef = useRef(null)
 
   const table = useReactTable({
     data,
@@ -187,11 +191,29 @@ export default function StockTable({ data, compareStocks = [], onToggleCompare, 
     },
   })
 
+  const rows = table.getRowModel().rows
+
+  const virtualizer = useVirtualizer({
+    count:            rows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize:     () => ROW_HEIGHT,
+    overscan:         25,
+  })
+
+  const virtualRows  = virtualizer.getVirtualItems()
+  const totalHeight  = virtualizer.getTotalSize()
+  const groupBoundaries = [8, 15, 18, 21, 24, 25, 26, 29]
+
   return (
     <>
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm border-collapse">
-        <thead>
+    {/* Scroll container — fixed height, scrolls independently */}
+    <div
+      ref={scrollRef}
+      className="overflow-auto border border-gray-800/50"
+      style={{ height: 'calc(100vh - 320px)', minHeight: 400 }}
+    >
+      <table className="w-full text-sm border-collapse" style={{ tableLayout: 'fixed' }}>
+        <thead className="sticky top-0 z-10 bg-gray-950">
           {/* Column group headers */}
           <tr className="border-b border-gray-800/50">
             {GROUPS.map((g, i) => (
@@ -205,52 +227,61 @@ export default function StockTable({ data, compareStocks = [], onToggleCompare, 
             ))}
           </tr>
           {/* Column headers */}
-          {table.getHeaderGroups().map(headerGroup => (
-            <tr key={headerGroup.id} className="border-b border-gray-800">
-              {headerGroup.headers.map((header, idx) => {
-                // Add border-left at group boundaries
-                const groupBoundaries = [8, 15, 18, 21, 24, 25, 26, 29]
-                const hasBorder = groupBoundaries.includes(idx)
-                return (
-                  <th
-                    key={header.id}
-                    onClick={header.column.getToggleSortingHandler()}
-                    style={{ width: header.getSize() }}
-                    className={`px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-300 whitespace-nowrap ${hasBorder ? 'border-l border-gray-800' : ''}`}
-                  >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                    <SortIcon isSorted={header.column.getIsSorted()} />
-                  </th>
-                )
-              })}
+          {table.getHeaderGroups().map(hg => (
+            <tr key={hg.id} className="border-b border-gray-800">
+              {hg.headers.map((header, idx) => (
+                <th
+                  key={header.id}
+                  onClick={header.column.getToggleSortingHandler()}
+                  style={{ width: header.getSize() }}
+                  className={`px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-300 whitespace-nowrap ${groupBoundaries.includes(idx) ? 'border-l border-gray-800' : ''}`}
+                >
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                  <SortIcon isSorted={header.column.getIsSorted()} />
+                </th>
+              ))}
             </tr>
           ))}
         </thead>
+
         <tbody>
-          {table.getRowModel().rows.map((row, i) => {
-            const sym = row.original.symbol
+          {/* Top spacer */}
+          {virtualRows.length > 0 && virtualRows[0].start > 0 && (
+            <tr><td colSpan={COLUMNS.length} style={{ height: virtualRows[0].start }} /></tr>
+          )}
+
+          {virtualRows.map(vRow => {
+            const row    = rows[vRow.index]
+            const sym    = row.original.symbol
             const cmpIdx = compareStocks.indexOf(sym)
-            const isCompared = cmpIdx !== -1
-            const leftBorderColor = isCompared
+            const isCmp  = cmpIdx !== -1
+            const leftBorder = isCmp
               ? ['border-l-orange-500','border-l-cyan-500','border-l-yellow-400','border-l-purple-500'][cmpIdx]
               : ''
             return (
-            <tr
-              key={row.id}
-              className={`border-b border-gray-900 hover:bg-gray-900/50 transition-colors ${i % 2 === 0 ? '' : 'bg-gray-950/40'} ${isCompared ? `border-l-2 ${leftBorderColor} bg-gray-800/30` : ''}`}
-            >
-              {row.getVisibleCells().map((cell, idx) => {
-                const groupBoundaries = [8, 15, 18, 21, 24, 25, 26, 29]
-                const hasBorder = groupBoundaries.includes(idx)
-                return (
-                  <td key={cell.id} className={`px-3 py-2.5 text-gray-300 ${hasBorder ? 'border-l border-gray-900' : ''}`}>
+              <tr
+                key={row.id}
+                style={{ height: ROW_HEIGHT }}
+                className={`border-b border-gray-900 hover:bg-gray-900/50 transition-colors ${vRow.index % 2 === 0 ? '' : 'bg-gray-950/40'} ${isCmp ? `border-l-2 ${leftBorder} bg-gray-800/30` : ''}`}
+              >
+                {row.getVisibleCells().map((cell, idx) => (
+                  <td
+                    key={cell.id}
+                    className={`px-3 py-2 text-gray-300 overflow-hidden ${groupBoundaries.includes(idx) ? 'border-l border-gray-900' : ''}`}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
-                )
-              })}
-            </tr>
+                ))}
+              </tr>
             )
           })}
+
+          {/* Bottom spacer */}
+          {virtualRows.length > 0 && (() => {
+            const last = virtualRows[virtualRows.length - 1]
+            const pad  = totalHeight - last.start - last.size
+            return pad > 0 ? <tr><td colSpan={COLUMNS.length} style={{ height: pad }} /></tr> : null
+          })()}
         </tbody>
       </table>
 

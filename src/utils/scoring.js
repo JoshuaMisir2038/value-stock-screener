@@ -2,7 +2,6 @@
 // Sector rank = percentile rank within sector only (shown as a secondary column)
 // Lower is better for valuation multiples; higher is better for quality metrics
 
-// Default metrics — weights sum to 1.0 but scoreAgainst normalises automatically
 export const DEFAULT_SCORE_METRICS = [
   { key: 'evEbitda',        weight: 20, lowerIsBetter: true,  label: 'EV/EBITDA',        group: 'Valuation',    desc: 'Enterprise value relative to EBITDA. Best cross-sector valuation metric.' },
   { key: 'pFcf',            weight: 18, lowerIsBetter: true,  label: 'P/FCF',            group: 'Valuation',    desc: 'Price to free cash flow. Harder to manipulate than earnings — a Buffett favourite.' },
@@ -15,7 +14,6 @@ export const DEFAULT_SCORE_METRICS = [
   { key: 'fcfMargin',       weight:  6, lowerIsBetter: false, label: 'FCF Margin',       group: 'Quality',      desc: 'Free cash flow as % of revenue. How efficiently revenue converts to cash.' },
 ]
 
-// Additional metrics users can add to the score
 export const EXTRA_SCORE_METRICS = [
   { key: 'forwardPE',       weight:  0, lowerIsBetter: true,  label: 'Fwd P/E',          group: 'Valuation',    desc: 'Forward price-to-earnings based on next year\'s consensus EPS estimate.' },
   { key: 'operatingMargin', weight:  0, lowerIsBetter: false, label: 'Op Margin',         group: 'Quality',      desc: 'Operating income as % of revenue. Core business profitability.' },
@@ -30,17 +28,34 @@ export const EXTRA_SCORE_METRICS = [
 ]
 
 export const ALL_SCORE_METRICS = [...DEFAULT_SCORE_METRICS, ...EXTRA_SCORE_METRICS]
-
-// Legacy alias used by useStocks (default weights, unchanged behaviour)
 export const SCORE_METRICS = DEFAULT_SCORE_METRICS
 
-function percentileRank(value, values) {
-  const sorted = [...values].sort((a, b) => a - b)
-  const rank = sorted.filter(v => v < value).length
-  return rank / (sorted.length - 1 || 1)
+// Binary search: count elements strictly less than value in a sorted array.
+// O(log n) vs O(n) linear scan — key to making scoring fast at 1500 stocks.
+function countLessThan(sortedArr, value) {
+  let lo = 0, hi = sortedArr.length
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1
+    if (sortedArr[mid] < value) lo = mid + 1
+    else hi = mid
+  }
+  return lo
 }
 
-function scoreAgainst(stock, pool, metrics) {
+// Build sorted pool arrays once per metric, reused across all stocks.
+function buildPools(stocks, metrics) {
+  const pools = {}
+  for (const { key, enabled, weight } of metrics) {
+    if (enabled === false || weight <= 0) continue
+    pools[key] = stocks
+      .map(s => s[key])
+      .filter(v => v != null && !isNaN(v))
+      .sort((a, b) => a - b)
+  }
+  return pools
+}
+
+function scoreWithPools(stock, pools, metrics) {
   let totalWeight = 0
   let weightedScore = 0
 
@@ -48,39 +63,43 @@ function scoreAgainst(stock, pool, metrics) {
     if (enabled === false || weight <= 0) continue
     const value = stock[key]
     if (value == null || isNaN(value)) continue
+    const pool = pools[key]
+    if (!pool || pool.length < 2) continue
 
-    const poolValues = pool
-      .map(p => p[key])
-      .filter(v => v != null && !isNaN(v))
-
-    if (poolValues.length < 2) continue
-
-    let pct = percentileRank(value, poolValues)
+    let pct = countLessThan(pool, value) / (pool.length - 1)
     if (lowerIsBetter) pct = 1 - pct
 
     weightedScore += pct * weight
-    totalWeight += weight
+    totalWeight   += weight
   }
 
   return totalWeight > 0 ? Math.round((weightedScore / totalWeight) * 100) : null
 }
 
-// computeScores uses default metrics (called by useStocks for the raw load)
 export function computeScores(stocks) {
   return computeScoresWithMetrics(stocks, DEFAULT_SCORE_METRICS)
 }
 
-// computeScoresWithMetrics accepts a custom metrics array (weight in 0-100 range, auto-normalises)
 export function computeScoresWithMetrics(stocks, metrics) {
-  const sectors = {}
+  if (!stocks.length) return stocks
+
+  // Build market-wide pools once — O(n log n) total instead of O(n² × metrics)
+  const marketPools = buildPools(stocks, metrics)
+
+  // Build per-sector pools once
+  const sectorMap = {}
   for (const s of stocks) {
-    if (!sectors[s.sector]) sectors[s.sector] = []
-    sectors[s.sector].push(s)
+    if (!sectorMap[s.sector]) sectorMap[s.sector] = []
+    sectorMap[s.sector].push(s)
+  }
+  const sectorPools = {}
+  for (const [sector, sStocks] of Object.entries(sectorMap)) {
+    sectorPools[sector] = buildPools(sStocks, metrics)
   }
 
   return stocks.map(stock => ({
     ...stock,
-    valueScore:  scoreAgainst(stock, stocks,                            metrics),
-    sectorScore: scoreAgainst(stock, sectors[stock.sector] || stocks,   metrics),
+    valueScore:  scoreWithPools(stock, marketPools,                         metrics),
+    sectorScore: scoreWithPools(stock, sectorPools[stock.sector] ?? marketPools, metrics),
   }))
 }
