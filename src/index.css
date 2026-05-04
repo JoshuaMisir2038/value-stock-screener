@@ -19,11 +19,18 @@ body {
   border-radius: 0 !important;
 }
 
-/* Terminal-style scrollbar */
+/* Terminal-style scrollbar — global (thin, subtle) */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #000; }
 ::-webkit-scrollbar-thumb { background: #2A2A2A; }
 ::-webkit-scrollbar-thumb:hover { background: #FF6600; }
+
+/* Stock table scrollbar — always visible, thicker horizontal bar */
+.aletheia-scroll::-webkit-scrollbar         { width: 8px; height: 8px; }
+.aletheia-scroll::-webkit-scrollbar-track   { background: #0a0f1c; }
+.aletheia-scroll::-webkit-scrollbar-thumb   { background: #1e3a5f; border: 1px solid #0a0f1c; }
+.aletheia-scroll::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+.aletheia-scroll::-webkit-scrollbar-corner  { background: #0a0f1c; }
 
 /* Ticker banner animations */
 @keyframes ticker-fwd {
