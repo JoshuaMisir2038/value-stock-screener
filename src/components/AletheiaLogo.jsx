@@ -1,6 +1,17 @@
-// Rainbow eye — Apple 1977 meets Pepsi bold.
-// Six horizontal colour bands clipped to the eye silhouette, white pupil, dark field.
+/**
+ * Aletheia mark — a precision reticle.
+ *
+ * Outer ring + four inward cardinal ticks + a small square target at centre.
+ * One colour, warm off-white on deep navy. No gradients, no effects.
+ * Reads like a Bloomberg terminal widget or a Palantir interface element.
+ */
 export default function AletheiaLogo({ size = 48 }) {
+  const C  = 24        // centre
+  const R  = 15        // outer ring radius
+  const TL = 3.5       // tick length (inward from ring)
+  const SQ = 4         // half-size of centre target square
+  const fg = '#ddd8ce' // warm off-white — not stark, not cold
+
   return (
     <svg
       width={size}
@@ -9,62 +20,54 @@ export default function AletheiaLogo({ size = 48 }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <defs>
-        <clipPath id="aletheia-eye">
-          <path d="M3 24 C10 12 18 6 24 6 C30 6 38 12 45 24 C38 36 30 42 24 42 C18 42 10 36 3 24Z" />
-        </clipPath>
-      </defs>
+      {/* Deep navy field */}
+      <rect width="48" height="48" fill="#080d16" />
 
-      {/* Dark field */}
-      <rect width="48" height="48" fill="#09111f" />
-
-      {/* Rainbow stripes — clipped to eye silhouette */}
-      <g clipPath="url(#aletheia-eye)">
-        {/* Red */}
-        <rect x="0" y="6"    width="48" height="6"   fill="#FF3B30" />
-        {/* Thin dark separator */}
-        <rect x="0" y="12"   width="48" height="0.6" fill="#09111f" />
-        {/* Orange */}
-        <rect x="0" y="12.6" width="48" height="6"   fill="#FF9500" />
-        <rect x="0" y="18.6" width="48" height="0.6" fill="#09111f" />
-        {/* Yellow */}
-        <rect x="0" y="19.2" width="48" height="6"   fill="#FFD60A" />
-        <rect x="0" y="25.2" width="48" height="0.6" fill="#09111f" />
-        {/* Green */}
-        <rect x="0" y="25.8" width="48" height="6"   fill="#30D158" />
-        <rect x="0" y="31.8" width="48" height="0.6" fill="#09111f" />
-        {/* Cyan / light blue */}
-        <rect x="0" y="32.4" width="48" height="5"   fill="#40C8E0" />
-        <rect x="0" y="37.4" width="48" height="0.6" fill="#09111f" />
-        {/* Purple */}
-        <rect x="0" y="38"   width="48" height="5"   fill="#BF5AF2" />
-      </g>
-
-      {/* Iris ring — white, semi-transparent so colours show through */}
-      <circle cx="24" cy="24" r="9" stroke="white" strokeWidth="0.8" fill="none" opacity="0.35" />
-
-      {/* Eye outline */}
-      <path
-        d="M3 24 C10 12 18 6 24 6 C30 6 38 12 45 24 C38 36 30 42 24 42 C18 42 10 36 3 24Z"
-        stroke="white"
-        strokeWidth="0.7"
-        fill="none"
-        opacity="0.25"
+      {/* Outer precision ring */}
+      <circle
+        cx={C} cy={C} r={R}
+        stroke={fg} strokeWidth="1.2"
       />
 
-      {/* Pupil — solid white, sharp centre point */}
-      <circle cx="24" cy="24" r="2.8" fill="white" />
-      <circle cx="24" cy="24" r="1"   fill="#09111f" />
+      {/* Cardinal tick marks — inward from ring edge, like a watch dial */}
+      {/* Top */}
+      <line x1={C} y1={C - R} x2={C} y2={C - R + TL}
+            stroke={fg} strokeWidth="1.1" strokeLinecap="square" />
+      {/* Bottom */}
+      <line x1={C} y1={C + R} x2={C} y2={C + R - TL}
+            stroke={fg} strokeWidth="1.1" strokeLinecap="square" />
+      {/* Left */}
+      <line x1={C - R} y1={C} x2={C - R + TL} y2={C}
+            stroke={fg} strokeWidth="1.1" strokeLinecap="square" />
+      {/* Right */}
+      <line x1={C + R} y1={C} x2={C + R - TL} y2={C}
+            stroke={fg} strokeWidth="1.1" strokeLinecap="square" />
 
-      {/* Corner bracket marks */}
-      <line x1="0"  y1="0"  x2="7"  y2="0"  stroke="#1e3a5f" strokeWidth="0.8" />
-      <line x1="0"  y1="0"  x2="0"  y2="7"  stroke="#1e3a5f" strokeWidth="0.8" />
-      <line x1="41" y1="0"  x2="48" y2="0"  stroke="#1e3a5f" strokeWidth="0.8" />
-      <line x1="48" y1="0"  x2="48" y2="7"  stroke="#1e3a5f" strokeWidth="0.8" />
-      <line x1="0"  y1="41" x2="0"  y2="48" stroke="#1e3a5f" strokeWidth="0.8" />
-      <line x1="0"  y1="48" x2="7"  y2="48" stroke="#1e3a5f" strokeWidth="0.8" />
-      <line x1="41" y1="48" x2="48" y2="48" stroke="#1e3a5f" strokeWidth="0.8" />
-      <line x1="48" y1="41" x2="48" y2="48" stroke="#1e3a5f" strokeWidth="0.8" />
+      {/* Centre target — open square, not a circle.
+          The square reads as data cursor / terminal, not as a generic eye. */}
+      <rect
+        x={C - SQ} y={C - SQ}
+        width={SQ * 2} height={SQ * 2}
+        stroke={fg} strokeWidth="0.9"
+      />
+
+      {/* Centre fill dot */}
+      <rect
+        x={C - 1.1} y={C - 1.1}
+        width="2.2" height="2.2"
+        fill={fg}
+      />
+
+      {/* Subtle outer tick extensions — just past the ring, very short.
+          Give it the feel of a calibrated instrument. */}
+      <line x1={C} y1={C - R - 2.5} x2={C} y2={C - R}
+            stroke={fg} strokeWidth="0.7" opacity="0.4" />
+      <line x1={C} y1={C + R} x2={C} y2={C + R + 2.5}
+            stroke={fg} strokeWidth="0.7" opacity="0.4" />
+      <line x1={C - R - 2.5} y1={C} x2={C - R} y2={C}
+            stroke={fg} strokeWidth="0.7" opacity="0.4" />
+      <line x1={C + R} y1={C} x2={C + R + 2.5} y2={C}
+            stroke={fg} strokeWidth="0.7" opacity="0.4" />
     </svg>
   )
 }
