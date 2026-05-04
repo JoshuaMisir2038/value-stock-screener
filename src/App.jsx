@@ -21,7 +21,7 @@ import DCFTab from './components/DCFTab'
 import EducationTab from './components/EducationTab'
 import PredictionMarketsTab from './components/PredictionMarketsTab'
 import WatchlistTab from './components/WatchlistTab'
-import MetricFilters, { applyMetricFilters } from './components/MetricFilters'
+import ScreenerFilters, { applyScreenerFilters } from './components/ScreenerFilters'
 import AuthModal from './components/AuthModal'
 import AlertsPanel from './components/AlertsPanel'
 import ChatWidget from './components/ChatWidget'
@@ -114,7 +114,7 @@ export default function App() {
   )
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [tab, setTab] = useState('screener')
-  const [metricFilters, setMetricFilters] = useState([])
+  const [screenerFilters, setScreenerFilters] = useState({})
   const [backtestPayload, setBacktestPayload] = useState(null)
   const [compareSymbols, setCompareSymbols] = useState([])
   const { watchlist, toggle: toggleWatch, setNote: setWatchNote, remove: removeFromWatch } = useWatchlist()
@@ -154,8 +154,8 @@ export default function App() {
       if (filters.minScore && (s.valueScore || 0) < filters.minScore) return false
       return true
     })
-    return applyMetricFilters(base, metricFilters)
-  }, [stocks, filters, metricFilters])
+    return applyScreenerFilters(base, screenerFilters, sectors)
+  }, [stocks, filters, screenerFilters, sectors])
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -276,7 +276,11 @@ export default function App() {
             </div>
 
             <div className="mb-5">
-              <MetricFilters filters={metricFilters} onChange={setMetricFilters} />
+              <ScreenerFilters
+                filterState={screenerFilters}
+                onChange={setScreenerFilters}
+                sectors={sectors}
+              />
             </div>
 
             {!loading && !error && (
