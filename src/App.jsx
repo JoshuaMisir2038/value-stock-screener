@@ -21,6 +21,7 @@ import DCFTab from './components/DCFTab'
 import EducationTab from './components/EducationTab'
 import PredictionMarketsTab from './components/PredictionMarketsTab'
 import WatchlistTab from './components/WatchlistTab'
+import MetricFilters, { applyMetricFilters } from './components/MetricFilters'
 import AuthModal from './components/AuthModal'
 import AlertsPanel from './components/AlertsPanel'
 import ChatWidget from './components/ChatWidget'
@@ -113,6 +114,7 @@ export default function App() {
   )
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [tab, setTab] = useState('screener')
+  const [metricFilters, setMetricFilters] = useState([])
   const [backtestPayload, setBacktestPayload] = useState(null)
   const [compareSymbols, setCompareSymbols] = useState([])
   const { watchlist, toggle: toggleWatch, setNote: setWatchNote, remove: removeFromWatch } = useWatchlist()
@@ -142,7 +144,7 @@ export default function App() {
   }, [stocks])
 
   const filtered = useMemo(() => {
-    return stocks.filter(s => {
+    const base = stocks.filter(s => {
       if (filters.search) {
         const q = filters.search.toLowerCase()
         if (!s.symbol?.toLowerCase().includes(q) && !s.name?.toLowerCase().includes(q)) return false
@@ -152,7 +154,8 @@ export default function App() {
       if (filters.minScore && (s.valueScore || 0) < filters.minScore) return false
       return true
     })
-  }, [stocks, filters])
+    return applyMetricFilters(base, metricFilters)
+  }, [stocks, filters, metricFilters])
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -268,8 +271,12 @@ export default function App() {
               <ScoreWeightsPanel metrics={scoreMetrics} onChange={setScoreMetrics} />
             </div>
 
-            <div className="mb-5">
+            <div className="mb-3">
               <Filters sectors={sectors} filters={filters} onChange={setFilters} />
+            </div>
+
+            <div className="mb-5">
+              <MetricFilters filters={metricFilters} onChange={setMetricFilters} />
             </div>
 
             {!loading && !error && (
