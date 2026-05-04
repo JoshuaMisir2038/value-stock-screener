@@ -233,8 +233,8 @@ export default function StockTable({ data, compareStocks = [], onToggleCompare, 
     <div
       ref={scrollRef}
       onScroll={syncFromTable}
-      className="border border-gray-800/50 aletheia-scroll"
-      style={{ height: 'calc(100vh - 320px)', minHeight: 400, overflowX: 'scroll', overflowY: 'auto' }}
+      className="border border-gray-800/50"
+      style={{ height: 'calc(100vh - 320px)', minHeight: 400, overflowX: 'hidden', overflowY: 'auto' }}
     >
       <table className="text-sm border-collapse" style={{ minWidth: '2400px', tableLayout: 'fixed' }}>
         <thead className="sticky top-0 z-10 bg-gray-950">
