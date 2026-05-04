@@ -212,7 +212,7 @@ export default function StockTable({ data, compareStocks = [], onToggleCompare, 
       className="border border-gray-800/50 aletheia-scroll"
       style={{ height: 'calc(100vh - 320px)', minHeight: 400, overflowX: 'scroll', overflowY: 'auto' }}
     >
-      <table className="text-sm border-collapse" style={{ minWidth: '2400px' }}>
+      <table className="text-sm border-collapse" style={{ minWidth: '2400px', tableLayout: 'fixed' }}>
         <thead className="sticky top-0 z-10 bg-gray-950">
           {/* Column group headers */}
           <tr className="border-b border-gray-800/50">
