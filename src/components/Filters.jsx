@@ -53,7 +53,7 @@ export default function Filters({ sectors, filters, onChange }) {
 
       {/* Min Score */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-500">Min score</span>
+        <span className="text-xs text-gray-300 font-medium">Min score</span>
         <select
           value={filters.minScore}
           onChange={e => onChange({ ...filters, minScore: Number(e.target.value) })}

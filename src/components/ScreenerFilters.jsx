@@ -421,17 +421,17 @@ function FilterSelect({ def, value, onChange, sectors }) {
     : def.options
 
   return (
-    <div className="flex flex-col gap-1 min-w-[110px]">
-      <label className="text-[9px] font-bold tracking-widest text-gray-600 uppercase truncate">
+    <div className="flex flex-col gap-1 min-w-[120px]">
+      <label className="text-[11px] font-semibold text-gray-300 uppercase tracking-wide truncate">
         {def.label}
       </label>
       <select
         value={value || 'Any'}
         onChange={e => onChange(def.key, e.target.value)}
-        className={`bg-gray-900 border text-[11px] px-2 py-1.5 focus:outline-none transition-colors cursor-pointer ${
+        className={`bg-gray-900 border text-[12px] font-medium px-2 py-1.5 focus:outline-none transition-colors cursor-pointer ${
           isActive
-            ? 'border-blue-500/60 text-blue-300 bg-blue-500/5'
-            : 'border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-200'
+            ? 'border-blue-500/60 text-blue-200 bg-blue-500/5'
+            : 'border-gray-700 text-gray-200 hover:border-gray-500 hover:text-white'
         }`}
       >
         {options.map(o => (
@@ -477,10 +477,10 @@ export default function ScreenerFilters({ filterState, onChange, sectors }) {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`px-4 py-2 text-[11px] font-bold tracking-widest uppercase transition-colors border-b-2 ${
+              className={`px-4 py-2 text-[12px] font-bold tracking-wide uppercase transition-colors border-b-2 ${
                 activeTab === t.id
                   ? 'border-blue-500 text-white bg-gray-900/40'
-                  : 'border-transparent text-gray-500 hover:text-gray-300'
+                  : 'border-transparent text-gray-300 hover:text-white'
               }`}
             >
               {t.label}
@@ -490,12 +490,12 @@ export default function ScreenerFilters({ filterState, onChange, sectors }) {
 
         {activeCount > 0 && (
           <div className="ml-auto flex items-center gap-3 px-3">
-            <span className="text-[10px] text-blue-400 font-bold">
+            <span className="text-[11px] text-blue-300 font-bold">
               {activeCount} filter{activeCount !== 1 ? 's' : ''} active
             </span>
             <button
               onClick={clearAll}
-              className="text-[10px] text-gray-600 hover:text-red-400 transition-colors uppercase tracking-wider"
+              className="text-[11px] text-gray-400 hover:text-red-400 transition-colors uppercase tracking-wide"
             >
               Reset all
             </button>
@@ -521,7 +521,7 @@ export default function ScreenerFilters({ filterState, onChange, sectors }) {
       {/* Active filter tags */}
       {activeSummary.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 px-4 pb-3 border-t border-gray-900 pt-2">
-          <span className="text-[10px] text-gray-700 uppercase tracking-wider mr-1">Active:</span>
+          <span className="text-[11px] text-gray-400 uppercase tracking-wide mr-1">Active:</span>
           {activeSummary.map(({ key, displayKey, label }) => (
             <div
               key={key}
