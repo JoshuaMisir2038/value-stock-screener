@@ -3,5 +3,14 @@ import { createClient } from '@supabase/supabase-js'
 const url = import.meta.env.VITE_SUPABASE_URL
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Returns null when env vars aren't configured so the app degrades gracefully
-export const supabase = url && key ? createClient(url, key) : null
+// Defensive initialization — never throws during module load
+let supabase = null
+try {
+  if (url && key) {
+    supabase = createClient(url, key)
+  }
+} catch (e) {
+  console.warn('Supabase init failed:', e)
+}
+
+export { supabase }

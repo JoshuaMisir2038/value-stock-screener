@@ -3,7 +3,19 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  // Set base to repo name for GitHub Pages deployment
-  // Change 'value-stock-screener' if your repo has a different name
   base: process.env.NODE_ENV === 'production' ? '/value-stock-screener/' : '/',
+  // Force Vite to pre-bundle supabase-js so Rolldown doesn't hit TDZ issues
+  optimizeDeps: {
+    include: ['@supabase/supabase-js'],
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('@supabase')) return 'supabase'
+          if (id.includes('node_modules')) return 'vendor'
+        },
+      },
+    },
+  },
 })
