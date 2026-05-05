@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { MessageSquare, X, Send, RotateCcw, ChevronDown, Bot } from 'lucide-react'
+import { Sparkles, X, Send, RotateCcw, Bot } from 'lucide-react'
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -248,11 +248,14 @@ export default function ChatWidget({ stocks }) {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-13 h-13 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/40 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-          style={{ width: 52, height: 52 }}
-          title="Ask AI"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/50 transition-all hover:scale-105 active:scale-95"
+          title="Ask the AI assistant"
         >
-          <MessageSquare size={20} />
+          <Sparkles size={15} className="shrink-0" />
+          <div className="text-left">
+            <div className="text-[12px] font-bold tracking-wide leading-none">Ask AI</div>
+            <div className="text-[9px] opacity-70 tracking-wider mt-0.5 leading-none">Powered by Llama 3.3</div>
+          </div>
         </button>
       )}
 
