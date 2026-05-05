@@ -68,10 +68,10 @@ export default function ScoreWeightsPanel({ metrics, onChange }) {
       >
         <div className="flex items-center gap-2.5">
           <SlidersHorizontal size={11} className="text-blue-500 shrink-0" />
-          <span className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">
+          <span className="text-[11px] font-bold tracking-widest text-gray-200 uppercase">
             Customize Value Score Weights
           </span>
-          <span className="text-[9px] text-gray-700 uppercase tracking-wider">
+          <span className="text-[10px] text-gray-500 uppercase tracking-wider">
             {metrics.filter(m => m.enabled).length} active · {totalWeight}pts
           </span>
         </div>
@@ -79,13 +79,13 @@ export default function ScoreWeightsPanel({ metrics, onChange }) {
           {open && (
             <button
               onClick={e => { e.stopPropagation(); reset() }}
-              className="flex items-center gap-1 text-[9px] text-gray-600 hover:text-gray-400 transition-colors uppercase tracking-wider"
+              className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
             >
               <RotateCcw size={9} />
               Reset
             </button>
           )}
-          {open ? <ChevronUp size={12} className="text-gray-700" /> : <ChevronDown size={12} className="text-gray-700" />}
+          {open ? <ChevronUp size={12} className="text-gray-400" /> : <ChevronDown size={12} className="text-gray-400" />}
         </div>
       </button>
 
@@ -93,8 +93,8 @@ export default function ScoreWeightsPanel({ metrics, onChange }) {
         <div className="border-t border-gray-800">
           {/* Column headers */}
           <div className="grid grid-cols-[1fr_1fr] border-b border-gray-900 px-3 py-1.5 bg-gray-900/40">
-            <div className="text-[9px] text-gray-700 uppercase tracking-widest">Metric · Weight</div>
-            <div className="text-[9px] text-gray-700 uppercase tracking-widest pl-4">Direction · Why it matters</div>
+            <div className="text-[10px] text-gray-400 uppercase tracking-widest">Metric · Weight</div>
+            <div className="text-[10px] text-gray-400 uppercase tracking-widest pl-4">Direction · Why it matters</div>
           </div>
 
           {/* Metric rows */}
@@ -122,7 +122,7 @@ export default function ScoreWeightsPanel({ metrics, onChange }) {
 
                     {/* Group dot + label */}
                     <div className={`w-1.5 h-1.5 shrink-0 ${GROUP_DOT[m.group] ?? 'bg-gray-600'}`} />
-                    <span className="text-[11px] text-gray-300 font-bold w-20 shrink-0">{m.label}</span>
+                    <span className="text-[11px] text-white font-bold w-20 shrink-0">{m.label}</span>
 
                     {/* Slider — local draft state for instant visual response,
                         commits to parent (triggers recompute) only on release */}
@@ -150,7 +150,7 @@ export default function ScoreWeightsPanel({ metrics, onChange }) {
                       <span className="text-[11px] text-blue-400 tabular-nums font-bold">
                         {draftWeights[m.key] ?? m.weight}pt
                       </span>
-                      <span className="text-[9px] text-gray-700 tabular-nums">
+                      <span className="text-[10px] text-gray-400 tabular-nums">
                         {totalWeight > 0
                           ? `${Math.round(((draftWeights[m.key] ?? m.weight) / totalWeight) * 100)}%`
                           : '0%'}
@@ -175,7 +175,7 @@ export default function ScoreWeightsPanel({ metrics, onChange }) {
                     </button>
 
                     {/* Description */}
-                    <span className="text-[10px] text-gray-600 leading-snug flex-1 min-w-0">{m.desc}</span>
+                    <span className="text-[10px] text-gray-300 leading-snug flex-1 min-w-0">{m.desc}</span>
 
                     {/* Remove button (extras only) */}
                     {!isDefault && (
@@ -198,7 +198,7 @@ export default function ScoreWeightsPanel({ metrics, onChange }) {
             {/* Add buttons */}
             {available.length > 0 && (
               <div className="flex flex-wrap gap-1.5 flex-1">
-                <span className="text-[9px] text-gray-700 uppercase tracking-wider self-center shrink-0">Add:</span>
+                <span className="text-[10px] text-gray-400 uppercase tracking-wider self-center shrink-0">Add:</span>
                 {available.map(m => (
                   <button
                     key={m.key}
@@ -227,7 +227,7 @@ export default function ScoreWeightsPanel({ metrics, onChange }) {
                   />
                 ))}
               </div>
-              <span className="text-[9px] text-gray-700 tabular-nums">{totalWeight}pts</span>
+              <span className="text-[10px] text-gray-400 tabular-nums">{totalWeight}pts</span>
             </div>
           </div>
         </div>
