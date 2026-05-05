@@ -3,11 +3,19 @@ import { RefreshCw, ExternalLink, TrendingUp, AlertTriangle } from 'lucide-react
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
 
+// Route everything through allorigins to avoid CORS issues
 const PROXY = url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
 
+// AbortSignal.timeout isn't universally supported — use AbortController instead
+function timedFetch(url, ms = 14000) {
+  const ctrl  = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), ms)
+  return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(timer))
+}
+
 async function fetchPolymarket() {
-  const url = 'https://gamma-api.polymarket.com/markets?limit=50&active=true&closed=false&order=volume24hr&ascending=false'
-  const res  = await fetch(url, { signal: AbortSignal.timeout(10000) })
+  const url = PROXY('https://gamma-api.polymarket.com/markets?limit=50&active=true&closed=false&order=volume24hr&ascending=false')
+  const res  = await timedFetch(url)
   if (!res.ok) throw new Error(`Polymarket ${res.status}`)
   const data = await res.json()
   return data
@@ -24,8 +32,8 @@ async function fetchPolymarket() {
         question: m.question,
         category: m.groupItemTitle || m.category || 'General',
         prob,
-        volume:   m.volume    ? parseFloat(m.volume)    : 0,
-        vol24h:   m.volume24hr? parseFloat(m.volume24hr): 0,
+        volume:   m.volume     ? parseFloat(m.volume)     : 0,
+        vol24h:   m.volume24hr ? parseFloat(m.volume24hr) : 0,
         url:      `https://polymarket.com/event/${m.slug}`,
         endDate:  m.endDate || null,
       }
@@ -33,8 +41,9 @@ async function fetchPolymarket() {
 }
 
 async function fetchKalshi() {
-  const url  = 'https://trading-api.kalshi.com/trade-api/v2/markets?limit=50&status=open'
-  const res  = await fetch(PROXY(url), { signal: AbortSignal.timeout(10000) })
+  // Kalshi updated their public API endpoint
+  const url = PROXY('https://api.kalshi.com/trade-api/v2/markets?limit=50&status=open')
+  const res  = await timedFetch(url)
   if (!res.ok) throw new Error(`Kalshi ${res.status}`)
   const data = await res.json()
   return (data.markets || []).map(m => ({
@@ -42,7 +51,7 @@ async function fetchKalshi() {
     source:   'Kalshi',
     question: m.title,
     category: m.category || 'General',
-    prob:     m.yes_ask != null ? Math.round(m.yes_ask) : null,
+    prob:     m.yes_ask  != null ? Math.round(m.yes_ask)  : null,
     volume:   m.volume   || 0,
     vol24h:   m.volume   || 0,
     url:      `https://kalshi.com/markets/${m.ticker_name || m.ticker}`,
@@ -51,8 +60,8 @@ async function fetchKalshi() {
 }
 
 async function fetchManifold() {
-  const url = 'https://api.manifold.markets/v0/markets?limit=50&sort=liquidity&filter=open&contractType=BINARY'
-  const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
+  const url = PROXY('https://api.manifold.markets/v0/markets?limit=50&sort=liquidity&filter=open&contractType=BINARY')
+  const res  = await timedFetch(url)
   if (!res.ok) throw new Error(`Manifold ${res.status}`)
   const data = await res.json()
   return data.map(m => ({
@@ -61,10 +70,10 @@ async function fetchManifold() {
     question: m.question,
     category: m.category || 'General',
     prob:     m.probability != null ? Math.round(m.probability * 100) : null,
-    volume:   m.volume     || 0,
-    vol24h:   m.volume     || 0,
+    volume:   m.volume      || 0,
+    vol24h:   m.volume      || 0,
     url:      m.url,
-    endDate:  m.closeTime  ? new Date(m.closeTime).toISOString() : null,
+    endDate:  m.closeTime   ? new Date(m.closeTime).toISOString() : null,
   }))
 }
 
@@ -208,7 +217,7 @@ export default function PredictionMarketsTab() {
         all = [...all, ...r.value]
       } else {
         next[key] = 'error'
-        console.warn(`${key} failed:`, r.reason?.message)
+        console.warn(`${key} failed:`, r.reason)
       }
     })
 
