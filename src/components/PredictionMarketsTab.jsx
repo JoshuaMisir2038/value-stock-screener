@@ -3,22 +3,40 @@ import { RefreshCw, ExternalLink, TrendingUp, AlertTriangle } from 'lucide-react
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
 
-// Route everything through allorigins to avoid CORS issues
-const PROXY = url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+const PROXY = url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
 
-// AbortSignal.timeout isn't universally supported — use AbortController instead
-function timedFetch(url, ms = 14000) {
-  const ctrl  = new AbortController()
-  const timer = setTimeout(() => ctrl.abort(), ms)
-  return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(timer))
+// Hard Promise.race timeout — guarantees every fetch settles within ms
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+    ),
+  ])
+}
+
+async function getJson(url) {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+// Try direct first (many APIs allow CORS), fall back to proxy
+async function safeFetch(directUrl, label) {
+  try {
+    return await withTimeout(getJson(directUrl), 8000, label)
+  } catch (e) {
+    console.warn(`${label} direct failed (${e.message}), trying proxy`)
+    return withTimeout(getJson(PROXY(directUrl)), 12000, `${label}-proxy`)
+  }
 }
 
 async function fetchPolymarket() {
-  const url = PROXY('https://gamma-api.polymarket.com/markets?limit=50&active=true&closed=false&order=volume24hr&ascending=false')
-  const res  = await timedFetch(url)
-  if (!res.ok) throw new Error(`Polymarket ${res.status}`)
-  const data = await res.json()
-  return data
+  const data = await safeFetch(
+    'https://gamma-api.polymarket.com/markets?limit=50&active=true&closed=false&order=volume24hr&ascending=false',
+    'Polymarket'
+  )
+  return (Array.isArray(data) ? data : [])
     .filter(m => m.question && m.active && !m.closed)
     .map(m => {
       let prob = null
@@ -41,39 +59,38 @@ async function fetchPolymarket() {
 }
 
 async function fetchKalshi() {
-  // Kalshi updated their public API endpoint
-  const url = PROXY('https://api.kalshi.com/trade-api/v2/markets?limit=50&status=open')
-  const res  = await timedFetch(url)
-  if (!res.ok) throw new Error(`Kalshi ${res.status}`)
-  const data = await res.json()
+  const data = await safeFetch(
+    'https://api.kalshi.com/trade-api/v2/markets?limit=50&status=open',
+    'Kalshi'
+  )
   return (data.markets || []).map(m => ({
     id:       `ks-${m.ticker}`,
     source:   'Kalshi',
     question: m.title,
     category: m.category || 'General',
-    prob:     m.yes_ask  != null ? Math.round(m.yes_ask)  : null,
-    volume:   m.volume   || 0,
-    vol24h:   m.volume   || 0,
+    prob:     m.yes_ask != null ? Math.round(m.yes_ask) : null,
+    volume:   m.volume  || 0,
+    vol24h:   m.volume  || 0,
     url:      `https://kalshi.com/markets/${m.ticker_name || m.ticker}`,
     endDate:  m.close_time || null,
   }))
 }
 
 async function fetchManifold() {
-  const url = PROXY('https://api.manifold.markets/v0/markets?limit=50&sort=liquidity&filter=open&contractType=BINARY')
-  const res  = await timedFetch(url)
-  if (!res.ok) throw new Error(`Manifold ${res.status}`)
-  const data = await res.json()
-  return data.map(m => ({
+  const data = await safeFetch(
+    'https://api.manifold.markets/v0/markets?limit=50&sort=liquidity&filter=open&contractType=BINARY',
+    'Manifold'
+  )
+  return (Array.isArray(data) ? data : []).map(m => ({
     id:       `mf-${m.id}`,
     source:   'Manifold',
     question: m.question,
     category: m.category || 'General',
     prob:     m.probability != null ? Math.round(m.probability * 100) : null,
-    volume:   m.volume      || 0,
-    vol24h:   m.volume      || 0,
+    volume:   m.volume     || 0,
+    vol24h:   m.volume     || 0,
     url:      m.url,
-    endDate:  m.closeTime   ? new Date(m.closeTime).toISOString() : null,
+    endDate:  m.closeTime  ? new Date(m.closeTime).toISOString() : null,
   }))
 }
 
@@ -122,7 +139,6 @@ function MarketRow({ m }) {
   return (
     <div className="border border-gray-800 hover:border-gray-700 transition-colors p-4 group">
       <div className="flex items-start gap-4">
-        {/* Probability */}
         <div className="shrink-0 w-16 text-center">
           <div className={`text-xl font-bold tabular-nums ${probColor(m.prob)}`}>
             {m.prob != null ? `${m.prob}%` : '—'}
@@ -130,15 +146,10 @@ function MarketRow({ m }) {
           <div className="text-[9px] text-gray-700 uppercase tracking-wider mt-0.5">YES</div>
           {m.prob != null && (
             <div className="mt-1.5 h-1 bg-gray-800 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full ${probBarColor(m.prob)}`}
-                style={{ width: `${m.prob}%` }}
-              />
+              <div className={`h-full rounded-full ${probBarColor(m.prob)}`} style={{ width: `${m.prob}%` }} />
             </div>
           )}
         </div>
-
-        {/* Content */}
         <div className="flex-1 min-w-0">
           <a
             href={m.url}
@@ -160,9 +171,7 @@ function MarketRow({ m }) {
             {m.category && m.category !== 'General' && (
               <span className="text-gray-500">{m.category}</span>
             )}
-            {end && (
-              <span className="text-gray-600">Closes {end}</span>
-            )}
+            {end && <span className="text-gray-600">Closes {end}</span>}
             <a
               href={m.url}
               target="_blank"
@@ -180,20 +189,20 @@ function MarketRow({ m }) {
 
 // ── Main tab ─────────────────────────────────────────────────────────────────
 
-const SOURCES = ['All', 'Polymarket', 'Kalshi', 'Manifold']
+const SOURCES     = ['All', 'Polymarket', 'Kalshi', 'Manifold']
 const SORT_OPTIONS = [
-  { key: 'vol24h',  label: 'Volume'      },
-  { key: 'prob',    label: 'Probability' },
+  { key: 'vol24h',  label: 'Volume'       },
+  { key: 'prob',    label: 'Probability'  },
   { key: 'endDate', label: 'Closing Soon' },
 ]
 
 export default function PredictionMarketsTab() {
-  const [markets,    setMarkets]    = useState([])
-  const [statuses,   setStatuses]   = useState({ Polymarket: 'idle', Kalshi: 'idle', Manifold: 'idle' })
-  const [source,     setSource]     = useState('All')
-  const [sortKey,    setSortKey]    = useState('vol24h')
-  const [search,     setSearch]     = useState('')
-  const [lastFetch,  setLastFetch]  = useState(null)
+  const [markets,   setMarkets]   = useState([])
+  const [statuses,  setStatuses]  = useState({ Polymarket: 'idle', Kalshi: 'idle', Manifold: 'idle' })
+  const [source,    setSource]    = useState('All')
+  const [sortKey,   setSortKey]   = useState('vol24h')
+  const [search,    setSearch]    = useState('')
+  const [lastFetch, setLastFetch] = useState(null)
 
   const load = useCallback(async () => {
     setStatuses({ Polymarket: 'loading', Kalshi: 'loading', Manifold: 'loading' })
@@ -205,8 +214,9 @@ export default function PredictionMarketsTab() {
       { key: 'Manifold',   fn: fetchManifold   },
     ]
 
-    // Fire all three in parallel, surface results as each resolves
-    const results = await Promise.allSettled(fetchers.map(f => f.fn()))
+    const results = await Promise.allSettled(
+      fetchers.map(f => withTimeout(f.fn(), 20000, f.key))
+    )
 
     let all = []
     const next = {}
@@ -243,9 +253,7 @@ export default function PredictionMarketsTab() {
         if (!b.endDate) return -1
         return new Date(a.endDate) - new Date(b.endDate)
       }
-      if (sortKey === 'prob') {
-        return (b.prob ?? -1) - (a.prob ?? -1)
-      }
+      if (sortKey === 'prob') return (b.prob ?? -1) - (a.prob ?? -1)
       return (b.vol24h ?? 0) - (a.vol24h ?? 0)
     })
 
@@ -261,7 +269,7 @@ export default function PredictionMarketsTab() {
             <h2 className="text-sm font-bold text-white tracking-widest uppercase">Prediction Markets</h2>
           </div>
           <p className="text-[11px] text-gray-600">
-            Live markets from Polymarket, Kalshi, and Manifold — what the crowd is betting on.
+            Live markets from Polymarket, Kalshi, and Manifold — ranked by amount wagered.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -295,32 +303,26 @@ export default function PredictionMarketsTab() {
             {status === 'loading' && <RefreshCw size={9} className="animate-spin" />}
             {status === 'error'   && <AlertTriangle size={9} />}
             {src}
-            {status === 'ok'      && <span className="opacity-50">·</span>}
-            {status === 'ok'      && <span className="opacity-50">{markets.filter(m => m.source === src).length}</span>}
+            {status === 'ok' && <span className="opacity-50">· {markets.filter(m => m.source === src).length}</span>}
           </div>
         ))}
       </div>
 
       {/* Filters */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
-        {/* Source tabs */}
         <div className="flex">
           {SOURCES.map(s => (
             <button
               key={s}
               onClick={() => setSource(s)}
               className={`px-3 py-1.5 text-[11px] font-medium tracking-wider border-b-2 transition-colors whitespace-nowrap ${
-                source === s
-                  ? 'border-blue-500 text-blue-400'
-                  : 'border-transparent text-gray-600 hover:text-gray-400'
+                source === s ? 'border-blue-500 text-blue-400' : 'border-transparent text-gray-600 hover:text-gray-400'
               }`}
             >
               {s}
             </button>
           ))}
         </div>
-
-        {/* Sort */}
         <div className="flex items-center gap-1.5 ml-4">
           <span className="text-[10px] text-gray-700 uppercase tracking-wider">Sort:</span>
           {SORT_OPTIONS.map(o => (
@@ -337,8 +339,6 @@ export default function PredictionMarketsTab() {
             </button>
           ))}
         </div>
-
-        {/* Search */}
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -347,18 +347,10 @@ export default function PredictionMarketsTab() {
         />
       </div>
 
-      {/* Count */}
-      {visible.length > 0 && (
-        <div className="text-[11px] text-gray-700 mb-3">
-          {visible.length} market{visible.length !== 1 ? 's' : ''}
-        </div>
-      )}
-
-      {/* Market list */}
       {anyLoading && markets.length === 0 && (
         <div className="flex items-center justify-center py-24 text-gray-600 gap-2">
           <RefreshCw size={14} className="animate-spin" />
-          Fetching prediction markets...
+          Fetching prediction markets…
         </div>
       )}
 
@@ -366,6 +358,10 @@ export default function PredictionMarketsTab() {
         <div className="py-24 text-center text-gray-700 text-sm">
           No markets found — try a different filter or refresh.
         </div>
+      )}
+
+      {visible.length > 0 && (
+        <div className="mb-3 text-[11px] text-gray-700">{visible.length} markets</div>
       )}
 
       <div className="space-y-2">
