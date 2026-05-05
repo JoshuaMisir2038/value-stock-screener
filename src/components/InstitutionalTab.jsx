@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react'
-import { RefreshCw, AlertTriangle, ExternalLink, Building2 } from 'lucide-react'
+import { useState, useCallback, useRef } from 'react'
+import { RefreshCw, AlertTriangle, ExternalLink, Building2, Search, X } from 'lucide-react'
 
 // ── Firm registry ─────────────────────────────────────────────────────────────
 
@@ -130,15 +130,42 @@ function fmtShares(n) {
   return n.toLocaleString()
 }
 
+// ── EDGAR firm search ─────────────────────────────────────────────────────────
+
+async function searchEdgar(query) {
+  // EDGAR full-text search — returns 13F filers matching the query
+  const url  = `https://efts.sec.gov/LATEST/search-index?q=${encodeURIComponent(`"${query}"`)}&forms=13F-HR&dateRange=custom&startdt=2023-01-01`
+  const res  = await timeout(fetch(url, { headers: { 'User-Agent': 'Aletheia/1.0' } }), 8000)
+  if (!res.ok) throw new Error(`EDGAR search HTTP ${res.status}`)
+  const data = await res.json()
+
+  const seen = new Set()
+  return (data.hits?.hits ?? [])
+    .map(h => {
+      // CIK is in the _id path: "edgar/data/1234567/..."
+      const cikMatch = h._id?.match(/edgar\/data\/(\d+)\//)
+      const cik      = cikMatch?.[1]
+      const name     = h._source?.entity_name ?? h._source?.file_date ?? 'Unknown'
+      return { name, cik, filedAt: h._source?.file_date }
+    })
+    .filter(r => r.cik && !seen.has(r.cik) && seen.add(r.cik))
+    .slice(0, 8)
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function InstitutionalTab() {
-  const [activeFirm,   setActiveFirm]   = useState(FIRMS[0])
-  const [data,         setData]         = useState(null)
-  const [loading,      setLoading]      = useState(false)
-  const [error,        setError]        = useState(null)
-  const [search,       setSearch]       = useState('')
-  const [cache,        setCache]        = useState({})
+  const [activeFirm,      setActiveFirm]      = useState(FIRMS[0])
+  const [data,            setData]            = useState(null)
+  const [loading,         setLoading]         = useState(false)
+  const [error,           setError]           = useState(null)
+  const [search,          setSearch]          = useState('')
+  const [cache,           setCache]           = useState({})
+  const [edgarQuery,      setEdgarQuery]      = useState('')
+  const [edgarResults,    setEdgarResults]    = useState([])
+  const [edgarSearching,  setEdgarSearching]  = useState(false)
+  const [edgarError,      setEdgarError]      = useState(null)
+  const searchTimer = useRef(null)
 
   const load = useCallback(async (firm) => {
     if (cache[firm.cik]) { setData(cache[firm.cik]); setError(null); return }
@@ -159,7 +186,28 @@ export default function InstitutionalTab() {
   function selectFirm(firm) {
     setActiveFirm(firm)
     setSearch('')
+    setEdgarResults([])
+    setEdgarQuery('')
     load(firm)
+  }
+
+  function onEdgarInput(val) {
+    setEdgarQuery(val)
+    setEdgarError(null)
+    clearTimeout(searchTimer.current)
+    if (!val.trim() || val.length < 3) { setEdgarResults([]); return }
+    searchTimer.current = setTimeout(async () => {
+      setEdgarSearching(true)
+      try {
+        const results = await searchEdgar(val.trim())
+        setEdgarResults(results)
+      } catch (e) {
+        setEdgarError(e.message)
+        setEdgarResults([])
+      } finally {
+        setEdgarSearching(false)
+      }
+    }, 500)
   }
 
   // Load first firm on mount
@@ -207,6 +255,49 @@ export default function InstitutionalTab() {
             <div className="text-[9px] opacity-60 mt-0.5">{firm.manager}</div>
           </button>
         ))}
+      </div>
+
+      {/* EDGAR firm search */}
+      <div className="mb-4 relative">
+        <div className="flex items-center gap-2 bg-gray-900/50 border border-gray-800 px-3 py-2">
+          <Search size={12} className="text-gray-600 shrink-0" />
+          <input
+            value={edgarQuery}
+            onChange={e => onEdgarInput(e.target.value)}
+            placeholder="Search any 13F filer on SEC EDGAR (e.g. Aschenbrenner, Forethought…)"
+            className="flex-1 bg-transparent text-gray-200 text-[12px] focus:outline-none placeholder-gray-600"
+          />
+          {edgarSearching && <RefreshCw size={11} className="animate-spin text-gray-600 shrink-0" />}
+          {edgarQuery && (
+            <button onClick={() => { setEdgarQuery(''); setEdgarResults([]) }}>
+              <X size={11} className="text-gray-600 hover:text-gray-400" />
+            </button>
+          )}
+        </div>
+
+        {/* Search results dropdown */}
+        {(edgarResults.length > 0 || edgarError) && (
+          <div className="absolute top-full left-0 right-0 z-20 bg-gray-900 border border-gray-700 border-t-0 max-h-64 overflow-y-auto">
+            {edgarError && (
+              <div className="px-4 py-3 text-[11px] text-red-400 flex items-center gap-1">
+                <AlertTriangle size={11} /> {edgarError}
+              </div>
+            )}
+            {edgarResults.map(r => (
+              <button
+                key={r.cik}
+                onClick={() => selectFirm({ name: r.name, manager: '', cik: r.cik, style: 'Value' })}
+                className="w-full text-left px-4 py-2.5 hover:bg-gray-800 transition-colors border-b border-gray-800/60 last:border-0"
+              >
+                <div className="text-[12px] text-gray-200 font-medium">{r.name}</div>
+                <div className="text-[10px] text-gray-600 mt-0.5">CIK {r.cik} · Last filed {r.filedAt}</div>
+              </button>
+            ))}
+            {edgarResults.length === 0 && !edgarError && !edgarSearching && edgarQuery.length >= 3 && (
+              <div className="px-4 py-3 text-[11px] text-gray-600">No 13F filers matched "{edgarQuery}"</div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Active firm info bar */}
