@@ -158,9 +158,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-950">
       {/* Header */}
-      <div className="border-b border-gray-700 bg-gray-950 sticky top-0 z-10">
+      <div className="border-b border-gray-600 bg-gray-950 sticky top-0 z-10">
         {/* Terminal top bar */}
-        <div className="max-w-screen-2xl mx-auto px-4 py-2 flex items-center justify-between border-b border-gray-800">
+        <div className="max-w-screen-2xl mx-auto px-4 py-2 flex items-center justify-between border-b border-gray-700">
           <div className="flex items-center gap-4">
             <AletheiaLogo size={48} />
             <div>
@@ -215,20 +215,20 @@ export default function App() {
         </div>
 
         {/* Primary group row */}
-        <div className="max-w-screen-2xl mx-auto px-4 flex border-b border-gray-800">
+        <div className="max-w-screen-2xl mx-auto px-4 flex border-b border-gray-700">
           {TAB_GROUPS.map(({ id, label, icon: Icon, tabs }) => {
             const isActive = getGroup(tab).id === id
             return (
               <button
                 key={id}
                 onClick={() => !isActive && setTab(tabs[0].id)}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-[11px] font-bold tracking-widest border-b-2 transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-[12px] font-bold tracking-widest border-b-2 transition-colors whitespace-nowrap ${
                   isActive
-                    ? 'border-blue-500 text-white bg-gray-900/60'
-                    : 'border-transparent text-gray-300 hover:text-white hover:bg-gray-900/30'
+                    ? 'border-blue-400 text-white bg-gray-900/60'
+                    : 'border-transparent text-gray-100 hover:text-white hover:bg-gray-900/30'
                 }`}
               >
-                <Icon size={11} />
+                <Icon size={12} />
                 {label}
               </button>
             )
@@ -237,18 +237,18 @@ export default function App() {
 
         {/* Secondary sub-tab row — only shown when active group has > 1 tab */}
         {getGroup(tab).tabs.length > 1 && (
-          <div className="max-w-screen-2xl mx-auto px-4 flex bg-gray-900/40">
+          <div className="max-w-screen-2xl mx-auto px-4 flex border-b border-gray-700 bg-gray-900/40">
             {getGroup(tab).tabs.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setTab(id)}
-                className={`flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-medium tracking-wider border-b-2 transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-4 py-1.5 text-[11px] font-semibold tracking-wider border-b-2 transition-colors whitespace-nowrap ${
                   tab === id
-                    ? 'border-blue-400 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-200'
+                    ? 'border-blue-400 text-white'
+                    : 'border-transparent text-gray-200 hover:text-white'
                 }`}
               >
-                <Icon size={10} />
+                <Icon size={11} />
                 {label}
               </button>
             ))}
