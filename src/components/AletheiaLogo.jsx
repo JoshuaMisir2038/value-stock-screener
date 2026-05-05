@@ -1,21 +1,15 @@
 /**
- * Aletheia mark — a prism triangle.
+ * Aletheia mark — prism with gradient spectrum fill.
  *
- * Three Pepsi colour bands (red / white / blue) clipped to an upward-pointing
- * triangle. The prism is the symbol of unconcealment: hidden light revealed.
- * Same Apple-band technique as before, completely different form — no circles,
- * no Mastercard confusion. The triangle also reads as Greek Delta (Δ) = change,
- * and as an upward arrow = growth. All relevant to a stock screener.
+ * The prism shape stays (ἀλήθεια = unconcealing hidden light) but the
+ * flat Pepsi bands are replaced with a smooth gradient spectrum — the way
+ * a real prism actually reveals colour. Hot pink → violet → electric blue.
+ * Glow filter adds depth. Feels digital-native, not corporate.
  */
 export default function AletheiaLogo({ size = 48 }) {
-  const bg  = '#08111e'
-  const red = '#E8192C'
-  const wht = '#F0ECE4'
-  const blu = '#004A98'
-  const sep = '#08111e'
+  const bg   = '#08111e'
   const brkt = '#1e3050'
 
-  // Triangle: apex (24,5), bottom-left (4,43), bottom-right (44,43)
   const tri = 'M 24 5 L 44 43 L 4 43 Z'
 
   return (
@@ -27,6 +21,25 @@ export default function AletheiaLogo({ size = 48 }) {
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
+        {/* Spectrum gradient — top to bottom, like a real prism */}
+        <linearGradient id="spectrum" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#FF2D55" />
+          <stop offset="35%"  stopColor="#FF6B00" />
+          <stop offset="55%"  stopColor="#BF5AF2" />
+          <stop offset="100%" stopColor="#0A84FF" />
+        </linearGradient>
+
+        {/* Subtle glow behind the triangle */}
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#BF5AF2" floodOpacity="0.5" />
+        </filter>
+
+        {/* Gloss highlight — bright top-left shine */}
+        <linearGradient id="gloss" x1="0" y1="0" x2="0.5" y2="1">
+          <stop offset="0%"   stopColor="white" stopOpacity="0.25" />
+          <stop offset="50%"  stopColor="white" stopOpacity="0" />
+        </linearGradient>
+
         <clipPath id="aletheia-tri">
           <path d={tri} />
         </clipPath>
@@ -35,31 +48,23 @@ export default function AletheiaLogo({ size = 48 }) {
       {/* Background */}
       <rect width="48" height="48" fill={bg} />
 
-      {/* ── Three Pepsi bands clipped to triangle ── */}
-      <g clipPath="url(#aletheia-tri)">
-        {/* Red — top */}
-        <rect x="0" y="5"    width="48" height="13"  fill={red} />
-        {/* Separator */}
-        <rect x="0" y="18"   width="48" height="0.9" fill={sep} />
-        {/* White — middle */}
-        <rect x="0" y="18.9" width="48" height="9"   fill={wht} />
-        {/* Separator */}
-        <rect x="0" y="27.9" width="48" height="0.9" fill={sep} />
-        {/* Blue — bottom */}
-        <rect x="0" y="28.8" width="48" height="15"  fill={blu} />
+      {/* Gradient fill clipped to triangle, with glow */}
+      <g filter="url(#glow)">
+        <g clipPath="url(#aletheia-tri)">
+          <rect x="0" y="0" width="48" height="48" fill="url(#spectrum)" />
+          {/* Gloss overlay */}
+          <rect x="0" y="0" width="48" height="48" fill="url(#gloss)" />
+        </g>
       </g>
 
-      {/* Triangle outline — faint white border */}
+      {/* Triangle outline — bright white edge */}
       <path
         d={tri}
         stroke="white"
-        strokeWidth="0.6"
+        strokeWidth="0.7"
         fill="none"
-        opacity="0.2"
+        opacity="0.25"
       />
-
-      {/* Small apex dot — anchors the tip */}
-      <circle cx="24" cy="5" r="1.5" fill={red} opacity="0.8" />
 
       {/* Corner bracket marks */}
       <line x1="0"  y1="0"  x2="7"  y2="0"  stroke={brkt} strokeWidth="0.9" />
