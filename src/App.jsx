@@ -167,7 +167,7 @@ export default function App() {
             <AletheiaLogo size={48} />
             <div>
               <h1 className="text-sm font-extrabold text-white tracking-[0.2em] uppercase">ALETHEIA</h1>
-              <p className="text-[11px] text-gray-400 tracking-wider">find your edge &mdash; <span className="text-gray-500">truth in data</span></p>
+              <p className="text-[11px] text-gray-400 tracking-wider">truth in data</p>
             </div>
           </div>
           <div className="flex items-center gap-6 text-[11px]">
