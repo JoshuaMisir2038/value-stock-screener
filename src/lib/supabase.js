@@ -1,28 +1,22 @@
-// Lazy Supabase client — createClient is deferred to first use.
-// Calling createClient at module-init time causes a TDZ crash in Rolldown
-// (Vite 8's bundler) because the Supabase realtime system has internal
-// circular initialisations. The Proxy forwards every property access to
-// the real client, which is created on the first .from() / .auth. / etc call.
-
-import { createClient } from '@supabase/supabase-js'
+// Supabase is loaded from a CDN <script> tag in index.html (UMD build).
+// The UMD bundle exposes window.supabase = { createClient, ... }.
+// We reference it as a global rather than bundling it, to avoid a TDZ
+// crash caused by Supabase's internal circular ES-module structure when
+// processed by Rolldown (Vite 8's bundler).
 
 const url = import.meta.env.VITE_SUPABASE_URL
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-let _client = null
+let supabase = null
 
-function getClient() {
-  if (!_client) _client = createClient(url, key)
-  return _client
+if (url && key) {
+  try {
+    // window.supabase is set by the CDN script before module scripts run
+    const { createClient } = window.supabase
+    supabase = createClient(url, key)
+  } catch (e) {
+    console.warn('Supabase init failed:', e)
+  }
 }
 
-// Proxy forwards every property access to the lazily-created client.
-// Existing code (supabase.from(...), supabase.auth, supabase.rpc(...))
-// continues to work unchanged.
-export const supabase = (url && key)
-  ? new Proxy({}, {
-      get(_, prop) {
-        return getClient()[prop]
-      },
-    })
-  : null
+export { supabase }
