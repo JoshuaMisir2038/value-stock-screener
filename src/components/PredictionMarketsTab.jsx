@@ -58,40 +58,52 @@ async function fetchPolymarket() {
     })
 }
 
-async function fetchKalshi() {
+// Kalshi requires auth — replaced with Metaculus (fully public API)
+async function fetchMetaculus() {
   const data = await safeFetch(
-    'https://api.kalshi.com/trade-api/v2/markets?limit=50&status=open',
-    'Kalshi'
+    'https://www.metaculus.com/api2/questions/?format=json&limit=50&order_by=-activity&status=open&type=forecast',
+    'Metaculus'
   )
-  return (data.markets || []).map(m => ({
-    id:       `ks-${m.ticker}`,
-    source:   'Kalshi',
-    question: m.title,
-    category: m.category || 'General',
-    prob:     m.yes_ask != null ? Math.round(m.yes_ask) : null,
-    volume:   m.volume  || 0,
-    vol24h:   m.volume  || 0,
-    url:      `https://kalshi.com/markets/${m.ticker_name || m.ticker}`,
-    endDate:  m.close_time || null,
-  }))
+  return (data.results || [])
+    .filter(q => q.title && q.active_state === 'OPEN')
+    .map(q => {
+      const prob = q.community_prediction?.full?.q2 != null
+        ? Math.round(q.community_prediction.full.q2 * 100)
+        : null
+      return {
+        id:       `mc-${q.id}`,
+        source:   'Metaculus',
+        question: q.title,
+        category: q.categories?.[0]?.name || 'General',
+        prob,
+        volume:   q.number_of_forecasters || 0,
+        vol24h:   q.number_of_forecasters || 0,
+        url:      `https://www.metaculus.com${q.page_url}`,
+        endDate:  q.resolve_time || null,
+      }
+    })
 }
 
 async function fetchManifold() {
+  // Try direct fetch first — Manifold supports CORS
   const data = await safeFetch(
-    'https://api.manifold.markets/v0/markets?limit=50&sort=liquidity&filter=open&contractType=BINARY',
+    'https://api.manifold.markets/v0/markets?limit=50&sort=liquidity',
     'Manifold'
   )
-  return (Array.isArray(data) ? data : []).map(m => ({
-    id:       `mf-${m.id}`,
-    source:   'Manifold',
-    question: m.question,
-    category: m.category || 'General',
-    prob:     m.probability != null ? Math.round(m.probability * 100) : null,
-    volume:   m.volume     || 0,
-    vol24h:   m.volume     || 0,
-    url:      m.url,
-    endDate:  m.closeTime  ? new Date(m.closeTime).toISOString() : null,
-  }))
+  return (Array.isArray(data) ? data : [])
+    .filter(m => m.isResolved === false && m.closeTime > Date.now())
+    .slice(0, 50)
+    .map(m => ({
+      id:       `mf-${m.id}`,
+      source:   'Manifold',
+      question: m.question,
+      category: m.category || 'General',
+      prob:     m.probability != null ? Math.round(m.probability * 100) : null,
+      volume:   Math.round(m.volume || 0),
+      vol24h:   Math.round(m.volume || 0),
+      url:      m.url,
+      endDate:  m.closeTime ? new Date(m.closeTime).toISOString() : null,
+    }))
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -127,8 +139,8 @@ function probBarColor(p) {
 }
 
 const SOURCE_STYLES = {
-  Polymarket: 'text-blue-400   border-blue-500/30   bg-blue-500/10',
-  Kalshi:     'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
+  Polymarket: 'text-blue-400    border-blue-500/30    bg-blue-500/10',
+  Metaculus:  'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
   Manifold:   'text-purple-400  border-purple-500/30  bg-purple-500/10',
 }
 
@@ -189,7 +201,7 @@ function MarketRow({ m }) {
 
 // ── Main tab ─────────────────────────────────────────────────────────────────
 
-const SOURCES     = ['All', 'Polymarket', 'Kalshi', 'Manifold']
+const SOURCES     = ['All', 'Polymarket', 'Metaculus', 'Manifold']
 const SORT_OPTIONS = [
   { key: 'vol24h',  label: 'Volume'       },
   { key: 'prob',    label: 'Probability'  },
@@ -198,19 +210,19 @@ const SORT_OPTIONS = [
 
 export default function PredictionMarketsTab() {
   const [markets,   setMarkets]   = useState([])
-  const [statuses,  setStatuses]  = useState({ Polymarket: 'idle', Kalshi: 'idle', Manifold: 'idle' })
+  const [statuses,  setStatuses]  = useState({ Polymarket: 'idle', Metaculus: 'idle', Manifold: 'idle' })
   const [source,    setSource]    = useState('All')
   const [sortKey,   setSortKey]   = useState('vol24h')
   const [search,    setSearch]    = useState('')
   const [lastFetch, setLastFetch] = useState(null)
 
   const load = useCallback(async () => {
-    setStatuses({ Polymarket: 'loading', Kalshi: 'loading', Manifold: 'loading' })
+    setStatuses({ Polymarket: 'loading', Metaculus: 'loading', Manifold: 'loading' })
     setMarkets([])
 
     const fetchers = [
       { key: 'Polymarket', fn: fetchPolymarket },
-      { key: 'Kalshi',     fn: fetchKalshi     },
+      { key: 'Metaculus',  fn: fetchMetaculus  },
       { key: 'Manifold',   fn: fetchManifold   },
     ]
 
@@ -269,7 +281,7 @@ export default function PredictionMarketsTab() {
             <h2 className="text-sm font-bold text-white tracking-widest uppercase">Prediction Markets</h2>
           </div>
           <p className="text-[11px] text-gray-600">
-            Live markets from Polymarket, Kalshi, and Manifold — ranked by amount wagered.
+            Live markets from Polymarket, Metaculus, and Manifold — ranked by amount wagered.
           </p>
         </div>
         <div className="flex items-center gap-3">
