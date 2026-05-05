@@ -20,6 +20,7 @@ import CustomBacktestTab from './components/CustomBacktestTab'
 import DCFTab from './components/DCFTab'
 import EducationTab from './components/EducationTab'
 import PredictionMarketsTab from './components/PredictionMarketsTab'
+import InstitutionalTab from './components/InstitutionalTab'
 import WatchlistTab from './components/WatchlistTab'
 import ScreenerFilters, { applyScreenerFilters } from './components/ScreenerFilters'
 import AuthModal from './components/AuthModal'
@@ -30,7 +31,7 @@ import AletheiaLogo from './components/AletheiaLogo'
 import { EquityMethodology } from './components/Methodology'
 import TickerBanner from './components/TickerBanner'
 import CompareModal from './components/CompareModal'
-import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch, SlidersHorizontal, TestTube2, X, GitCompare, Calculator, BookOpen, Star, Bell, User, LogOut } from 'lucide-react'
+import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch, SlidersHorizontal, TestTube2, X, GitCompare, Calculator, BookOpen, Star, Bell, User, LogOut, Building2 } from 'lucide-react'
 
 const DEFAULT_FILTERS = { search: '' }
 
@@ -59,9 +60,10 @@ const TAB_GROUPS = [
     label: 'MARKETS',
     icon: Globe,
     tabs: [
-      { id: 'bonds',       label: 'BONDS',       icon: Landmark },
-      { id: 'commodities', label: 'COMMODITIES', icon: Package },
-      { id: 'macro',       label: 'MACRO',        icon: Globe },
+      { id: 'bonds',         label: 'BONDS',         icon: Landmark  },
+      { id: 'commodities',   label: 'COMMODITIES',   icon: Package   },
+      { id: 'macro',         label: 'MACRO',         icon: Globe     },
+      { id: 'institutional', label: 'WHALES',        icon: Building2 },
     ],
   },
   {
@@ -318,7 +320,8 @@ export default function App() {
         {tab === 'commodities' && <CommoditiesTab />}
         {tab === 'backtest'    && <BacktestTab stocks={stocks} benchmark={benchmark} loading={loading} />}
         {tab === 'optbacktest' && <OptionsBacktestTab />}
-        {tab === 'macro'       && <MacroTab />}
+        {tab === 'macro'         && <MacroTab />}
+        {tab === 'institutional' && <InstitutionalTab />}
         {tab === 'predictions' && <PredictionMarketsTab />}
         {tab === 'hackernews'  && <HackerNewsTab />}
         {tab === 'news'        && <GlobalNewsTab />}
