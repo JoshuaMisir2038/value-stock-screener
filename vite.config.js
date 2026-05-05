@@ -8,14 +8,4 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@supabase/supabase-js'],
   },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('@supabase')) return 'supabase'
-          if (id.includes('node_modules')) return 'vendor'
-        },
-      },
-    },
-  },
 })
