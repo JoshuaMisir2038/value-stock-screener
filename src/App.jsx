@@ -22,6 +22,8 @@ import EducationTab from './components/EducationTab'
 import PredictionMarketsTab from './components/PredictionMarketsTab'
 import InstitutionalTab from './components/InstitutionalTab'
 import WatchlistTab from './components/WatchlistTab'
+import MembershipBanner from './components/MembershipBanner'
+import CommunityTrending from './components/CommunityTrending'
 import ScreenerFilters, { applyScreenerFilters } from './components/ScreenerFilters'
 import AuthModal from './components/AuthModal'
 import AlertsPanel from './components/AlertsPanel'
@@ -121,10 +123,11 @@ export default function App() {
   const [screenerFilters, setScreenerFilters] = useState({})
   const [backtestPayload, setBacktestPayload] = useState(null)
   const [compareSymbols, setCompareSymbols] = useState([])
-  const { watchlist, toggle: toggleWatch, setNote: setWatchNote, remove: removeFromWatch } = useWatchlist()
+  const { watchlist, toggle: toggleWatch, setNote: setWatchNote, remove: removeFromWatch, syncing: watchlistSyncing } = useWatchlist(user)
   const { user, signIn, signOut } = useAuth()
   const [showAuth,   setShowAuth]   = useState(false)
   const [showAlerts, setShowAlerts] = useState(false)
+  const [detailForCommunity, setDetailForCommunity] = useState(null)
   const [showCompare, setShowCompare] = useState(false)
 
   const handleToggleCompare = symbol => {
@@ -263,6 +266,16 @@ export default function App() {
       <div className="max-w-screen-2xl mx-auto px-6 py-5">
         {tab === 'screener' && (
           <>
+            {/* Membership banner — only for logged-out users */}
+            {!user && supabase && (
+              <MembershipBanner signIn={signIn} />
+            )}
+
+            {/* Community trending */}
+            {supabase && (
+              <CommunityTrending stocks={stocks} onTickerClick={() => {}} />
+            )}
+
             <div className="mb-4">
               <EquityMethodology />
             </div>

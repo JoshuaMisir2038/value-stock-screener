@@ -1,0 +1,33 @@
+name: Weekly Digest
+
+on:
+  schedule:
+    # Monday 8:00am ET = Monday 12:00pm UTC
+    - cron: '0 12 * * 1'
+  workflow_dispatch:  # allow manual trigger for testing
+
+permissions:
+  contents: read
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - run: pip install requests
+
+      - name: Send weekly digest
+        run: python scripts/send_weekly_digest.py
+        env:
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY:            ${{ secrets.RESEND_API_KEY }}
+          FROM_EMAIL:                ${{ secrets.FROM_EMAIL }}
