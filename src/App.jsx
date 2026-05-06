@@ -124,7 +124,7 @@ export default function App() {
   const [backtestPayload, setBacktestPayload] = useState(null)
   const [compareSymbols, setCompareSymbols] = useState([])
   const { watchlist, toggle: toggleWatch, setNote: setWatchNote, remove: removeFromWatch } = useWatchlist()
-  const { user, signIn, signOut } = useAuth()
+  const { user, signUp, signInWithPassword, signInWithMagicLink, signOut } = useAuth()
   const [showAuth,   setShowAuth]   = useState(false)
   const [showAlerts, setShowAlerts] = useState(false)
   const [showJoin,   setShowJoin]   = useState(false)
@@ -266,7 +266,7 @@ export default function App() {
       <div className="max-w-screen-2xl mx-auto px-6 py-5">
         {tab === 'screener' && (
           <>
-            {!user && supabase && <MembershipBanner signIn={signIn} />}
+            {!user && supabase && <MembershipBanner signIn={signInWithMagicLink} />}
             {supabase && <CommunityTrending stocks={stocks} onTickerClick={() => {}} />}
 
             <div className="mb-4">
@@ -403,7 +403,12 @@ export default function App() {
       <ChatWidget stocks={stocks} />
 
       {showAuth && (
-        <AuthModal onClose={() => setShowAuth(false)} signIn={signIn} />
+        <AuthModal
+          onClose={() => setShowAuth(false)}
+          signUp={signUp}
+          signInWithPassword={signInWithPassword}
+          signInWithMagicLink={signInWithMagicLink}
+        />
       )}
 
       {showAlerts && user && (
