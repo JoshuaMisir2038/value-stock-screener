@@ -67,51 +67,6 @@ async function fetchPolymarket() {
     })
 }
 
-async function fetchManifold() {
-  // CORS-enabled — no proxy needed
-  const data = await safeFetch(
-    'https://api.manifold.markets/v0/markets?limit=50&sort=liquidity&filter=open',
-    'Manifold'
-  )
-  return (Array.isArray(data) ? data : [])
-    .filter(m => m.question && !m.isResolved)
-    .map(m => ({
-      id:       `mf-${m.id}`,
-      source:   'Manifold',
-      question: m.question,
-      category: m.category || 'General',
-      prob:     m.probability != null ? Math.round(m.probability * 100) : null,
-      volume:   Math.round(m.volume    || 0),
-      vol24h:   Math.round(m.volume24Hours || m.volume || 0),
-      url:      m.url,
-      endDate:  m.closeTime ? new Date(m.closeTime).toISOString() : null,
-    }))
-}
-
-async function fetchSmarkets() {
-  // Smarkets — UK-based prediction exchange, public REST API
-  const data = await safeFetch(
-    'https://api.smarkets.com/v3/markets/?state=open&limit=50&sort=-traded_volume',
-    'Smarkets'
-  )
-  const markets = data.markets || (Array.isArray(data) ? data : [])
-  return markets
-    .filter(m => m.name)
-    .map(m => ({
-      id:       `sm-${m.id}`,
-      source:   'Smarkets',
-      question: m.name,
-      category: m.market_type?.name || m.type_display || 'General',
-      prob:     null, // probability requires a separate contracts fetch
-      volume:   m.traded_volume ? Math.round(parseFloat(m.traded_volume)) : 0,
-      vol24h:   m.traded_volume ? Math.round(parseFloat(m.traded_volume)) : 0,
-      url:      m.slug
-        ? `https://smarkets.com/event/${m.event_id}/${m.slug}`
-        : `https://smarkets.com`,
-      endDate:  m.close_at || null,
-    }))
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmtVolume(v) {
@@ -145,9 +100,7 @@ function probBarColor(p) {
 }
 
 const SOURCE_STYLES = {
-  Polymarket: 'text-blue-400    border-blue-500/30    bg-blue-500/10',
-  Manifold:   'text-purple-400  border-purple-500/30  bg-purple-500/10',
-  Smarkets:   'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
+  Polymarket: 'text-blue-400 border-blue-500/30 bg-blue-500/10',
 }
 
 // ── Market card ───────────────────────────────────────────────────────────────
@@ -207,7 +160,7 @@ function MarketRow({ m }) {
 
 // ── Main tab ─────────────────────────────────────────────────────────────────
 
-const SOURCES     = ['All', 'Polymarket', 'Manifold', 'Smarkets']
+const SOURCES     = ['All', 'Polymarket']
 const SORT_OPTIONS = [
   { key: 'vol24h',  label: 'Volume'       },
   { key: 'prob',    label: 'Probability'  },
@@ -216,20 +169,18 @@ const SORT_OPTIONS = [
 
 export default function PredictionMarketsTab() {
   const [markets,   setMarkets]   = useState([])
-  const [statuses,  setStatuses]  = useState({ Polymarket: 'idle', Manifold: 'idle', Smarkets: 'idle' })
+  const [statuses,  setStatuses]  = useState({ Polymarket: 'idle' })
   const [source,    setSource]    = useState('All')
   const [sortKey,   setSortKey]   = useState('vol24h')
   const [search,    setSearch]    = useState('')
   const [lastFetch, setLastFetch] = useState(null)
 
   const load = useCallback(async () => {
-    setStatuses({ Polymarket: 'loading', Manifold: 'loading', Smarkets: 'loading' })
+    setStatuses({ Polymarket: 'loading' })
     setMarkets([])
 
     const fetchers = [
       { key: 'Polymarket', fn: fetchPolymarket },
-      { key: 'Manifold',   fn: fetchManifold   },
-      { key: 'Smarkets',   fn: fetchSmarkets   },
     ]
 
     const results = await Promise.allSettled(
@@ -287,7 +238,7 @@ export default function PredictionMarketsTab() {
             <h2 className="text-sm font-bold text-white tracking-widest uppercase">Prediction Markets</h2>
           </div>
           <p className="text-[11px] text-gray-300">
-            Live markets from Polymarket, Manifold, and Smarkets — ranked by amount wagered.
+            Live markets from Polymarket — ranked by amount wagered.
           </p>
         </div>
         <div className="flex items-center gap-3">
