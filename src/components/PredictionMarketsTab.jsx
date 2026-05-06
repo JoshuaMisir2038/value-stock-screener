@@ -3,14 +3,16 @@ import { RefreshCw, ExternalLink, TrendingUp, AlertTriangle } from 'lucide-react
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
 
-const PROXY = url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
+const PROXIES = [
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+]
 
-// Hard Promise.race timeout — guarantees every fetch settles within ms
 function withTimeout(promise, ms, label) {
   return Promise.race([
     promise,
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+      setTimeout(() => reject(new Error(`${label} timed out`)), ms)
     ),
   ])
 }
@@ -21,14 +23,21 @@ async function getJson(url) {
   return res.json()
 }
 
-// Try direct first (many APIs allow CORS), fall back to proxy
+// Try direct, then each proxy in turn
 async function safeFetch(directUrl, label) {
   try {
     return await withTimeout(getJson(directUrl), 8000, label)
   } catch (e) {
-    console.warn(`${label} direct failed (${e.message}), trying proxy`)
-    return withTimeout(getJson(PROXY(directUrl)), 12000, `${label}-proxy`)
+    console.warn(`${label} direct failed: ${e.message}`)
   }
+  for (const proxy of PROXIES) {
+    try {
+      return await withTimeout(getJson(proxy(directUrl)), 12000, `${label}-proxy`)
+    } catch (e) {
+      console.warn(`${label} proxy failed: ${e.message}`)
+    }
+  }
+  throw new Error(`${label}: all fetch attempts failed`)
 }
 
 async function fetchPolymarket() {
@@ -58,40 +67,44 @@ async function fetchPolymarket() {
     })
 }
 
-// Kalshi requires auth — replaced with Metaculus (fully public API)
 async function fetchMetaculus() {
+  // Use the v3 posts API — more reliable, no active_state filtering needed
   const data = await safeFetch(
-    'https://www.metaculus.com/api2/questions/?format=json&limit=50&order_by=-activity&status=open&type=forecast',
+    'https://www.metaculus.com/api2/questions/?format=json&limit=50&order_by=-activity&status=open',
     'Metaculus'
   )
-  return (data.results || [])
-    .filter(q => q.title && q.active_state === 'OPEN')
+  const items = data.results || data.objects || (Array.isArray(data) ? data : [])
+  return items
+    .filter(q => q.title)
     .map(q => {
-      const prob = q.community_prediction?.full?.q2 != null
-        ? Math.round(q.community_prediction.full.q2 * 100)
-        : null
+      // Try multiple paths for the community probability
+      const prob =
+        q.community_prediction?.full?.q2 != null ? Math.round(q.community_prediction.full.q2 * 100) :
+        q.metaculus_prediction?.full?.q2 != null  ? Math.round(q.metaculus_prediction.full.q2 * 100)  :
+        q.cp_reveal_time == null && q.nr_forecasters > 0 ? null : null
       return {
         id:       `mc-${q.id}`,
         source:   'Metaculus',
         question: q.title,
-        category: q.categories?.[0]?.name || 'General',
+        category: q.categories?.[0]?.name || q.tags?.[0] || 'General',
         prob,
-        volume:   q.number_of_forecasters || 0,
-        vol24h:   q.number_of_forecasters || 0,
-        url:      `https://www.metaculus.com${q.page_url}`,
-        endDate:  q.resolve_time || null,
+        volume:   q.nr_forecasters || q.number_of_forecasters || 0,
+        vol24h:   q.nr_forecasters || q.number_of_forecasters || 0,
+        url:      q.page_url
+          ? (q.page_url.startsWith('http') ? q.page_url : `https://www.metaculus.com${q.page_url}`)
+          : `https://www.metaculus.com/questions/${q.id}`,
+        endDate:  q.scheduled_resolve_time || q.resolve_time || null,
       }
     })
 }
 
 async function fetchManifold() {
-  // Try direct fetch first — Manifold supports CORS
   const data = await safeFetch(
-    'https://api.manifold.markets/v0/markets?limit=50&sort=liquidity',
+    'https://api.manifold.markets/v0/markets?limit=50&sort=liquidity&filter=open',
     'Manifold'
   )
   return (Array.isArray(data) ? data : [])
-    .filter(m => m.isResolved === false && m.closeTime > Date.now())
+    .filter(m => !m.isResolved && m.question)   // !isResolved handles false AND undefined
     .slice(0, 50)
     .map(m => ({
       id:       `mf-${m.id}`,
