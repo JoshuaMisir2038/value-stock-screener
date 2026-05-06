@@ -123,11 +123,10 @@ export default function App() {
   const [screenerFilters, setScreenerFilters] = useState({})
   const [backtestPayload, setBacktestPayload] = useState(null)
   const [compareSymbols, setCompareSymbols] = useState([])
-  const { watchlist, toggle: toggleWatch, setNote: setWatchNote, remove: removeFromWatch, syncing: watchlistSyncing } = useWatchlist(user)
+  const { watchlist, toggle: toggleWatch, setNote: setWatchNote, remove: removeFromWatch } = useWatchlist()
   const { user, signIn, signOut } = useAuth()
   const [showAuth,   setShowAuth]   = useState(false)
   const [showAlerts, setShowAlerts] = useState(false)
-  const [detailForCommunity, setDetailForCommunity] = useState(null)
   const [showCompare, setShowCompare] = useState(false)
 
   const handleToggleCompare = symbol => {
