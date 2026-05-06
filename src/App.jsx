@@ -22,8 +22,8 @@ import EducationTab from './components/EducationTab'
 import PredictionMarketsTab from './components/PredictionMarketsTab'
 import InstitutionalTab from './components/InstitutionalTab'
 import WatchlistTab from './components/WatchlistTab'
-import MembershipBanner from './components/MembershipBanner'
-import CommunityTrending from './components/CommunityTrending'
+// import MembershipBanner from './components/MembershipBanner'
+// import CommunityTrending from './components/CommunityTrending'
 import ScreenerFilters, { applyScreenerFilters } from './components/ScreenerFilters'
 import AuthModal from './components/AuthModal'
 import AlertsPanel from './components/AlertsPanel'
@@ -266,15 +266,7 @@ export default function App() {
       <div className="max-w-screen-2xl mx-auto px-6 py-5">
         {tab === 'screener' && (
           <>
-            {/* Membership banner — only for logged-out users */}
-            {!user && supabase && (
-              <MembershipBanner signIn={signIn} />
-            )}
-
-            {/* Community trending */}
-            {supabase && (
-              <CommunityTrending stocks={stocks} onTickerClick={() => {}} />
-            )}
+            {/* Membership banner + community trending — temporarily disabled for debug */}
 
             <div className="mb-4">
               <EquityMethodology />
