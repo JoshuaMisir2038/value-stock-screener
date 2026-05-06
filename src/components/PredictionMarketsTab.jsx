@@ -286,7 +286,7 @@ export default function PredictionMarketsTab() {
             <TrendingUp size={13} className="text-blue-400" />
             <h2 className="text-sm font-bold text-white tracking-widest uppercase">Prediction Markets</h2>
           </div>
-          <p className="text-[11px] text-gray-600">
+          <p className="text-[11px] text-gray-300">
             Live markets from Polymarket, Manifold, and Smarkets — ranked by amount wagered.
           </p>
         </div>
