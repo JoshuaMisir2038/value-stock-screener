@@ -53,7 +53,7 @@ export default function AuthModal({ onClose, signUp, signInWithPassword, signInW
             </h2>
             <p className="text-[11px] text-gray-500 mt-0.5">
               {mode === 'signup'
-                ? 'Free — get alerts, digest & cloud watchlist'
+                ? 'Free — daily digest, alerts & cloud watchlist'
                 : mode === 'magic'
                 ? 'We\'ll email you a one-click sign-in link'
                 : 'Welcome back'}

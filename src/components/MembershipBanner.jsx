@@ -10,7 +10,7 @@ export default function MembershipBanner({ signIn, memberCount = null }) {
   // Icons inside component — avoids Rolldown TDZ with shared lucide imports
   const perks = [
     { Icon: Bell,      label: 'Price alerts'    },
-    { Icon: Newspaper, label: 'Weekly digest'   },
+    { Icon: Newspaper, label: 'Daily digest'    },
     { Icon: Star,      label: 'Cloud watchlist' },
     { Icon: Users,     label: 'Community data'  },
   ]
