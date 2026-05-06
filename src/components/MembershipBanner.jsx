@@ -37,62 +37,56 @@ export default function MembershipBanner({ signIn, memberCount = null }) {
   }
 
   return (
-    <div className="border border-blue-500/20 bg-blue-500/5 mb-5 relative">
-      <button onClick={dismiss} className="absolute top-3 right-3 text-gray-700 hover:text-gray-400 transition-colors">
-        <X size={13} />
+    <div className="border border-blue-500/30 bg-blue-500/5 mb-3 relative">
+      <button onClick={dismiss} className="absolute top-2.5 right-2.5 text-gray-600 hover:text-gray-300 transition-colors">
+        <X size={12} />
       </button>
 
-      <div className="px-5 py-4">
-        <div className="flex items-start gap-6 flex-wrap">
-          <div className="flex-1 min-w-[240px]">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-              <span className="text-[11px] font-bold text-blue-400 uppercase tracking-widest">Free Membership</span>
-              {memberCount != null && <span className="text-[10px] text-gray-600">· {memberCount.toLocaleString()} members</span>}
-            </div>
-            <h3 className="text-sm font-extrabold text-white tracking-wide mb-3">Get alerts, digests &amp; community data</h3>
-            <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-              {perks.map(({ Icon, label }) => (
-                <div key={label} className="flex items-center gap-1.5 text-[11px] text-gray-400">
-                  <Icon size={11} className="text-blue-400 shrink-0" />
-                  {label}
-                </div>
-              ))}
-            </div>
+      <div className="px-4 py-2.5 flex items-center gap-6 flex-wrap">
+        {/* Left: label + perks */}
+        <div className="flex items-center gap-4 flex-wrap flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+            <span className="text-[11px] font-bold text-blue-300 uppercase tracking-widest">Free Membership</span>
           </div>
-
-          <div className="flex-1 min-w-[240px] max-w-sm">
-            {sent ? (
-              <div className="flex items-center gap-3 py-2">
-                <CheckCircle size={20} className="text-emerald-400 shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-white">Check your inbox</p>
-                  <p className="text-[11px] text-gray-500">Magic link sent to {email}</p>
-                </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            {perks.map(({ Icon, label }) => (
+              <div key={label} className="flex items-center gap-1 text-[11px] text-gray-200 font-medium">
+                <Icon size={10} className="text-blue-400 shrink-0" />
+                {label}
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-2">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  required
-                  className="w-full bg-gray-900 border border-gray-700 text-gray-200 text-sm px-3 py-2.5 focus:outline-none focus:border-blue-500 placeholder-gray-600"
-                />
-                {error && <p className="text-red-400 text-[10px]">{error}</p>}
-                <button
-                  type="submit"
-                  disabled={loading || !email.trim()}
-                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-[12px] font-bold tracking-widest uppercase transition-colors flex items-center justify-center gap-2"
-                >
-                  {loading && <Loader2 size={12} className="animate-spin" />}
-                  {loading ? 'Sending…' : 'Join Free →'}
-                </button>
-                <p className="text-[9px] text-gray-700 text-center">No password · No credit card · Unsubscribe anytime</p>
-              </form>
-            )}
+            ))}
           </div>
+        </div>
+
+        {/* Right: form */}
+        <div className="shrink-0">
+          {sent ? (
+            <div className="flex items-center gap-2">
+              <CheckCircle size={14} className="text-emerald-400" />
+              <span className="text-[11px] text-white font-semibold">Check your inbox — magic link sent to {email}</span>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="flex items-center gap-2">
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                required
+                className="bg-gray-900 border border-gray-700 text-gray-100 text-[12px] px-3 py-1.5 focus:outline-none focus:border-blue-400 placeholder-gray-600 w-52"
+              />
+              <button
+                type="submit"
+                disabled={loading || !email.trim()}
+                className="px-4 py-1.5 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-white text-[12px] font-bold tracking-wide uppercase transition-colors flex items-center gap-1.5 shrink-0"
+              >
+                {loading && <Loader2 size={11} className="animate-spin" />}
+                {loading ? 'Sending…' : 'Join Free →'}
+              </button>
+              {error && <p className="text-red-400 text-[10px]">{error}</p>}
+            </form>
+          )}
         </div>
       </div>
     </div>
