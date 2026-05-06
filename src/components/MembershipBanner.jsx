@@ -1,16 +1,11 @@
 import { useState } from 'react'
-import { X, Loader2, CheckCircle, Bell, Newspaper, Star, Users } from 'lucide-react'
+import { Loader2, CheckCircle, Bell, Newspaper, Star, Users } from 'lucide-react'
 
 export default function MembershipBanner({ signIn, memberCount = null }) {
-  const [dismissed, setDismissed] = useState(
-    () => sessionStorage.getItem('banner_dismissed') === '1'
-  )
   const [email,   setEmail]   = useState('')
   const [loading, setLoading] = useState(false)
   const [sent,    setSent]    = useState(false)
   const [error,   setError]   = useState(null)
-
-  if (dismissed) return null
 
   // Icons inside component — avoids Rolldown TDZ with shared lucide imports
   const perks = [
@@ -19,11 +14,6 @@ export default function MembershipBanner({ signIn, memberCount = null }) {
     { Icon: Star,      label: 'Cloud watchlist' },
     { Icon: Users,     label: 'Community data'  },
   ]
-
-  function dismiss() {
-    sessionStorage.setItem('banner_dismissed', '1')
-    setDismissed(true)
-  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -37,11 +27,7 @@ export default function MembershipBanner({ signIn, memberCount = null }) {
   }
 
   return (
-    <div className="border border-blue-500/30 bg-blue-500/5 mb-3 relative">
-      <button onClick={dismiss} className="absolute top-2.5 right-2.5 text-gray-600 hover:text-gray-300 transition-colors">
-        <X size={12} />
-      </button>
-
+    <div className="border border-blue-500/30 bg-blue-500/5 mb-3">
       <div className="px-4 py-2.5 flex items-center gap-6 flex-wrap">
         {/* Left: label + perks */}
         <div className="flex items-center gap-4 flex-wrap flex-1 min-w-0">
