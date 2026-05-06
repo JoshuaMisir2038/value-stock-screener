@@ -81,7 +81,7 @@ export default function AuthModal({ onClose, signIn }) {
                 {loading && <Loader2 size={13} className="animate-spin" />}
                 {loading ? 'Sending link…' : 'Join Free →'}
               </button>
-              <p className="text-[10px] text-gray-700 text-center">No password · No credit card · Unsubscribe anytime</p>
+              <p className="text-[11px] text-gray-400 text-center">No password · No credit card · Unsubscribe anytime</p>
             </form>
           </>
         )}
