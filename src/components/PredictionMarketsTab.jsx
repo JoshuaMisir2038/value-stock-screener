@@ -172,7 +172,7 @@ function MarketRow({ m }) {
               href={m.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="ml-auto text-gray-700 hover:text-gray-400 transition-colors flex items-center gap-1"
+              className="ml-auto text-gray-300 hover:text-white transition-colors flex items-center gap-1 font-medium"
             >
               View <ExternalLink size={10} />
             </a>
