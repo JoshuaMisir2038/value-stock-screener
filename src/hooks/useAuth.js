@@ -20,11 +20,13 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
+  const REDIRECT = 'https://joshuamisir2038.github.io/value-stock-screener'
+
   async function signUp(email, password) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.href },
+      options: { emailRedirectTo: REDIRECT },
     })
     return error
   }
@@ -37,7 +39,7 @@ export function useAuth() {
   async function signInWithMagicLink(email) {
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.href },
+      options: { emailRedirectTo: REDIRECT },
     })
     return error
   }
