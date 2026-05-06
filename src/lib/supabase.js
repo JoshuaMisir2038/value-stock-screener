@@ -1,3 +1,13 @@
-// Temporary: force supabase = null to isolate whether the TDZ crash
-// is from Supabase or from our app code added in the membership commit.
-export const supabase = null
+import { createClient } from '@supabase/supabase-js'
+
+const url = import.meta.env.VITE_SUPABASE_URL
+const key = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+let supabase = null
+try {
+  if (url && key) supabase = createClient(url, key)
+} catch (e) {
+  console.warn('Supabase init failed:', e)
+}
+
+export { supabase }

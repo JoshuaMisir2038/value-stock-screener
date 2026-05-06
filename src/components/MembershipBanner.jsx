@@ -1,12 +1,5 @@
 import { useState } from 'react'
-import { Bell, Star, Newspaper, Users, X, Loader2, CheckCircle } from 'lucide-react'
-
-const PERKS = [
-  { icon: Bell,      label: 'Price alerts'   },
-  { icon: Newspaper, label: 'Weekly digest'  },
-  { icon: Star,      label: 'Cloud watchlist'},
-  { icon: Users,     label: 'Community data' },
-]
+import { X, Loader2, CheckCircle, Bell, Newspaper, Star, Users } from 'lucide-react'
 
 export default function MembershipBanner({ signIn, memberCount = null }) {
   const [dismissed, setDismissed] = useState(
@@ -18,6 +11,14 @@ export default function MembershipBanner({ signIn, memberCount = null }) {
   const [error,   setError]   = useState(null)
 
   if (dismissed) return null
+
+  // Icons inside component — avoids Rolldown TDZ with shared lucide imports
+  const perks = [
+    { Icon: Bell,      label: 'Price alerts'    },
+    { Icon: Newspaper, label: 'Weekly digest'   },
+    { Icon: Star,      label: 'Cloud watchlist' },
+    { Icon: Users,     label: 'Community data'  },
+  ]
 
   function dismiss() {
     sessionStorage.setItem('banner_dismissed', '1')
@@ -37,29 +38,21 @@ export default function MembershipBanner({ signIn, memberCount = null }) {
 
   return (
     <div className="border border-blue-500/20 bg-blue-500/5 mb-5 relative">
-      <button
-        onClick={dismiss}
-        className="absolute top-3 right-3 text-gray-700 hover:text-gray-400 transition-colors"
-      >
+      <button onClick={dismiss} className="absolute top-3 right-3 text-gray-700 hover:text-gray-400 transition-colors">
         <X size={13} />
       </button>
 
       <div className="px-5 py-4">
         <div className="flex items-start gap-6 flex-wrap">
-          {/* Left: headline + perks */}
           <div className="flex-1 min-w-[240px]">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
               <span className="text-[11px] font-bold text-blue-400 uppercase tracking-widest">Free Membership</span>
-              {memberCount != null && (
-                <span className="text-[10px] text-gray-600">· {memberCount.toLocaleString()} members</span>
-              )}
+              {memberCount != null && <span className="text-[10px] text-gray-600">· {memberCount.toLocaleString()} members</span>}
             </div>
-            <h3 className="text-sm font-extrabold text-white tracking-wide mb-3">
-              Get alerts, digests & community data
-            </h3>
+            <h3 className="text-sm font-extrabold text-white tracking-wide mb-3">Get alerts, digests &amp; community data</h3>
             <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-              {PERKS.map(({ icon: Icon, label }) => (
+              {perks.map(({ Icon, label }) => (
                 <div key={label} className="flex items-center gap-1.5 text-[11px] text-gray-400">
                   <Icon size={11} className="text-blue-400 shrink-0" />
                   {label}
@@ -68,7 +61,6 @@ export default function MembershipBanner({ signIn, memberCount = null }) {
             </div>
           </div>
 
-          {/* Right: email form */}
           <div className="flex-1 min-w-[240px] max-w-sm">
             {sent ? (
               <div className="flex items-center gap-3 py-2">
