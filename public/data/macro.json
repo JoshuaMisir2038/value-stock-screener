@@ -1,10 +1,10 @@
 {
-  "asOf": "2026-05-13 16:20 UTC",
+  "asOf": "2026-05-13 19:16 UTC",
   "vix": {
-    "current": 18.05,
+    "current": 17.8,
     "prev": 17.99,
-    "change1d": 0.06,
-    "change1w": 0.66,
+    "change1d": -0.19,
+    "change1w": 0.41,
     "high52": 31.05,
     "low52": 13.47,
     "history": [
@@ -214,13 +214,13 @@
       },
       {
         "date": "2026-05-17",
-        "value": 18.05
+        "value": 17.8
       }
     ]
   },
   "pcr": {
     "equity": {
-      "value": 1.36,
+      "value": 1.28,
       "date": "2026-05-13",
       "source": "SPY + QQQ + IWM options volume",
       "history": []
