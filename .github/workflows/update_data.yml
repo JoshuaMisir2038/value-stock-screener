@@ -16,7 +16,7 @@ permissions:
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repo
@@ -29,10 +29,8 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install yfinance pandas requests lxml urllib3
+        run: pip install "yfinance>=0.2.50,<0.3" "pandas>=2.0" requests lxml urllib3
 
-      # continue-on-error on every script so a timeout or crash never
-      # prevents the commit step from running
       - name: Fetch stock data
         run: python scripts/fetch_data.py
         continue-on-error: true

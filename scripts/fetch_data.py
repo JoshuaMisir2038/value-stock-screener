@@ -116,7 +116,7 @@ def _wiki_tickers(url, col):
     return pd.read_html(io.StringIO(html))[0][col].tolist()
 
 
-MAX_TICKERS = 2500  # cap that fits comfortably inside the 90-min job timeout
+MAX_TICKERS = 600   # ~S&P 500 + 100 extras — completes in <25 min on GitHub Actions
 
 def get_tickers():
     """
@@ -157,9 +157,6 @@ def get_tickers():
     # ── 3. Hardcoded fallback ──────────────────────────────────────────────────
     print(f"Using hardcoded fallback list ({len(_FALLBACK_TICKERS)} tickers)")
     return _FALLBACK_TICKERS
-
-TICKERS = get_tickers()
-
 
 # ── Technical indicators ─────────────────────────────────────────────────────
 
@@ -573,22 +570,49 @@ def find_best_option(stock, option_type, action):
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
+    import signal, threading
+
     base = os.path.join(os.path.dirname(__file__), '..', 'public', 'data')
     os.makedirs(base, exist_ok=True)
 
+    # Hard wall-clock deadline: save partial results rather than letting the job
+    # run until the GitHub Actions 45-minute timeout with nothing committed.
+    DEADLINE_MINUTES = 38
+    _deadline_hit = threading.Event()
+
+    def _on_deadline():
+        print(f"\n⚠️  {DEADLINE_MINUTES}-minute deadline reached — will save partial results.")
+        _deadline_hit.set()
+
+    _timer = threading.Timer(DEADLINE_MINUTES * 60, _on_deadline)
+    _timer.daemon = True
+    _timer.start()
+
+    # Fetch tickers here (not at module level) so import is cheap and errors are catchable.
+    tickers = get_tickers()
+
     # ── Step 1: Batch download technicals ──
-    print(f"Downloading price history for {len(TICKERS)} tickers...")
-    technicals = batch_download_technicals(TICKERS)
+    print(f"Downloading price history for {len(tickers)} tickers...")
+    technicals = batch_download_technicals(tickers)
     print(f"  Got technicals for {len(technicals)} tickers.")
+
+    if len(technicals) < 50:
+        print("ERROR: fewer than 50 tickers returned price data — Yahoo Finance likely "
+              "rate-limiting this IP. Keeping existing stocks.json unchanged.")
+        _timer.cancel()
+        return
 
     # ── Step 2: Fetch fundamentals ──
     # Only fetch for tickers that had price data — skips ~40% of the list immediately
-    tickers_with_price = [t for t in TICKERS if t in technicals]
-    tickers_no_price   = [t for t in TICKERS if t not in technicals]
+    tickers_with_price = [t for t in tickers if t in technicals]
+    tickers_no_price   = [t for t in tickers if t not in technicals]
     print(f"\nFetching fundamentals for {len(tickers_with_price)} tickers with price data "
           f"(skipping {len(tickers_no_price)} with no price history)")
     stocks = []
     for i, ticker in enumerate(tickers_with_price):
+        if _deadline_hit.is_set():
+            print(f"\n  Deadline hit after {i} fundamentals — saving partial results.")
+            break
         friday_close = technicals.get(ticker, {}).get('fridayClose')
         result = None
         for attempt in range(2):
@@ -679,15 +703,21 @@ def main():
 
     clean_stocks = [clean_stock(s) for s in stocks]
 
-    with open(os.path.join(base, 'stocks.json'), 'w') as f:
-        json.dump({
-            'lastUpdated': datetime.now(timezone.utc).isoformat(),
-            'asOf': as_of,
-            'count': len(clean_stocks),
-            'benchmark': {'spy': spy_benchmark},
-            'stocks': clean_stocks,
-        }, f, separators=(',', ':'))   # compact separators shave another ~5%
-    print(f"\nSaved {len(clean_stocks)} stocks.")
+    stocks_path = os.path.join(base, 'stocks.json')
+    if len(clean_stocks) < 100:
+        print(f"\nWARNING: only {len(clean_stocks)} stocks — keeping existing stocks.json to avoid serving empty data.")
+    else:
+        with open(stocks_path, 'w') as f:
+            json.dump({
+                'lastUpdated': datetime.now(timezone.utc).isoformat(),
+                'asOf': as_of,
+                'count': len(clean_stocks),
+                'benchmark': {'spy': spy_benchmark},
+                'stocks': clean_stocks,
+            }, f, separators=(',', ':'))   # compact separators shave another ~5%
+        print(f"\nSaved {len(clean_stocks)} stocks.")
+
+    _timer.cancel()
 
     # ── Step 4: Find options candidates ──
     scored = [s for s in stocks if s.get('valueScore') is not None and s.get('rsi') and s.get('ma200')]
