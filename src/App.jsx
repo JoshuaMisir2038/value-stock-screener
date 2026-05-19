@@ -25,6 +25,7 @@ import PredictionMarketsTab from './components/PredictionMarketsTab'
 import InstitutionalTab from './components/InstitutionalTab'
 import WatchlistTab from './components/WatchlistTab'
 import MembershipBanner from './components/MembershipBanner'
+import DigestSubscribeBanner from './components/DigestSubscribeBanner'
 import CommunityTrending from './components/CommunityTrending'
 import ScreenerFilters, { applyScreenerFilters } from './components/ScreenerFilters'
 import AuthModal from './components/AuthModal'
@@ -271,6 +272,7 @@ export default function App() {
         {tab === 'screener' && (
           <>
             {!user && supabase && <MembershipBanner signIn={signInWithMagicLink} />}
+            {supabase && <DigestSubscribeBanner user={user} />}
             {supabase && <CommunityTrending stocks={stocks} onTickerClick={() => {}} />}
 
             <div className="mb-4">
