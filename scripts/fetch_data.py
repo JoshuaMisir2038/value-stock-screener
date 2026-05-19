@@ -14,6 +14,11 @@ import requests
 import yfinance as yf
 import pandas as pd
 
+try:
+    from yfinance.exceptions import YFRateLimitError
+except ImportError:
+    YFRateLimitError = Exception   # fallback for older versions
+
 warnings.filterwarnings('ignore')
 
 # ── Shared session with browser headers ───────────────────────────────────────
@@ -132,7 +137,7 @@ def _wiki_tickers(url, col):
     return pd.read_html(io.StringIO(html))[0][col].tolist()
 
 
-MAX_TICKERS = 600   # ~S&P 500 + 100 extras — completes in <25 min on GitHub Actions
+MAX_TICKERS = 500   # S&P 500 core — keeps total requests under rate limit ceiling
 
 def get_tickers():
     """
@@ -276,10 +281,13 @@ def batch_download_technicals(symbols):
                     'asOf': last_date,
                     **returns,
                 }
+        except YFRateLimitError:
+            print(f"  Rate limited on chunk {i//chunk_size} — waiting 120s before continuing…")
+            time.sleep(120)
         except Exception as e:
             print(f"  Batch error (chunk {i//chunk_size}): {e}")
 
-        time.sleep(2)   # 2s between chunks — enough to avoid 429s
+        time.sleep(3)   # 3s between chunks
 
     return technicals
 
@@ -408,6 +416,8 @@ def fetch_fundamental(ticker, friday_close):
             # Annual Revenue (last 3 fiscal years)
             **annual_rev,
         }
+    except YFRateLimitError:
+        raise   # let caller handle the retry
     except Exception as e:
         print(f"  Fundamental error {ticker}: {e}")
         return None
@@ -635,18 +645,30 @@ def main():
     # Fetch tickers here (not at module level) so import is cheap and errors are catchable.
     tickers = get_tickers()
 
-    # ── Pre-flight: verify Yahoo Finance is reachable from this IP ────────────
+    # ── Pre-flight: verify Yahoo Finance is reachable ────────────────────────
+    # YFRateLimitError clears after a few minutes; retry up to 3× with backoff.
     print("Pre-flight: testing Yahoo Finance connectivity...")
-    try:
-        _test = yf.download('AAPL', period='5d', progress=False, threads=False)
-        if _test.empty:
-            print("ERROR: pre-flight FAILED — yf.download('AAPL') returned empty. "
-                  "Yahoo Finance is likely blocking this runner IP. Keeping existing stocks.json.")
-            _timer.cancel()
-            return
-        print(f"  Pre-flight OK — got {len(_test)} rows for AAPL.")
-    except Exception as e:
-        print(f"ERROR: pre-flight exception: {e}. Keeping existing stocks.json.")
+    _preflight_ok = False
+    for _attempt in range(3):
+        try:
+            _test = yf.download('AAPL', period='5d', progress=False, threads=False)
+            if not _test.empty:
+                print(f"  Pre-flight OK — {len(_test)} rows for AAPL (attempt {_attempt+1})")
+                _preflight_ok = True
+                break
+            print(f"  Pre-flight returned empty (attempt {_attempt+1}/3). "
+                  f"Waiting {(_attempt+1)*60}s…")
+            time.sleep((_attempt + 1) * 60)
+        except YFRateLimitError:
+            wait = (_attempt + 1) * 90   # 90s, 180s, 270s
+            print(f"  Rate limited (attempt {_attempt+1}/3). Waiting {wait}s…")
+            time.sleep(wait)
+        except Exception as e:
+            print(f"  Pre-flight error: {e} (attempt {_attempt+1}/3). Waiting 60s…")
+            time.sleep(60)
+    if not _preflight_ok:
+        print("ERROR: Yahoo Finance unreachable after 3 pre-flight attempts. "
+              "Keeping existing stocks.json unchanged.")
         _timer.cancel()
         return
 
@@ -674,12 +696,17 @@ def main():
             break
         friday_close = technicals.get(ticker, {}).get('fridayClose')
         result = None
-        for attempt in range(2):
-            result = fetch_fundamental(ticker, friday_close)
-            if result is not None:
+        for attempt in range(3):
+            try:
+                result = fetch_fundamental(ticker, friday_close)
                 break
-            if attempt == 0:
-                time.sleep(2)
+            except YFRateLimitError:
+                wait = (attempt + 1) * 90
+                print(f"\n  Rate limited at {ticker} — waiting {wait}s…")
+                time.sleep(wait)
+            except Exception:
+                if attempt < 2:
+                    time.sleep(3)
         if result:
             tech = technicals.get(ticker, {})
             result.update({
@@ -710,12 +737,12 @@ def main():
         else:
             print(f"  [{i+1}/{len(tickers_with_price)}] {ticker} skipped")
 
-        # 0.5s between each ticker; longer pause every 50 to let Yahoo Finance breathe
+        # 1.5s between each ticker; 15s pause every 50 to let Yahoo Finance breathe
         if (i + 1) % 50 == 0:
-            print(f"  [{i+1}] pausing 8s to avoid rate limits...")
-            time.sleep(8)
+            print(f"  [{i+1}] pausing 15s…")
+            time.sleep(15)
         else:
-            time.sleep(0.5)
+            time.sleep(1.5)
 
     # ── Step 3: Score ──
     sectors = {}
