@@ -16,6 +16,22 @@ import pandas as pd
 
 warnings.filterwarnings('ignore')
 
+# ── Shared session with browser headers ───────────────────────────────────────
+# Yahoo Finance blocks generic bot User-Agents (especially from AWS/GH Actions
+# IPs). A realistic browser UA + keep-alive session dramatically reduces 429s.
+_YF_SESSION = requests.Session()
+_YF_SESSION.headers.update({
+    'User-Agent': (
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+        'AppleWebKit/537.36 (KHTML, like Gecko) '
+        'Chrome/125.0.0.0 Safari/537.36'
+    ),
+    'Accept':          '*/*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Connection':      'keep-alive',
+})
+
 # Fallback hardcoded list used if Wikipedia fetch fails
 _FALLBACK_TICKERS = [
     "A","AAL","AAP","AAPL","ABBV","ABC","ABT","ACN","ADBE","ADI","ADM",
@@ -197,9 +213,9 @@ def compute_rsi(series, period=14):
 
 
 def batch_download_technicals(symbols):
-    """Download 1 year of closes for all symbols. Returns dict of technicals per symbol."""
+    """Download price history for all symbols. Returns dict of technicals per symbol."""
     technicals = {}
-    chunk_size = 100
+    chunk_size = 50   # smaller chunks → less pressure per request
 
     for i in range(0, len(symbols), chunk_size):
         chunk = symbols[i:i + chunk_size]
@@ -209,11 +225,21 @@ def batch_download_technicals(symbols):
                 period='5y',
                 auto_adjust=True,
                 progress=False,
-                threads=True,
+                threads=False,   # sequential is more reliable from cloud IPs
             )
-            # yfinance returns MultiIndex columns for multiple tickers
+            if raw.empty:
+                print(f"  Batch {i//chunk_size}: empty response — skipping chunk")
+                time.sleep(3)
+                continue
+
+            # Handle both MultiIndex (multi-ticker) and flat (single-ticker) columns
             if isinstance(raw.columns, pd.MultiIndex):
-                closes = raw['Close']
+                # newer yfinance: ('Close', 'AAPL'), ('Close', 'MSFT'), ...
+                if 'Close' in raw.columns.get_level_values(0):
+                    closes = raw['Close']
+                else:
+                    # Some versions put ticker as level 0
+                    closes = raw.xs('Close', axis=1, level=1, drop_level=True) if 'Close' in raw.columns.get_level_values(1) else pd.DataFrame()
             else:
                 closes = raw[['Close']].rename(columns={'Close': chunk[0]})
 
@@ -253,7 +279,7 @@ def batch_download_technicals(symbols):
         except Exception as e:
             print(f"  Batch error (chunk {i//chunk_size}): {e}")
 
-        time.sleep(0.5)
+        time.sleep(2)   # 2s between chunks — enough to avoid 429s
 
     return technicals
 
@@ -282,36 +308,21 @@ def fetch_annual_revenue(t):
         return {}
 
 
-def _parse_earnings_date(ticker_obj):
-    """Return next earnings date as ISO string, or None. Handles dict and DataFrame formats."""
-    try:
-        cal = ticker_obj.calendar
-        if isinstance(cal, dict):
-            eds = cal.get('Earnings Date', [])
-            if not hasattr(eds, '__iter__') or isinstance(eds, str):
-                eds = [eds]
-            for ed in eds:
-                if hasattr(ed, 'date'):
-                    return ed.date().isoformat()
-                if isinstance(ed, str):
-                    return ed[:10]
-        elif hasattr(cal, 'empty') and not cal.empty:
-            # DataFrame — 'Earnings Date' is usually the first column
-            col = cal.columns[0] if not cal.empty else None
-            if col is not None:
-                val = cal[col].iloc[0]
-                if hasattr(val, 'date'):
-                    return val.date().isoformat()
-                if isinstance(val, str):
-                    return val[:10]
-    except Exception:
-        pass
+def _earnings_date_from_info(info):
+    """Extract next earnings date from already-fetched info dict — no extra API call."""
+    # yfinance stores next earnings as a Unix timestamp in earningsTimestamp
+    ts = info.get('earningsTimestamp') or info.get('earningsDate')
+    if ts and isinstance(ts, (int, float)) and ts > 0:
+        try:
+            return datetime.fromtimestamp(int(ts), tz=timezone.utc).date().isoformat()
+        except Exception:
+            pass
     return None
 
 
 def fetch_fundamental(ticker, friday_close):
     try:
-        t = yf.Ticker(ticker)
+        t = yf.Ticker(ticker, session=_YF_SESSION)
         info = t.info
         market_cap = info.get('marketCap') or 0
         if market_cap < 100_000_000:
@@ -393,7 +404,7 @@ def fetch_fundamental(ticker, friday_close):
             'targetPrice':     info.get('targetMeanPrice'),
             'analystRating':   info.get('recommendationKey'),  # e.g. 'buy', 'hold', 'sell'
             # Upcoming earnings date
-            'earningsDate':    _parse_earnings_date(t),
+            'earningsDate':    _earnings_date_from_info(info),
             # Annual Revenue (last 3 fiscal years)
             **annual_rev,
         }
@@ -624,6 +635,21 @@ def main():
     # Fetch tickers here (not at module level) so import is cheap and errors are catchable.
     tickers = get_tickers()
 
+    # ── Pre-flight: verify Yahoo Finance is reachable from this IP ────────────
+    print("Pre-flight: testing Yahoo Finance connectivity...")
+    try:
+        _test = yf.download('AAPL', period='5d', progress=False, threads=False)
+        if _test.empty:
+            print("ERROR: pre-flight FAILED — yf.download('AAPL') returned empty. "
+                  "Yahoo Finance is likely blocking this runner IP. Keeping existing stocks.json.")
+            _timer.cancel()
+            return
+        print(f"  Pre-flight OK — got {len(_test)} rows for AAPL.")
+    except Exception as e:
+        print(f"ERROR: pre-flight exception: {e}. Keeping existing stocks.json.")
+        _timer.cancel()
+        return
+
     # ── Step 1: Batch download technicals ──
     print(f"Downloading price history for {len(tickers)} tickers...")
     technicals = batch_download_technicals(tickers)
@@ -684,11 +710,12 @@ def main():
         else:
             print(f"  [{i+1}/{len(tickers_with_price)}] {ticker} skipped")
 
-        # Steady rate: 0.1s per ticker, longer pause every 100 to avoid rate limits
-        if (i + 1) % 100 == 0:
-            time.sleep(5)
+        # 0.5s between each ticker; longer pause every 50 to let Yahoo Finance breathe
+        if (i + 1) % 50 == 0:
+            print(f"  [{i+1}] pausing 8s to avoid rate limits...")
+            time.sleep(8)
         else:
-            time.sleep(0.1)
+            time.sleep(0.5)
 
     # ── Step 3: Score ──
     sectors = {}
@@ -705,7 +732,7 @@ def main():
     spy_benchmark = None
     spy_above_ma50 = False
     try:
-        spy_hist = yf.Ticker('SPY').history(period='5y')
+        spy_hist = yf.Ticker('SPY', session=_YF_SESSION).history(period='5y')
         if not spy_hist.empty:
             spy_series = spy_hist['Close'].dropna()
             spy_benchmark = compute_returns(spy_series)
