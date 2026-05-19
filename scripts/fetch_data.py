@@ -282,6 +282,33 @@ def fetch_annual_revenue(t):
         return {}
 
 
+def _parse_earnings_date(ticker_obj):
+    """Return next earnings date as ISO string, or None. Handles dict and DataFrame formats."""
+    try:
+        cal = ticker_obj.calendar
+        if isinstance(cal, dict):
+            eds = cal.get('Earnings Date', [])
+            if not hasattr(eds, '__iter__') or isinstance(eds, str):
+                eds = [eds]
+            for ed in eds:
+                if hasattr(ed, 'date'):
+                    return ed.date().isoformat()
+                if isinstance(ed, str):
+                    return ed[:10]
+        elif hasattr(cal, 'empty') and not cal.empty:
+            # DataFrame — 'Earnings Date' is usually the first column
+            col = cal.columns[0] if not cal.empty else None
+            if col is not None:
+                val = cal[col].iloc[0]
+                if hasattr(val, 'date'):
+                    return val.date().isoformat()
+                if isinstance(val, str):
+                    return val[:10]
+    except Exception:
+        pass
+    return None
+
+
 def fetch_fundamental(ticker, friday_close):
     try:
         t = yf.Ticker(ticker)
@@ -361,6 +388,12 @@ def fetch_fundamental(ticker, friday_close):
             'netDebtEbitda':   net_debt_ebitda,
             # Income
             'dividendYield':   info.get('dividendYield'),
+            # Analyst consensus (free via yfinance info)
+            'analystCount':    info.get('numberOfAnalystOpinions'),
+            'targetPrice':     info.get('targetMeanPrice'),
+            'analystRating':   info.get('recommendationKey'),  # e.g. 'buy', 'hold', 'sell'
+            # Upcoming earnings date
+            'earningsDate':    _parse_earnings_date(t),
             # Annual Revenue (last 3 fiscal years)
             **annual_rev,
         }

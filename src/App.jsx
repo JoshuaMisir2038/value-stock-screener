@@ -19,6 +19,7 @@ import CustomScreenerTab from './components/CustomScreenerTab'
 import CustomBacktestTab from './components/CustomBacktestTab'
 import DCFTab from './components/DCFTab'
 import EducationTab from './components/EducationTab'
+import EarningsCalendarTab from './components/EarningsCalendarTab'
 import PredictionMarketsTab from './components/PredictionMarketsTab'
 import InstitutionalTab from './components/InstitutionalTab'
 import WatchlistTab from './components/WatchlistTab'
@@ -33,7 +34,7 @@ import AletheiaLogo from './components/AletheiaLogo'
 import { EquityMethodology } from './components/Methodology'
 import TickerBanner from './components/TickerBanner'
 import CompareModal from './components/CompareModal'
-import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch, SlidersHorizontal, TestTube2, X, GitCompare, Calculator, BookOpen, Star, Bell, User, LogOut, Building2 } from 'lucide-react'
+import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch, SlidersHorizontal, TestTube2, X, GitCompare, Calculator, BookOpen, Star, Bell, User, LogOut, Building2, CalendarDays } from 'lucide-react'
 
 const DEFAULT_FILTERS = { search: '' }
 
@@ -92,6 +93,7 @@ const TAB_GROUPS = [
     label: 'TOOLS',
     icon: Calculator,
     tabs: [
+      { id: 'earnings',  label: 'EARNINGS',        icon: CalendarDays },
       { id: 'dcf',       label: 'DCF CALCULATOR', icon: Calculator },
       { id: 'education', label: 'EDUCATION',       icon: BookOpen },
     ],
@@ -334,6 +336,7 @@ export default function App() {
         {tab === 'github'         && <GitHubTrendingTab />}
         {tab === 'customscreener' && <CustomScreenerTab stocks={stocks} benchmark={benchmark} onSendToBacktest={handleSendToBacktest} />}
         {tab === 'custombacktest' && <CustomBacktestTab stocks={stocks} benchmark={benchmark} backtestPayload={backtestPayload} />}
+        {tab === 'earnings'       && <EarningsCalendarTab stocks={stocks} />}
         {tab === 'dcf'            && <DCFTab stocks={stocks} />}
         {tab === 'education'      && <EducationTab />}
         {tab === 'watchlist'      && (
