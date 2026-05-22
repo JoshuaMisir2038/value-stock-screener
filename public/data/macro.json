@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-05-21 22:09 UTC",
+  "asOf": "2026-05-22 16:09 UTC",
   "vix": null,
   "pcr": null,
   "indicators": {
@@ -662,16 +662,12 @@
       "unit": "",
       "desc": "University of Michigan Consumer Sentiment Index",
       "goodLow": false,
-      "value": 53.3,
-      "date": "2026-03-01",
-      "prev": 56.6,
-      "change": -3.3,
-      "changeYoY": -3.7,
+      "value": 49.8,
+      "date": "2026-04-01",
+      "prev": 53.3,
+      "change": -3.5,
+      "changeYoY": -2.4,
       "history": [
-        {
-          "date": "2024-04",
-          "value": 77.2
-        },
         {
           "date": "2024-05",
           "value": 69.1
@@ -763,6 +759,10 @@
         {
           "date": "2026-03",
           "value": 53.3
+        },
+        {
+          "date": "2026-04",
+          "value": 49.8
         }
       ]
     }
