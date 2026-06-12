@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-06-12 19:16 UTC",
+  "asOf": "2026-06-12 22:47 UTC",
   "vix": null,
   "pcr": null,
   "indicators": {
@@ -436,6 +436,115 @@
         {
           "date": "2026-05",
           "value": 4.3
+        }
+      ]
+    },
+    "MORTGAGE30US": {
+      "label": "30Y Mortgage Rate",
+      "unit": "%",
+      "desc": "30-year fixed-rate mortgage average (Freddie Mac)",
+      "goodLow": true,
+      "value": 6.52,
+      "date": "2026-06-11",
+      "prev": 6.48,
+      "change": 0.04,
+      "changeYoY": 0.3,
+      "history": [
+        {
+          "date": "2025-12",
+          "value": 6.15
+        },
+        {
+          "date": "2026-01",
+          "value": 6.16
+        },
+        {
+          "date": "2026-01",
+          "value": 6.06
+        },
+        {
+          "date": "2026-01",
+          "value": 6.09
+        },
+        {
+          "date": "2026-01",
+          "value": 6.1
+        },
+        {
+          "date": "2026-02",
+          "value": 6.11
+        },
+        {
+          "date": "2026-02",
+          "value": 6.09
+        },
+        {
+          "date": "2026-02",
+          "value": 6.01
+        },
+        {
+          "date": "2026-02",
+          "value": 5.98
+        },
+        {
+          "date": "2026-03",
+          "value": 6.0
+        },
+        {
+          "date": "2026-03",
+          "value": 6.11
+        },
+        {
+          "date": "2026-03",
+          "value": 6.22
+        },
+        {
+          "date": "2026-03",
+          "value": 6.38
+        },
+        {
+          "date": "2026-04",
+          "value": 6.46
+        },
+        {
+          "date": "2026-04",
+          "value": 6.37
+        },
+        {
+          "date": "2026-04",
+          "value": 6.3
+        },
+        {
+          "date": "2026-04",
+          "value": 6.23
+        },
+        {
+          "date": "2026-04",
+          "value": 6.3
+        },
+        {
+          "date": "2026-05",
+          "value": 6.37
+        },
+        {
+          "date": "2026-05",
+          "value": 6.36
+        },
+        {
+          "date": "2026-05",
+          "value": 6.51
+        },
+        {
+          "date": "2026-05",
+          "value": 6.53
+        },
+        {
+          "date": "2026-06",
+          "value": 6.48
+        },
+        {
+          "date": "2026-06",
+          "value": 6.52
         }
       ]
     },
