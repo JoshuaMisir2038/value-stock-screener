@@ -1,10 +1,10 @@
 {
-  "asOf": "2026-06-15 22:42 UTC",
+  "asOf": "2026-06-16 18:24 UTC",
   "vix": {
-    "current": 16.2,
-    "prev": 17.68,
-    "change1d": -1.48,
-    "change1w": -2.72,
+    "current": 15.88,
+    "prev": 16.2,
+    "change1d": -0.32,
+    "change1w": -3.99,
     "high52": 31.05,
     "low52": 13.47,
     "history": [
@@ -214,14 +214,14 @@
       },
       {
         "date": "2026-06-21",
-        "value": 16.2
+        "value": 15.88
       }
     ]
   },
   "pcr": {
     "equity": {
-      "value": 0.9,
-      "date": "2026-06-15",
+      "value": 1.05,
+      "date": "2026-06-16",
       "source": "SPY + QQQ + IWM options volume",
       "history": []
     }
@@ -769,6 +769,115 @@
         {
           "date": "2026-06",
           "value": 6.52
+        }
+      ]
+    },
+    "T10Y2Y": {
+      "label": "10Y \u2212 2Y Spread",
+      "unit": "%",
+      "desc": "Yield curve spread \u2014 negative = inverted (recession signal)",
+      "goodLow": false,
+      "value": 0.4,
+      "date": "2026-06-15",
+      "prev": 0.39,
+      "change": 0.01,
+      "changeYoY": -0.06,
+      "history": [
+        {
+          "date": "2026-05",
+          "value": 0.46
+        },
+        {
+          "date": "2026-05",
+          "value": 0.48
+        },
+        {
+          "date": "2026-05",
+          "value": 0.47
+        },
+        {
+          "date": "2026-05",
+          "value": 0.5
+        },
+        {
+          "date": "2026-05",
+          "value": 0.54
+        },
+        {
+          "date": "2026-05",
+          "value": 0.54
+        },
+        {
+          "date": "2026-05",
+          "value": 0.53
+        },
+        {
+          "date": "2026-05",
+          "value": 0.49
+        },
+        {
+          "date": "2026-05",
+          "value": 0.43
+        },
+        {
+          "date": "2026-05",
+          "value": 0.49
+        },
+        {
+          "date": "2026-05",
+          "value": 0.48
+        },
+        {
+          "date": "2026-05",
+          "value": 0.46
+        },
+        {
+          "date": "2026-05",
+          "value": 0.47
+        },
+        {
+          "date": "2026-06",
+          "value": 0.42
+        },
+        {
+          "date": "2026-06",
+          "value": 0.41
+        },
+        {
+          "date": "2026-06",
+          "value": 0.41
+        },
+        {
+          "date": "2026-06",
+          "value": 0.42
+        },
+        {
+          "date": "2026-06",
+          "value": 0.38
+        },
+        {
+          "date": "2026-06",
+          "value": 0.41
+        },
+        {
+          "date": "2026-06",
+          "value": 0.4
+        },
+        {
+          "date": "2026-06",
+          "value": 0.42
+        },
+        {
+          "date": "2026-06",
+          "value": 0.4
+        },
+        {
+          "date": "2026-06",
+          "value": 0.39
+        },
+        {
+          "date": "2026-06",
+          "value": 0.4
         }
       ]
     },
