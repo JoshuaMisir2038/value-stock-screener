@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-06-17 20:05 UTC",
+  "asOf": "2026-06-17 22:59 UTC",
   "us": [
     {
       "ticker": "^IRX",
@@ -57,10 +57,10 @@
       "ticker": "BWX",
       "name": "Intl Treasury Bond",
       "region": "Global DM",
-      "price": 21.875,
-      "change1d": -0.84,
-      "change1w": 0.71,
-      "high52": 23.0553,
+      "price": 21.87,
+      "change1d": -0.86,
+      "change1w": 0.69,
+      "high52": 23.0554,
       "low52": 21.5192
     },
     {
@@ -87,9 +87,9 @@
       "ticker": "EMLC",
       "name": "EM Local Currency Bonds",
       "region": "Emerging Markets",
-      "price": 25.58,
-      "change1d": -0.89,
-      "change1w": 1.55,
+      "price": 25.59,
+      "change1d": -0.85,
+      "change1w": 1.59,
       "high52": 26.0774,
       "low52": 23.244
     }
@@ -99,19 +99,19 @@
       "ticker": "LQD",
       "name": "US Investment Grade Corp",
       "type": "IG Corp",
-      "price": 108.76,
-      "change1d": -0.33,
-      "change1w": 0.55,
-      "high52": 110.238,
+      "price": 108.77,
+      "change1d": -0.32,
+      "change1w": 0.56,
+      "high52": 110.2381,
       "low52": 102.9705
     },
     {
       "ticker": "HYG",
       "name": "US High Yield Corp",
       "type": "HY Corp",
-      "price": 79.76,
-      "change1d": -0.34,
-      "change1w": 0.36,
+      "price": 79.73,
+      "change1d": -0.37,
+      "change1w": 0.33,
       "high52": 80.17,
       "low52": 74.9054
     },
