@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-06-17 23:00 UTC",
+  "asOf": "2026-06-18 16:51 UTC",
   "vix": null,
   "pcr": null,
   "indicators": {
@@ -444,16 +444,12 @@
       "unit": "%",
       "desc": "30-year fixed-rate mortgage average (Freddie Mac)",
       "goodLow": true,
-      "value": 6.52,
-      "date": "2026-06-11",
-      "prev": 6.48,
-      "change": 0.04,
-      "changeYoY": 0.3,
+      "value": 6.47,
+      "date": "2026-06-18",
+      "prev": 6.52,
+      "change": -0.05,
+      "changeYoY": 0.09,
       "history": [
-        {
-          "date": "2025-12",
-          "value": 6.15
-        },
         {
           "date": "2026-01",
           "value": 6.16
@@ -545,6 +541,10 @@
         {
           "date": "2026-06",
           "value": 6.52
+        },
+        {
+          "date": "2026-06",
+          "value": 6.47
         }
       ]
     },
