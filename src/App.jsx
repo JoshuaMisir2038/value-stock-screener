@@ -156,13 +156,13 @@ export default function App() {
   }, [stocks])
 
   const filtered = useMemo(() => {
-    const base = filters.search
-      ? stocks.filter(s => {
-          const q = filters.search.toLowerCase()
-          return s.symbol?.toLowerCase().includes(q) || s.name?.toLowerCase().includes(q)
-        })
-      : stocks
-    return applyScreenerFilters(base, screenerFilters, sectors)
+    if (filters.search) {
+      const q = filters.search.toLowerCase()
+      return stocks.filter(s =>
+        s.symbol?.toLowerCase().includes(q) || s.name?.toLowerCase().includes(q)
+      )
+    }
+    return applyScreenerFilters(stocks, screenerFilters, sectors)
   }, [stocks, filters.search, screenerFilters, sectors])
 
   return (
