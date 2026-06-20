@@ -315,7 +315,15 @@ export default function App() {
               </div>
             )}
 
-            {!loading && !error && (
+            {!loading && !error && filtered.length === 0 && (
+              <div className="py-20 text-center text-gray-500 text-sm">
+                {filters.search
+                  ? <>No stock matching <span className="text-gray-300 font-bold uppercase">{filters.search}</span> found in today's data. It may not have been fetched in the latest pipeline run — try again after the next scheduled update.</>
+                  : 'No stocks match the active filters.'}
+              </div>
+            )}
+
+            {!loading && !error && filtered.length > 0 && (
               <StockTable
                 data={filtered}
                 compareStocks={compareSymbols}

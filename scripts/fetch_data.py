@@ -153,8 +153,16 @@ def get_tickers():
         sp500 = _wiki_tickers('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies', 'Symbol')
         sp400 = _wiki_tickers('https://en.wikipedia.org/wiki/List_of_S%26P_400_companies', 'Symbol')
         sp600 = _wiki_tickers('https://en.wikipedia.org/wiki/List_of_S%26P_600_companies', 'Symbol')
-        sp_tickers = list({t.replace('.', '-') for t in sp500 + sp400 + sp600 if isinstance(t, str)})
-        print(f"S&P 500/400/600: {len(sp_tickers)} tickers from Wikipedia")
+        seen = set()
+        sp_tickers = []
+        for t in sp500 + sp400 + sp600:
+            if not isinstance(t, str):
+                continue
+            clean = t.replace('.', '-')
+            if clean not in seen:
+                seen.add(clean)
+                sp_tickers.append(clean)
+        print(f"S&P 500/400/600: {len(sp_tickers)} tickers from Wikipedia (order preserved — S&P 500 first)")
     except Exception as e:
         print(f"Wikipedia fetch failed ({e})")
 
