@@ -53,7 +53,7 @@ export function useStocks() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('./data/stocks.json')
+        const res = await fetch(`./data/stocks.json?v=${Date.now()}`)
         if (!res.ok) throw new Error('Data not found')
         const json  = await res.json()
         const parsed = parseStocks(json)

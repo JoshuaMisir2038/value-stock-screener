@@ -2,16 +2,18 @@ name: Update Stock Data
 
 on:
   schedule:
-    # 9:30am ET (market open) = 1:30pm UTC
+    # 9:30am ET (market open) = 1:30pm UTC  — weekdays
     - cron: '30 13 * * 1-5'
-    # 1:00pm ET (midday) = 5:00pm UTC
-    - cron: '0 17 * * 1-5'
-    # 4:30pm ET (market close) = 8:30pm UTC
+    # 4:30pm ET (market close) = 8:30pm UTC — weekdays
     - cron: '30 20 * * 1-5'
+    # Saturday noon UTC — weekend keepalive (stamps last_run.json so GitHub
+    # counts repo activity and doesn't disable scheduled workflows)
+    - cron: '0 12 * * 6'
   workflow_dispatch:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   fetch:
@@ -60,16 +62,16 @@ jobs:
           RESEND_API_KEY:            ${{ secrets.RESEND_API_KEY }}
           FROM_EMAIL:                ${{ secrets.FROM_EMAIL }}
 
-      # Always stamp the run time — ensures there is always something to
-      # commit, which (a) keeps the workflow active and (b) makes it easy
-      # to see in git log that the job ran even when data didn't change.
+      # Always stamp the run time so there is always something to commit.
+      # This keeps the workflow "active" in GitHub's eyes and is easy to
+      # audit in git log.
       - name: Stamp run time
         if: always()
         run: |
           mkdir -p public/data
           echo "{\"lastRun\": \"$(date -u '+%Y-%m-%dT%H:%M:%S UTC')\"}" > public/data/last_run.json
 
-      - name: Commit updated data
+      - name: Commit and push updated data
         if: always()
         run: |
           git config user.name "github-actions[bot]"
@@ -81,3 +83,10 @@ jobs:
             echo "Push attempt $i failed, retrying in 15s..."
             sleep 15
           done
+
+      # Re-enable this very workflow each run so GitHub never auto-disables it.
+      - name: Re-enable scheduled workflow (prevent auto-disable)
+        if: always()
+        run: gh workflow enable update_data.yml
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

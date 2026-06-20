@@ -137,14 +137,14 @@ def _wiki_tickers(url, col):
     return pd.read_html(io.StringIO(html))[0][col].tolist()
 
 
-MAX_TICKERS = 500   # S&P 500 core — keeps total requests under rate limit ceiling
-
 def get_tickers():
     """
-    Build a prioritised ticker list capped at MAX_TICKERS:
-      - Core: S&P 500 + 400 + 600 from Wikipedia (~1 500, best data quality)
-      - Fill: remaining slots from NASDAQ FTP directory (broader coverage)
+    Build a full ticker list covering all US-listed equities:
+      - Core: S&P 500 + 400 + 600 from Wikipedia (processed first, best data quality)
+      - Remainder: all other US-listed stocks from NASDAQ FTP directory
       - Fallback: hardcoded list if both network sources fail
+    No cap is applied — the run-time deadline in main() will stop processing
+    when the wall-clock limit is reached.
     """
     sp_tickers = []
 
@@ -158,15 +158,13 @@ def get_tickers():
     except Exception as e:
         print(f"Wikipedia fetch failed ({e})")
 
-    # ── 2. Fill remaining slots from NASDAQ FTP ────────────────────────────────
+    # ── 2. All remaining US-listed equities from NASDAQ FTP ───────────────────
     extra_tickers = []
     try:
         all_nasdaq = _nasdaq_ftp_tickers()
         sp_set = set(sp_tickers)
         extra_tickers = [t for t in all_nasdaq if t not in sp_set]
-        remaining = MAX_TICKERS - len(sp_tickers)
-        extra_tickers = extra_tickers[:max(0, remaining)]
-        print(f"NASDAQ FTP: adding {len(extra_tickers)} extra tickers (cap {MAX_TICKERS})")
+        print(f"NASDAQ FTP: adding {len(extra_tickers)} extra tickers (no cap — all US-listed equities)")
     except Exception as e:
         print(f"NASDAQ FTP fetch failed ({e})")
 
@@ -333,8 +331,6 @@ def fetch_fundamental(ticker, friday_close):
         t = yf.Ticker(ticker, session=_YF_SESSION)
         info = t.info
         market_cap = info.get('marketCap') or 0
-        if market_cap < 100_000_000:
-            return None
 
         price = friday_close or info.get('currentPrice') or info.get('regularMarketPrice')
         if not price:
