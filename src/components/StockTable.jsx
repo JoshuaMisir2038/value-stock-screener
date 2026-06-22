@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useState, useRef } from 'react'
-import { ChevronUp, ChevronDown, ChevronsUpDown, History, Plus, Check, Star } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronsUpDown, History, Plus, Check, Star, ChevronRight } from 'lucide-react'
 import ScoreBadge from './ScoreBadge'
 import MetricCell from './MetricCell'
 import ScoreHistoryModal from './ScoreHistoryModal'
@@ -160,6 +160,75 @@ const COLUMNS = [
   col.accessor('aboveMa200',      { header: 'vs 200MA',     cell: i => { const s = i.row.original; if (!s.ma200 || !s.price) return <span className="text-gray-600">—</span>; const pct = ((s.price - s.ma200) / s.ma200 * 100).toFixed(1); const c = s.aboveMa200 ? 'text-emerald-400' : 'text-red-400'; return <span className={`tabular-nums text-xs ${c}`}>{s.aboveMa200 ? '▲' : '▼'} {Math.abs(pct)}%</span> }, size: 80 }),
 ]
 
+const MOBILE_SORT_OPTIONS = [
+  { value: 'valueScore:desc',      label: 'Value Score ↓' },
+  { value: 'sectorScore:desc',     label: 'Sector Score ↓' },
+  { value: 'marketCap:desc',       label: 'Market Cap ↓' },
+  { value: 'peRatio:asc',          label: 'P/E ↑' },
+  { value: 'evEbitda:asc',         label: 'EV/EBITDA ↑' },
+  { value: 'pFcf:asc',             label: 'P/FCF ↑' },
+  { value: 'rsi:asc',              label: 'RSI ↑' },
+  { value: 'return1y:desc',        label: '1Y Return ↓' },
+  { value: 'dividendYield:desc',   label: 'Dividend Yield ↓' },
+]
+
+function MobileCard({ stock, watchlist, onToggleWatch, onShowDetail }) {
+  const watched = watchlist?.[stock.symbol]
+  const rsiColor = !stock.rsi ? 'text-gray-500'
+    : stock.rsi <= 35 ? 'text-emerald-400'
+    : stock.rsi >= 65 ? 'text-red-400'
+    : 'text-blue-400'
+
+  return (
+    <div
+      onClick={() => onShowDetail(stock)}
+      className="border border-gray-800 bg-gray-900/40 p-3 active:bg-gray-800/60 transition-colors cursor-pointer"
+    >
+      {/* Row 1: identity */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-white font-bold tracking-wide text-sm shrink-0">{stock.symbol}</span>
+          <span className="text-gray-500 text-xs truncate">{stock.name}</span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0 ml-2">
+          <button
+            onClick={e => { e.stopPropagation(); onToggleWatch?.(stock.symbol) }}
+          >
+            <Star size={13} className={watched ? 'text-yellow-400 fill-yellow-400' : 'text-gray-700'} />
+          </button>
+          <ChevronRight size={13} className="text-gray-700" />
+        </div>
+      </div>
+
+      {/* Row 2: scores + sector */}
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <ScoreBadge score={stock.valueScore} />
+        <span className="text-[10px] text-gray-500 px-1.5 py-0.5 bg-gray-800 border border-gray-700 rounded-full whitespace-nowrap">{stock.sector}</span>
+      </div>
+
+      {/* Row 3: key metrics grid */}
+      <div className="grid grid-cols-4 gap-x-2 gap-y-1">
+        <div>
+          <div className="text-[10px] text-gray-600 uppercase tracking-wide">Price</div>
+          <div className="text-xs text-gray-200 tabular-nums">{stock.price ? `$${stock.price.toFixed(2)}` : '—'}</div>
+        </div>
+        <div>
+          <div className="text-[10px] text-gray-600 uppercase tracking-wide">P/E</div>
+          <div className="text-xs text-gray-200 tabular-nums">{stock.peRatio ? stock.peRatio.toFixed(1) : '—'}</div>
+        </div>
+        <div>
+          <div className="text-[10px] text-gray-600 uppercase tracking-wide">EV/EBITDA</div>
+          <div className="text-xs text-gray-200 tabular-nums">{stock.evEbitda ? stock.evEbitda.toFixed(1) : '—'}</div>
+        </div>
+        <div>
+          <div className="text-[10px] text-gray-600 uppercase tracking-wide">RSI</div>
+          <div className={`text-xs tabular-nums ${rsiColor}`}>{stock.rsi ?? '—'}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function SortIcon({ isSorted }) {
   if (isSorted === 'asc')  return <ChevronUp   size={11} className="inline ml-1 text-blue-400" />
   if (isSorted === 'desc') return <ChevronDown size={11} className="inline ml-1 text-blue-400" />
@@ -168,8 +237,10 @@ function SortIcon({ isSorted }) {
 
 const ROW_HEIGHT = 42
 
-export default function StockTable({ data, compareStocks = [], onToggleCompare, watchlist = {}, onToggleWatch }) {
-  const [sorting, setSorting] = useState([{ id: 'valueScore', desc: true }])
+export default function StockTable({ data, compareStocks = [], onToggleCompare, watchlist = {}, onToggleWatch, sorting: sortingProp, onSortChange }) {
+  const [sortingLocal, setSortingLocal] = useState([{ id: 'valueScore', desc: true }])
+  const sorting    = sortingProp  ?? sortingLocal
+  const setSorting = onSortChange ?? setSortingLocal
   const [historyStock, setHistoryStock] = useState(null)
   const [detailStock,  setDetailStock]  = useState(null)
   const scrollRef    = useRef(null)
@@ -219,6 +290,42 @@ export default function StockTable({ data, compareStocks = [], onToggleCompare, 
 
   return (
     <>
+    {/* ── Mobile card view (hidden on md+) ─────────────────────────────────── */}
+    <div className="md:hidden">
+      {/* Sort control */}
+      <div className="flex items-center gap-2 mb-2 px-1">
+        <span className="text-[11px] text-gray-500 uppercase tracking-wide shrink-0">Sort:</span>
+        <select
+          value={`${sorting[0]?.id ?? 'valueScore'}:${sorting[0]?.desc !== false ? 'desc' : 'asc'}`}
+          onChange={e => {
+            const [id, dir] = e.target.value.split(':')
+            setSorting([{ id, desc: dir === 'desc' }])
+          }}
+          className="bg-gray-900 border border-gray-700 text-xs text-gray-300 px-2 py-1 focus:outline-none"
+        >
+          {MOBILE_SORT_OPTIONS.map(o => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+        <span className="text-[11px] text-gray-600 ml-auto">{rows.length} stocks</span>
+      </div>
+
+      <div className="space-y-1.5">
+        {rows.map(row => (
+          <MobileCard
+            key={row.id}
+            stock={row.original}
+            watchlist={watchlist}
+            onToggleWatch={onToggleWatch}
+            onShowDetail={s => setDetailStock(s)}
+          />
+        ))}
+      </div>
+    </div>
+
+    {/* ── Desktop table view (hidden on mobile) ────────────────────────────── */}
+    <div className="hidden md:block">
+
     {/* Top phantom scrollbar — synced to table scroll */}
     <div
       ref={topScrollRef}
@@ -313,6 +420,7 @@ export default function StockTable({ data, compareStocks = [], onToggleCompare, 
         <div className="text-center py-16 text-gray-600">No stocks match your filters.</div>
       )}
     </div>
+    </div> {/* end desktop wrapper */}
 
     {historyStock && (
       <ScoreHistoryModal

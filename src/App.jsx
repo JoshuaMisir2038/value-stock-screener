@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useStocks } from './hooks/useStocks'
 import { useWatchlist } from './hooks/useWatchlist'
 import { useAuth } from './hooks/useAuth'
@@ -37,6 +37,30 @@ import { EquityMethodology } from './components/Methodology'
 import TickerBanner from './components/TickerBanner'
 import CompareModal from './components/CompareModal'
 import { TrendingUp, RefreshCw, BarChart2, Layers, Landmark, Package, Activity, FlaskConical, Globe, Flame, Newspaper, GitBranch, SlidersHorizontal, TestTube2, X, GitCompare, Calculator, BookOpen, Star, Bell, User, LogOut, Building2, CalendarDays, FileSearch } from 'lucide-react'
+
+const URL_RESERVED = new Set(['tab', 'q', 'sort', 'dir'])
+
+function timeAgo(isoString) {
+  if (!isoString) return null
+  const mins = Math.floor((Date.now() - new Date(isoString).getTime()) / 60_000)
+  if (mins < 2)  return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24)  return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  return days === 1 ? '1 day ago' : `${days} days ago`
+}
+
+function readUrlParams() {
+  const p = new URLSearchParams(window.location.search)
+  return {
+    tab:            p.get('tab')  || 'screener',
+    search:         p.get('q')    || '',
+    sortId:         p.get('sort') || 'valueScore',
+    sortDesc:       p.get('dir')  !== 'asc',
+    screenerFilters: Object.fromEntries([...p.entries()].filter(([k]) => !URL_RESERVED.has(k))),
+  }
+}
 
 const DEFAULT_FILTERS = { search: '' }
 
@@ -123,9 +147,13 @@ export default function App() {
     () => computeScoresWithMetrics(rawStocks, scoreMetrics),
     [rawStocks, scoreMetrics]
   )
-  const [filters, setFilters] = useState(DEFAULT_FILTERS)
-  const [tab, setTab] = useState('screener')
-  const [screenerFilters, setScreenerFilters] = useState({})
+  const [filters, setFilters] = useState(() => ({ search: readUrlParams().search }))
+  const [tab, setTab] = useState(() => readUrlParams().tab)
+  const [screenerFilters, setScreenerFilters] = useState(() => readUrlParams().screenerFilters)
+  const [sorting, setSorting] = useState(() => {
+    const { sortId, sortDesc } = readUrlParams()
+    return [{ id: sortId, desc: sortDesc }]
+  })
   const [backtestPayload, setBacktestPayload] = useState(null)
   const [compareSymbols, setCompareSymbols] = useState([])
   const { watchlist, toggle: toggleWatch, setNote: setWatchNote, remove: removeFromWatch } = useWatchlist()
@@ -149,6 +177,20 @@ export default function App() {
     setBacktestPayload(payload)
     setTab('custombacktest')
   }
+
+  // Sync tab, search, filters, and sort to URL so views are shareable/bookmarkable
+  useEffect(() => {
+    const p = new URLSearchParams()
+    if (tab !== 'screener')         p.set('tab',  tab)
+    if (filters.search)             p.set('q',    filters.search)
+    if (sorting[0]?.id && sorting[0].id !== 'valueScore') p.set('sort', sorting[0].id)
+    if (sorting[0] && !sorting[0].desc) p.set('dir', 'asc')
+    for (const [k, v] of Object.entries(screenerFilters)) {
+      if (v && v !== 'Any') p.set(k, v)
+    }
+    const qs = p.toString()
+    window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
+  }, [tab, filters.search, screenerFilters, sorting])
 
   const sectors = useMemo(() => {
     const set = new Set(stocks.map(s => s.sector).filter(Boolean))
@@ -183,7 +225,7 @@ export default function App() {
               <div className="flex items-center gap-1.5 text-gray-400 border border-gray-700 px-3 py-1">
                 <RefreshCw size={10} className={refreshing ? 'animate-spin' : ''} />
                 <span className="uppercase tracking-wider">
-                  {refreshing ? 'REFRESHING...' : `UPDATED ${new Date(lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}`}
+                  {refreshing ? 'REFRESHING...' : `UPDATED ${timeAgo(lastUpdated)?.toUpperCase()}`}
                 </span>
               </div>
             )}
@@ -330,6 +372,8 @@ export default function App() {
                 onToggleCompare={handleToggleCompare}
                 watchlist={watchlist}
                 onToggleWatch={toggleWatch}
+                sorting={sorting}
+                onSortChange={setSorting}
               />
             )}
           </>
