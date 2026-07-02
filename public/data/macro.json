@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-07-01 22:11 UTC",
+  "asOf": "2026-07-02 15:49 UTC",
   "vix": null,
   "pcr": null,
   "indicators": {
@@ -335,16 +335,12 @@
       "unit": "%",
       "desc": "Civilian unemployment rate (U-3)",
       "goodLow": true,
-      "value": 4.3,
-      "date": "2026-05-01",
+      "value": 4.2,
+      "date": "2026-06-01",
       "prev": 4.3,
-      "change": 0.0,
-      "changeYoY": 0.1,
+      "change": -0.1,
+      "changeYoY": -0.1,
       "history": [
-        {
-          "date": "2024-05",
-          "value": 3.9
-        },
         {
           "date": "2024-06",
           "value": 4.1
@@ -436,6 +432,10 @@
         {
           "date": "2026-05",
           "value": 4.3
+        },
+        {
+          "date": "2026-06",
+          "value": 4.2
         }
       ]
     },
