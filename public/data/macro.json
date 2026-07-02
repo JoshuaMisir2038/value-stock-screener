@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-07-02 15:49 UTC",
+  "asOf": "2026-07-02 21:53 UTC",
   "vix": null,
   "pcr": null,
   "indicators": {
@@ -444,16 +444,12 @@
       "unit": "%",
       "desc": "30-year fixed-rate mortgage average (Freddie Mac)",
       "goodLow": true,
-      "value": 6.49,
-      "date": "2026-06-25",
-      "prev": 6.47,
-      "change": 0.02,
-      "changeYoY": 0.03,
+      "value": 6.43,
+      "date": "2026-07-02",
+      "prev": 6.49,
+      "change": -0.06,
+      "changeYoY": 0.06,
       "history": [
-        {
-          "date": "2026-01",
-          "value": 6.06
-        },
         {
           "date": "2026-01",
           "value": 6.09
@@ -545,6 +541,10 @@
         {
           "date": "2026-06",
           "value": 6.49
+        },
+        {
+          "date": "2026-07",
+          "value": 6.43
         }
       ]
     },
@@ -553,16 +553,12 @@
       "unit": "%",
       "desc": "Yield curve spread \u2014 negative = inverted (recession signal)",
       "goodLow": false,
-      "value": 0.31,
-      "date": "2026-07-01",
-      "prev": 0.3,
-      "change": 0.01,
-      "changeYoY": -0.08,
+      "value": 0.35,
+      "date": "2026-07-02",
+      "prev": 0.31,
+      "change": 0.04,
+      "changeYoY": -0.05,
       "history": [
-        {
-          "date": "2026-05",
-          "value": 0.46
-        },
         {
           "date": "2026-05",
           "value": 0.47
@@ -654,6 +650,10 @@
         {
           "date": "2026-07",
           "value": 0.31
+        },
+        {
+          "date": "2026-07",
+          "value": 0.35
         }
       ]
     },
