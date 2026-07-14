@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-07-13 21:37 UTC",
+  "asOf": "2026-07-14 15:15 UTC",
   "vix": null,
   "pcr": null,
   "indicators": {
@@ -117,16 +117,12 @@
       "unit": "%",
       "desc": "Consumer Price Index, all urban consumers \u2014 year-over-year change",
       "goodLow": true,
-      "value": 4.27,
-      "date": "2026-05-01",
-      "prev": 3.95,
-      "change": 0.32,
-      "changeYoY": 1.94,
+      "value": 3.73,
+      "date": "2026-06-01",
+      "prev": 4.27,
+      "change": -0.54,
+      "changeYoY": 1.35,
       "history": [
-        {
-          "date": "2024-05",
-          "value": 3.24
-        },
         {
           "date": "2024-06",
           "value": 2.97
@@ -218,6 +214,10 @@
         {
           "date": "2026-05",
           "value": 4.27
+        },
+        {
+          "date": "2026-06",
+          "value": 3.73
         }
       ]
     },
@@ -226,16 +226,12 @@
       "unit": "%",
       "desc": "CPI excluding food and energy \u2014 year-over-year change",
       "goodLow": true,
-      "value": 2.96,
-      "date": "2026-05-01",
-      "prev": 2.99,
-      "change": -0.03,
-      "changeYoY": 0.18,
+      "value": 2.81,
+      "date": "2026-06-01",
+      "prev": 2.96,
+      "change": -0.15,
+      "changeYoY": 0.04,
       "history": [
-        {
-          "date": "2024-05",
-          "value": 3.39
-        },
         {
           "date": "2024-06",
           "value": 3.27
@@ -327,6 +323,10 @@
         {
           "date": "2026-05",
           "value": 2.96
+        },
+        {
+          "date": "2026-06",
+          "value": 2.81
         }
       ]
     },
