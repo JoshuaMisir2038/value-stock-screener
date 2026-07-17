@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-07-17 15:36 UTC",
+  "asOf": "2026-07-17 22:02 UTC",
   "vix": null,
   "pcr": null,
   "indicators": {
@@ -553,16 +553,12 @@
       "unit": "%",
       "desc": "Yield curve spread \u2014 negative = inverted (recession signal)",
       "goodLow": false,
-      "value": 0.41,
-      "date": "2026-07-16",
-      "prev": 0.42,
-      "change": -0.01,
-      "changeYoY": 0.13,
+      "value": 0.37,
+      "date": "2026-07-17",
+      "prev": 0.41,
+      "change": -0.04,
+      "changeYoY": 0.07,
       "history": [
-        {
-          "date": "2026-06",
-          "value": 0.4
-        },
         {
           "date": "2026-06",
           "value": 0.39
@@ -654,6 +650,10 @@
         {
           "date": "2026-07",
           "value": 0.41
+        },
+        {
+          "date": "2026-07",
+          "value": 0.37
         }
       ]
     },
