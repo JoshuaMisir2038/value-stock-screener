@@ -9,10 +9,14 @@ import json, os, requests
 from datetime import datetime, timezone, date
 from pathlib import Path
 
-SUPABASE_URL      = os.environ['SUPABASE_URL']
-SUPABASE_KEY      = os.environ['SUPABASE_SERVICE_ROLE_KEY']   # service role — bypasses RLS
-RESEND_API_KEY    = os.environ['RESEND_API_KEY']
+SUPABASE_URL      = os.environ.get('SUPABASE_URL', '')
+SUPABASE_KEY      = os.environ.get('SUPABASE_SERVICE_ROLE_KEY', '')
+RESEND_API_KEY    = os.environ.get('RESEND_API_KEY', '')
 FROM_EMAIL        = os.environ.get('FROM_EMAIL', 'alerts@yourdomain.com')
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    print("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured — skipping alerts check.")
+    raise SystemExit(0)
 SCREENER_URL      = 'https://joshuamisir2038.github.io/value-stock-screener'
 
 SUPABASE_HEADERS  = {
