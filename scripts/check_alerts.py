@@ -31,7 +31,8 @@ def load_stocks():
     path = Path(__file__).parent.parent / 'public' / 'data' / 'stocks.json'
     with open(path) as f:
         data = json.load(f)
-    return {s['symbol']: s for s in data}
+    stocks = data['stocks'] if isinstance(data, dict) else data
+    return {s['symbol']: s for s in stocks}
 
 # ── Supabase helpers ──────────────────────────────────────────────────────────
 
