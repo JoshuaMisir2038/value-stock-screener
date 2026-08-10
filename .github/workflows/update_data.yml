@@ -33,8 +33,14 @@ jobs:
       - name: Install dependencies
         run: pip install "yfinance==0.2.54" "pandas>=2.0" requests lxml urllib3
 
-      - name: Fetch stock data
+      - name: Fetch stock data (Finnhub)
         run: python scripts/fetch_data.py
+        continue-on-error: true
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+
+      - name: Fetch international stocks (FTSE 100, DAX, CAC, Nikkei, Hang Seng, ASX, TSX, BSE)
+        run: python scripts/fetch_international.py
         continue-on-error: true
 
       - name: Fetch bond and commodity data

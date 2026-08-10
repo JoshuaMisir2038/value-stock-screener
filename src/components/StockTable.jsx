@@ -96,14 +96,25 @@ const COLUMNS = [
     </div>
   ), size: 105 }),
   col.accessor('sectorScore',     { header: 'Sec Score',    cell: i => <ScoreBadge score={i.getValue()} />,                                          size: 82 }),
-  col.accessor('symbol',          { header: 'Ticker',       cell: i => (
-    <button
-      onClick={() => i.table.options.meta?.onShowDetail(i.row.original)}
-      className="font-bold text-white tracking-wide hover:text-blue-400 transition-colors"
-    >
-      {i.getValue()}
-    </button>
-  ), size: 75 }),
+  col.accessor('symbol',          { header: 'Ticker',       cell: i => {
+    const country = i.row.original.country
+    const isIntl  = country && country !== 'US'
+    return (
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => i.table.options.meta?.onShowDetail(i.row.original)}
+          className="font-bold text-white tracking-wide hover:text-blue-400 transition-colors"
+        >
+          {i.getValue()}
+        </button>
+        {isIntl && (
+          <span className="text-[9px] font-bold text-gray-500 bg-gray-800 border border-gray-700 px-1 leading-4">
+            {country}
+          </span>
+        )}
+      </div>
+    )
+  }, size: 90 }),
   col.accessor('name',            { header: 'Company',      cell: i => <span className="text-gray-300 truncate block max-w-[180px]" title={i.getValue()}>{i.getValue()}</span>, size: 190 }),
   col.accessor('sector',          { header: 'Sector',       cell: i => <span className="text-xs text-gray-400 px-2 py-0.5 bg-gray-800 rounded-full whitespace-nowrap">{i.getValue()}</span>, size: 140 }),
   col.accessor('marketCap',       { header: 'Mkt Cap',      cell: i => <MetricCell value={i.getValue()} format="marketcap" />,                       size: 88 }),

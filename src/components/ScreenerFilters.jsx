@@ -18,6 +18,22 @@ const DESCRIPTIVE = [
     options: [{ label: 'Any', test: null }],
   },
   {
+    key: 'country', label: 'Region', string: true,
+    options: [
+      { label: 'Any',           test: null },
+      { label: 'USA',           test: v => v === 'US' },
+      { label: 'International', test: v => v !== 'US' },
+      { label: 'UK',            test: v => v === 'GB' },
+      { label: 'Germany',       test: v => v === 'DE' },
+      { label: 'France',        test: v => v === 'FR' },
+      { label: 'Japan',         test: v => v === 'JP' },
+      { label: 'Hong Kong',     test: v => v === 'HK' },
+      { label: 'Australia',     test: v => v === 'AU' },
+      { label: 'Canada',        test: v => v === 'CA' },
+      { label: 'India',         test: v => v === 'IN' },
+    ],
+  },
+  {
     key: 'marketCap', label: 'Market Cap', scale: 1e9,
     options: [
       { label: 'Any',               test: null },
@@ -523,7 +539,7 @@ export function applyScreenerFilters(stocks, filterState, sectors) {
 
       // Get the stock value, normalise it
       let val = stock[key]
-      if (def.boolean) {
+      if (def.boolean || def.string) {
         if (!opt.test(val)) return false
         continue
       }
