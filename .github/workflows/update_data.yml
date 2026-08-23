@@ -39,6 +39,29 @@ jobs:
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
 
+      # fetch_data.py silently keeps the existing stocks.json (and exits 0) when
+      # the Finnhub pre-flight check fails, so the step above shows green even
+      # when nothing was actually refreshed. Check the timestamp it just wrote
+      # to catch that case and fail the job loudly instead.
+      - name: Verify core stock data actually refreshed
+        run: |
+          python3 - <<'EOF'
+          import json, sys
+          from datetime import datetime, timezone
+
+          with open('public/data/stocks.json') as f:
+              data = json.load(f)
+
+          last_updated = datetime.fromisoformat(data['lastUpdated'])
+          age_minutes = (datetime.now(timezone.utc) - last_updated).total_seconds() / 60
+
+          if age_minutes > 15:
+              print(f"::error::stocks.json was NOT refreshed this run (lastUpdated is {age_minutes:.0f} min old). "
+                    f"Finnhub pre-flight likely failed — check FINNHUB_API_KEY validity/quota.")
+              sys.exit(1)
+          print(f"stocks.json refreshed {age_minutes:.1f} min ago — OK")
+          EOF
+
       - name: Fetch international stocks (FTSE 100, DAX, CAC, Nikkei, Hang Seng, ASX, TSX, BSE)
         run: python scripts/fetch_international.py
         continue-on-error: true
