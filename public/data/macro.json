@@ -1,10 +1,10 @@
 {
-  "asOf": "2026-08-24 19:43 UTC",
+  "asOf": "2026-08-24 21:19 UTC",
   "vix": {
-    "current": 15.78,
+    "current": 15.85,
     "prev": 15.13,
-    "change1d": 0.65,
-    "change1w": 0.59,
+    "change1d": 0.72,
+    "change1w": 0.66,
     "high52": 31.05,
     "low52": 13.47,
     "history": [
@@ -214,7 +214,7 @@
       },
       {
         "date": "2026-08-30",
-        "value": 15.78
+        "value": 15.85
       }
     ]
   },
@@ -777,16 +777,12 @@
       "unit": "%",
       "desc": "Yield curve spread \u2014 negative = inverted (recession signal)",
       "goodLow": false,
-      "value": 0.5,
-      "date": "2026-08-21",
+      "value": 0.46,
+      "date": "2026-08-24",
       "prev": 0.5,
-      "change": 0.0,
-      "changeYoY": 0.05,
+      "change": -0.04,
+      "changeYoY": 0.02,
       "history": [
-        {
-          "date": "2026-07",
-          "value": 0.37
-        },
         {
           "date": "2026-07",
           "value": 0.36
@@ -878,6 +874,10 @@
         {
           "date": "2026-08",
           "value": 0.5
+        },
+        {
+          "date": "2026-08",
+          "value": 0.46
         }
       ]
     },
