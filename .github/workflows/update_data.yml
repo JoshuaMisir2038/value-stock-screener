@@ -31,7 +31,7 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install "yfinance==0.2.54" "curl_cffi>=0.7" "pandas>=2.0" requests lxml urllib3
+        run: pip install "yfinance>=1.6.0" "curl_cffi>=0.7" "pandas>=2.0" requests lxml urllib3
 
       - name: Fetch stock data (Finnhub)
         run: python scripts/fetch_data.py
