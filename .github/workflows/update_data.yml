@@ -31,7 +31,7 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install "yfinance==0.2.54" "pandas>=2.0" requests lxml urllib3
+        run: pip install "yfinance==0.2.54" "curl_cffi>=0.7" "pandas>=2.0" requests lxml urllib3
 
       - name: Fetch stock data (Finnhub)
         run: python scripts/fetch_data.py
@@ -63,26 +63,32 @@ jobs:
           EOF
 
       - name: Fetch international stocks (FTSE 100, DAX, CAC, Nikkei, Hang Seng, ASX, TSX, BSE)
+        if: always()
         run: python scripts/fetch_international.py
         continue-on-error: true
 
       - name: Fetch bond and commodity data
+        if: always()
         run: python scripts/fetch_market_data.py
         continue-on-error: true
 
       - name: Fetch macro data (VIX, PCR, FRED)
+        if: always()
         run: python scripts/fetch_macro.py
         continue-on-error: true
 
       - name: Run options backtest
+        if: always()
         run: python scripts/run_backtest.py
         continue-on-error: true
 
       - name: Snapshot value scores (once per day)
+        if: always()
         run: python scripts/snapshot_scores.py
         continue-on-error: true
 
       - name: Check and send price alerts
+        if: always()
         run: python scripts/check_alerts.py
         continue-on-error: true
         env:

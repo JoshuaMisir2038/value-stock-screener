@@ -1,13 +1,23 @@
 """
-Fetches value metrics + technical indicators for US-listed stocks via Finnhub API.
+Fetches value metrics (Finnhub) + price history/technicals (yfinance) for
+US-listed stocks.
 
-Migrated from yfinance because Yahoo Finance rate-limits GitHub Actions (AWS) IPs
-so aggressively that stocks.json could not be updated for weeks. Finnhub is designed
-for programmatic access and works reliably from cloud IPs.
+Price history comes from yfinance rather than Finnhub because Finnhub's free
+tier stopped serving /stock/candle (historical OHLC) — it now 403s on every
+symbol, silently, which is why this pipeline could report "success" while
+stocks.json sat un-refreshed. yfinance's own default requests/urllib3 session
+gets an instant 429 from Yahoo regardless of IP or volume (a TLS-fingerprint
+block, not rate limiting) — routing it through curl_cffi's Chrome-impersonating
+session bypasses that, which is yfinance's own documented workaround. A single
+bulk yf.download() covers the whole ~1,500-ticker universe (plus SPY) in well
+under a minute.
 
-Free tier: 60 calls/min. With fundamentals caching (profile cached 30 days, metrics
-7 days), daily runs only need 1 candle call per stock — covering all ~1,500 S&P tickers
-in ~25 min rather than the 3-call-per-stock limit of ~760 stocks.
+Finnhub remains the source for fundamentals (profile2 + metric), which are
+unaffected by the candle restriction and still work fine on the free tier.
+
+Free tier: 60 calls/min. With fundamentals caching (profile cached 30 days,
+metrics 7 days), a cold run needs 2 Finnhub calls/stock (profile + metric) —
+covering all ~1,500 tickers in ~50 min worst case, far less once cached.
 
 Output: stocks.json (unchanged schema, adds country: 'US' field).
 """
@@ -21,6 +31,7 @@ from datetime import datetime, timezone, date
 
 import pandas as pd
 import requests
+import yfinance as yf
 
 warnings.filterwarnings('ignore')
 
@@ -224,30 +235,40 @@ def compute_rsi(series, period=14):
     return 100 - (100 / (1 + rs))
 
 
+# ── yfinance-backed price history ─────────────────────────────────────────────
+
+def fetch_price_histories(tickers, years=5):
+    """
+    Bulk daily-close history for every ticker in one shot via yfinance, routed
+    through a Chrome-impersonating TLS session so Yahoo's fingerprint block
+    doesn't 429 it (see module docstring). Returns {symbol: pd.Series of closes}.
+    """
+    try:
+        from curl_cffi import requests as cffi_requests
+        session = cffi_requests.Session(impersonate='chrome')
+    except ImportError:
+        print("WARNING: curl_cffi not installed — falling back to a plain "
+              "session, which Yahoo is likely to 429.")
+        session = None
+
+    data = yf.download(
+        tickers, period=f'{years}y', interval='1d', group_by='ticker',
+        progress=False, session=session, threads=True, auto_adjust=True,
+    )
+
+    out = {}
+    for sym in dict.fromkeys(tickers):
+        try:
+            closes = data[sym]['Close'].dropna()
+        except (KeyError, TypeError):
+            continue
+        if len(closes) < 30:
+            continue
+        out[sym] = closes.astype(float)
+    return out
+
+
 # ── Finnhub-backed data fetch ────────────────────────────────────────────────
-
-def fetch_candles(symbol, years=5):
-    """
-    Daily close prices for the last N years.
-    /stock/candle returns {'c': [...], 't': [...], 's': 'ok' | 'no_data'}
-    """
-    to_ts = int(time.time())
-    from_ts = to_ts - years * 366 * 86400
-    data = _finnhub_get('/stock/candle', {
-        'symbol':     symbol,
-        'resolution': 'D',
-        'from':       from_ts,
-        'to':         to_ts,
-    }, silent=True)
-    if not data or data.get('s') != 'ok':
-        return None
-    closes = data.get('c', [])
-    stamps = data.get('t', [])
-    if len(closes) < 30:
-        return None
-    idx = pd.to_datetime(stamps, unit='s')
-    return pd.Series(closes, index=idx).astype(float)
-
 
 def fetch_profile(symbol):
     data = _finnhub_get('/stock/profile2', {'symbol': symbol}, silent=True)
@@ -298,11 +319,11 @@ def fetch_metrics(symbol):
     }
 
 
-def fetch_stock(symbol, cache=None):
-    """Full per-symbol fetch. Uses cache for profile/metrics to reduce API calls.
+def fetch_stock(symbol, closes, cache=None):
+    """Full per-symbol fetch. `closes` is the pre-fetched price Series (see
+    fetch_price_histories). Uses cache for profile/metrics to reduce API calls.
     Returns dict with price + fundamentals + technicals, or None."""
-    closes = fetch_candles(symbol)
-    if closes is None:
+    if closes is None or len(closes) < 30:
         return None
 
     entry = cache.get(symbol, {}) if cache is not None else {}
@@ -445,6 +466,18 @@ def main():
         return
     print(f"  Pre-flight OK — AAPL current price ${test.get('c')}")
 
+    # ── Bulk price history (yfinance, one shot for the whole universe) ───────
+    print("\nFetching price history for all tickers (+ SPY) via yfinance…")
+    t0 = time.time()
+    price_histories = fetch_price_histories(tickers + ['SPY'])
+    print(f"  Got price history for {len(price_histories)}/{len(tickers)} tickers "
+          f"in {time.time() - t0:.0f}s")
+    if len(price_histories) < 100:
+        print("ERROR: yfinance returned price history for almost nothing — "
+              "likely blocked again. Keeping existing stocks.json.")
+        _timer.cancel()
+        return
+
     # ── Fetch each ticker ────────────────────────────────────────────────────
     stocks = []
     for i, sym in enumerate(tickers):
@@ -452,7 +485,7 @@ def main():
             print(f"\n  Deadline hit after {i} stocks — saving partial results.")
             break
         try:
-            s = fetch_stock(sym, cache=cache)
+            s = fetch_stock(sym, price_histories.get(sym), cache=cache)
         except Exception as e:
             print(f"  [{i+1}/{len(tickers)}] {sym} error: {e}")
             continue
@@ -478,10 +511,9 @@ def main():
         peers = sectors.get(stock['sector'], stocks)
         stock['valueScore'] = compute_value_score(stock, peers)
 
-    # ── Fetch SPY benchmark returns ──────────────────────────────────────────
-    print("\nFetching SPY benchmark…")
+    # ── SPY benchmark returns (from the same bulk price fetch) ───────────────
     spy_benchmark = None
-    spy_closes = fetch_candles('SPY')
+    spy_closes = price_histories.get('SPY')
     if spy_closes is not None:
         spy_benchmark = compute_returns(spy_closes)
         print(f"  SPY 1Y {spy_benchmark.get('return1y')}%  "
