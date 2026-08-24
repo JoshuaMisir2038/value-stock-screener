@@ -451,6 +451,11 @@ def main():
 
     tickers = get_tickers()
 
+    _limit = int(os.environ.get('TICKER_LIMIT', '0') or '0')
+    if _limit:
+        print(f"TICKER_LIMIT set — capping universe to top {_limit} tickers for this run.")
+        tickers = tickers[:_limit]
+
     # ── Load fundamentals cache ──────────────────────────────────────────────
     cache = _load_fundamentals_cache()
     cached_count = sum(1 for v in cache.values() if v.get('pFetched'))

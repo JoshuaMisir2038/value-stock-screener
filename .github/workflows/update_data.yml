@@ -10,6 +10,11 @@ on:
     # counts repo activity and doesn't disable scheduled workflows)
     - cron: '0 12 * * 6'
   workflow_dispatch:
+    inputs:
+      ticker_limit:
+        description: 'Cap the ticker universe to the top N (S&P 500 first) for a fast/emergency run. Leave blank for full universe.'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -38,6 +43,7 @@ jobs:
         continue-on-error: true
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          TICKER_LIMIT: ${{ inputs.ticker_limit }}
 
       # fetch_data.py silently keeps the existing stocks.json (and exits 0) when
       # the Finnhub pre-flight check fails, so the step above shows green even
