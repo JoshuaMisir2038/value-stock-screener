@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-10-01 19:01 UTC",
+  "asOf": "2026-10-02 00:08 UTC",
   "vix": null,
   "pcr": null,
   "indicators": {
@@ -8,16 +8,12 @@
       "unit": "%",
       "desc": "Federal Reserve target interest rate",
       "goodLow": true,
-      "value": 3.63,
-      "date": "2026-08-01",
+      "value": 3.75,
+      "date": "2026-09-01",
       "prev": 3.63,
-      "change": 0.0,
-      "changeYoY": -0.7,
+      "change": 0.12,
+      "changeYoY": -0.47,
       "history": [
-        {
-          "date": "2024-09",
-          "value": 5.13
-        },
         {
           "date": "2024-10",
           "value": 4.83
@@ -109,6 +105,10 @@
         {
           "date": "2026-08",
           "value": 3.63
+        },
+        {
+          "date": "2026-09",
+          "value": 3.75
         }
       ]
     },
@@ -553,16 +553,12 @@
       "unit": "%",
       "desc": "Yield curve spread \u2014 negative = inverted (recession signal)",
       "goodLow": false,
-      "value": 0.41,
-      "date": "2026-09-30",
-      "prev": 0.37,
-      "change": 0.04,
-      "changeYoY": 0.09,
+      "value": 0.46,
+      "date": "2026-10-01",
+      "prev": 0.41,
+      "change": 0.05,
+      "changeYoY": 0.13,
       "history": [
-        {
-          "date": "2026-08",
-          "value": 0.47
-        },
         {
           "date": "2026-08",
           "value": 0.39
@@ -654,6 +650,10 @@
         {
           "date": "2026-09",
           "value": 0.41
+        },
+        {
+          "date": "2026-10",
+          "value": 0.46
         }
       ]
     },
