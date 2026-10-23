@@ -1,45 +1,45 @@
 {
-  "asOf": "2026-10-23 17:58 UTC",
+  "asOf": "2026-10-23 23:54 UTC",
   "energy": [
     {
       "ticker": "CL=F",
       "name": "WTI Crude Oil",
       "unit": "$/bbl",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 103.44,
+      "change1d": 3.99,
+      "change1w": 2.0,
+      "high52": 119.48,
+      "low52": 54.98
     },
     {
       "ticker": "BZ=F",
       "name": "Brent Crude",
       "unit": "$/bbl",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 111.66,
+      "change1d": -1.33,
+      "change1w": 1.64,
+      "high52": 126.1,
+      "low52": 58.72
     },
     {
       "ticker": "NG=F",
       "name": "Natural Gas",
       "unit": "$/MMBtu",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 3.047,
+      "change1d": 8.98,
+      "change1w": -2.21,
+      "high52": 7.827,
+      "low52": 2.483
     },
     {
       "ticker": "RB=F",
       "name": "RBOB Gasoline",
       "unit": "$/gal",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 3.1276,
+      "change1d": -1.54,
+      "change1w": -3.33,
+      "high52": 3.8232,
+      "low52": 1.6656
     }
   ],
   "metals": [
@@ -47,51 +47,51 @@
       "ticker": "GC=F",
       "name": "Gold",
       "unit": "$/oz",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 4010.0,
+      "change1d": -1.24,
+      "change1w": -4.09,
+      "high52": 5586.2002,
+      "low52": 3901.3
     },
     {
       "ticker": "SI=F",
       "name": "Silver",
       "unit": "$/oz",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 53.96,
+      "change1d": -1.47,
+      "change1w": -5.33,
+      "high52": 121.3,
+      "low52": 45.845
     },
     {
       "ticker": "HG=F",
       "name": "Copper",
       "unit": "$/lb",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 6.4975,
+      "change1d": 2.12,
+      "change1w": -0.51,
+      "high52": 6.83,
+      "low52": 4.9195
     },
     {
       "ticker": "PL=F",
       "name": "Platinum",
       "unit": "$/oz",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 1555.8,
+      "change1d": -0.75,
+      "change1w": -4.16,
+      "high52": 2852.3999,
+      "low52": 1506.2
     },
     {
       "ticker": "PA=F",
       "name": "Palladium",
       "unit": "$/oz",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 1046.5,
+      "change1d": -0.48,
+      "change1w": -6.0,
+      "high52": 2169.8999,
+      "low52": 1036.0
     }
   ],
   "grains": [
@@ -99,31 +99,31 @@
       "ticker": "ZW=F",
       "name": "Wheat",
       "unit": "\u00a2/bu",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 625.0,
+      "change1d": 0.04,
+      "change1w": -5.37,
+      "high52": 775.75,
+      "low52": 501.5
     },
     {
       "ticker": "ZC=F",
       "name": "Corn",
       "unit": "\u00a2/bu",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 456.0,
+      "change1d": -0.98,
+      "change1w": -3.85,
+      "high52": 544.5,
+      "low52": 398.5
     },
     {
       "ticker": "ZS=F",
       "name": "Soybeans",
       "unit": "\u00a2/bu",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 1269.5,
+      "change1d": 1.32,
+      "change1w": 0.65,
+      "high52": 1332.25,
+      "low52": 1022.0
     }
   ],
   "softs": [
@@ -131,41 +131,41 @@
       "ticker": "KC=F",
       "name": "Coffee",
       "unit": "\u00a2/lb",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 306.0,
+      "change1d": -2.06,
+      "change1w": 0.13,
+      "high52": 437.95,
+      "low52": 242.7
     },
     {
       "ticker": "SB=F",
       "name": "Sugar",
       "unit": "\u00a2/lb",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 20.26,
+      "change1d": 0.65,
+      "change1w": -2.83,
+      "high52": 21.29,
+      "low52": 13.22
     },
     {
       "ticker": "CT=F",
       "name": "Cotton",
       "unit": "\u00a2/lb",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 80.31,
+      "change1d": -0.59,
+      "change1w": 0.39,
+      "high52": 92.15,
+      "low52": 60.71
     },
     {
       "ticker": "CC=F",
       "name": "Cocoa",
       "unit": "$/MT",
-      "price": null,
-      "change1d": null,
-      "change1w": null,
-      "high52": null,
-      "low52": null
+      "price": 5560.0,
+      "change1d": -0.39,
+      "change1w": -1.51,
+      "high52": 6675.0,
+      "low52": 2798.0
     }
   ]
 }
