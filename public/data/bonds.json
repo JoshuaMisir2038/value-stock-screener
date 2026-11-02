@@ -1,13 +1,13 @@
 {
-  "asOf": "2026-10-31 16:51 UTC",
+  "asOf": "2026-11-02 22:29 UTC",
   "us": [
     {
       "ticker": "^IRX",
       "name": "3-Month T-Bill",
       "maturity": "3M",
-      "price": 3.973,
-      "change1d": -0.63,
-      "change1w": -1.46,
+      "price": 3.982,
+      "change1d": 0.23,
+      "change1w": -1.07,
       "high52": 4.147,
       "low52": 3.507
     },
@@ -15,9 +15,9 @@
       "ticker": "^FVX",
       "name": "5-Year T-Note",
       "maturity": "5Y",
-      "price": 4.721,
-      "change1d": -1.67,
-      "change1w": -1.75,
+      "price": 4.693,
+      "change1d": -0.59,
+      "change1w": -2.72,
       "high52": 5.153,
       "low52": 3.507
     },
@@ -25,9 +25,9 @@
       "ticker": "^TNX",
       "name": "10-Year T-Note",
       "maturity": "10Y",
-      "price": 4.929,
-      "change1d": -1.2,
-      "change1w": -1.18,
+      "price": 4.894,
+      "change1d": -0.71,
+      "change1w": -1.85,
       "high52": 5.364,
       "low52": 3.956
     },
@@ -35,11 +35,11 @@
       "ticker": "^TYX",
       "name": "30-Year T-Bond",
       "maturity": "30Y",
-      "price": 5.309,
-      "change1d": -0.38,
-      "change1w": -0.11,
+      "price": 5.269,
+      "change1d": -0.75,
+      "change1w": -0.6,
       "high52": 5.732,
-      "low52": 4.62
+      "low52": 4.627
     }
   ],
   "international": [
@@ -47,9 +47,9 @@
       "ticker": "IGOV",
       "name": "Developed Markets Govt Bonds",
       "region": "Global DM",
-      "price": 40.22,
-      "change1d": 0.25,
-      "change1w": 0.07,
+      "price": 40.39,
+      "change1d": 0.42,
+      "change1w": 0.45,
       "high52": 43.12,
       "low52": 39.44
     },
@@ -57,8 +57,8 @@
       "ticker": "BWX",
       "name": "Intl Treasury Bond",
       "region": "Global DM",
-      "price": 21.42,
-      "change1d": 0.23,
+      "price": 21.39,
+      "change1d": -0.14,
       "change1w": 0.09,
       "high52": 22.7432,
       "low52": 20.99
@@ -67,9 +67,9 @@
       "ticker": "BNDX",
       "name": "Total Intl Bond (Hedged)",
       "region": "Global",
-      "price": 47.39,
-      "change1d": 0.17,
-      "change1w": 0.34,
+      "price": 47.35,
+      "change1d": -0.08,
+      "change1w": 0.23,
       "high52": 48.3104,
       "low52": 46.63
     },
@@ -77,9 +77,9 @@
       "ticker": "EMB",
       "name": "EM USD Sovereign Debt",
       "region": "Emerging Markets",
-      "price": 92.05,
-      "change1d": -0.22,
-      "change1w": 0.44,
+      "price": 91.78,
+      "change1d": -0.29,
+      "change1w": 0.31,
       "high52": 95.1593,
       "low52": 89.69
     },
@@ -87,9 +87,9 @@
       "ticker": "EMLC",
       "name": "EM Local Currency Bonds",
       "region": "Emerging Markets",
-      "price": 24.57,
-      "change1d": -0.28,
-      "change1w": -0.93,
+      "price": 24.53,
+      "change1d": -0.16,
+      "change1w": -0.2,
       "high52": 25.6451,
       "low52": 23.8423
     }
@@ -99,9 +99,9 @@
       "ticker": "LQD",
       "name": "US Investment Grade Corp",
       "type": "IG Corp",
-      "price": 104.27,
-      "change1d": 0.05,
-      "change1w": 0.4,
+      "price": 103.71,
+      "change1d": -0.54,
+      "change1w": -0.3,
       "high52": 108.4532,
       "low52": 101.2
     },
@@ -109,9 +109,9 @@
       "ticker": "HYG",
       "name": "US High Yield Corp",
       "type": "HY Corp",
-      "price": 77.43,
-      "change1d": -0.19,
-      "change1w": 0.49,
+      "price": 76.89,
+      "change1d": -0.7,
+      "change1w": -0.4,
       "high52": 79.1818,
       "low52": 75.7767
     },
@@ -119,19 +119,19 @@
       "ticker": "JNK",
       "name": "US High Yield (alt)",
       "type": "HY Corp",
-      "price": 92.98,
-      "change1d": -0.23,
-      "change1w": 0.5,
+      "price": 92.26,
+      "change1d": -0.77,
+      "change1w": -0.43,
       "high52": 95.169,
-      "low52": 90.6775
+      "low52": 90.6774
     },
     {
       "ticker": "VCIT",
       "name": "Vanguard Corp Bond Interm",
       "type": "IG Corp",
-      "price": 79.69,
-      "change1d": 0.23,
-      "change1w": 0.56,
+      "price": 79.24,
+      "change1d": -0.56,
+      "change1w": -0.1,
       "high52": 82.1179,
       "low52": 77.61
     }

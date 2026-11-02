@@ -1,17 +1,13 @@
 {
-  "asOf": "2026-10-31 16:51 UTC",
+  "asOf": "2026-11-02 22:29 UTC",
   "vix": {
-    "current": 19.42,
-    "prev": 17.2,
-    "change1d": 2.22,
-    "change1w": -0.03,
+    "current": 21.15,
+    "prev": 19.42,
+    "change1d": 1.73,
+    "change1w": 2.76,
     "high52": 31.05,
     "low52": 13.47,
     "history": [
-      {
-        "date": "2025-11-09",
-        "value": 19.08
-      },
       {
         "date": "2025-11-16",
         "value": 19.83
@@ -215,13 +211,17 @@
       {
         "date": "2026-11-01",
         "value": 19.42
+      },
+      {
+        "date": "2026-11-08",
+        "value": 21.15
       }
     ]
   },
   "pcr": {
     "equity": {
-      "value": 1.01,
-      "date": "2026-10-31",
+      "value": 1.14,
+      "date": "2026-11-02",
       "source": "SPY + QQQ + IWM options volume",
       "history": []
     }
@@ -232,16 +232,12 @@
       "unit": "%",
       "desc": "Federal Reserve target interest rate",
       "goodLow": true,
-      "value": 3.75,
-      "date": "2026-09-01",
-      "prev": 3.63,
-      "change": 0.12,
-      "changeYoY": -0.47,
+      "value": 3.88,
+      "date": "2026-10-01",
+      "prev": 3.75,
+      "change": 0.13,
+      "changeYoY": -0.21,
       "history": [
-        {
-          "date": "2024-10",
-          "value": 4.83
-        },
         {
           "date": "2024-11",
           "value": 4.64
@@ -333,6 +329,10 @@
         {
           "date": "2026-09",
           "value": 3.75
+        },
+        {
+          "date": "2026-10",
+          "value": 3.88
         }
       ]
     },
@@ -777,16 +777,12 @@
       "unit": "%",
       "desc": "Yield curve spread \u2014 negative = inverted (recession signal)",
       "goodLow": false,
-      "value": 0.38,
-      "date": "2026-10-30",
-      "prev": 0.37,
-      "change": 0.01,
-      "changeYoY": 0.01,
+      "value": 0.32,
+      "date": "2026-11-02",
+      "prev": 0.38,
+      "change": -0.06,
+      "changeYoY": -0.01,
       "history": [
-        {
-          "date": "2026-09",
-          "value": 0.32
-        },
         {
           "date": "2026-09",
           "value": 0.37
@@ -878,6 +874,10 @@
         {
           "date": "2026-10",
           "value": 0.38
+        },
+        {
+          "date": "2026-11",
+          "value": 0.32
         }
       ]
     },
