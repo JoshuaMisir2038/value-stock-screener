@@ -1,10 +1,10 @@
 {
-  "asOf": "2026-11-05 01:07 UTC",
+  "asOf": "2026-11-05 20:50 UTC",
   "vix": {
-    "current": 16.61,
-    "prev": 20.83,
-    "change1d": -4.22,
-    "change1w": -0.3,
+    "current": 26.09,
+    "prev": 16.61,
+    "change1d": 9.48,
+    "change1w": 8.89,
     "high52": 31.05,
     "low52": 13.47,
     "history": [
@@ -214,13 +214,13 @@
       },
       {
         "date": "2026-11-08",
-        "value": 16.61
+        "value": 26.09
       }
     ]
   },
   "pcr": {
     "equity": {
-      "value": 1.04,
+      "value": 1.18,
       "date": "2026-11-05",
       "source": "SPY + QQQ + IWM options volume",
       "history": []
@@ -668,16 +668,12 @@
       "unit": "%",
       "desc": "30-year fixed-rate mortgage average (Freddie Mac)",
       "goodLow": true,
-      "value": 7.24,
-      "date": "2026-10-29",
-      "prev": 7.32,
-      "change": -0.08,
-      "changeYoY": 0.55,
+      "value": 7.18,
+      "date": "2026-11-05",
+      "prev": 7.24,
+      "change": -0.06,
+      "changeYoY": 0.51,
       "history": [
-        {
-          "date": "2026-05",
-          "value": 6.51
-        },
         {
           "date": "2026-05",
           "value": 6.53
@@ -769,6 +765,10 @@
         {
           "date": "2026-10",
           "value": 7.24
+        },
+        {
+          "date": "2026-11",
+          "value": 7.18
         }
       ]
     },
