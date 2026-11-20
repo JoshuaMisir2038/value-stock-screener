@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-11-19 22:21 UTC",
+  "asOf": "2026-11-20 01:55 UTC",
   "vix": {
     "current": 28.44,
     "prev": 24.56,
@@ -220,8 +220,8 @@
   },
   "pcr": {
     "equity": {
-      "value": 1.19,
-      "date": "2026-11-19",
+      "value": 1.35,
+      "date": "2026-11-20",
       "source": "SPY + QQQ + IWM options volume",
       "history": []
     }
